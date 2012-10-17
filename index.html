@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset='UTF-8' />
-    <title>Videre Test</title>
+    <title>Videre</title>
     
     <link rel="stylesheet" type="text/css" href="style.css" />
     <script type='text/javascript' src='assets/js/jquery-1.8.0.min.js'></script>
@@ -752,25 +752,43 @@ function sendMessage() {
   connection.send(messageText);
 }
 
-
-
-
 </script>
   
   
   </head>
   <body>
-        <div id="toolbarControl" class="toolbarControl">
-            <div id="toolbar" class="toolbar">
-	      <!-- controls are currently added here when the document is loaded, see loadToolbar() -->
-            </div>
-            <div id="toolbarAccess" class="toolbarAccess">
-                <div id="toolbarButtonImage" class="toolbarAccessBar toolbarAccessBarInactive">
-                </div>
+    <div id="taskBar" class="taskBar boxLayout">
+      <div id="leftSidebarControl" class="sidebarControl noflex"></div>
+      <div id="tabBar" class="tabBar flex boxLayout">
+        <div id="payloadTabControl" class="tabControl centered">Payload</div>
+        <div id="telemetyTabControl" class="tabControl centered">Telemetry</div>
+        <div id="flightPlanTabControl" class="tabControl centered">Flight Plan</div>
+        <div id="flyByTheWireTabControl" class="tabControl centered">Fly by the Wire</div>
+      </div>
+      <div id="rightSidebarControl" class="sidebarControl noflex"></div>
+    </div>
+    <div id="rightSidebar" class="sideBar">
+      <div id="welcomeControl">Welcome</div>
+      <div id="vehicleGroup">
+        <div id="vehicleGroupTitle" class="groupTitle">Vehicles</div>
+      </div>
+      <div id="serversGroup">
+        <div id="serversGroupTitle" class="groupTitle">Servers</div>
+      </div>
+      <div id="welcomeControl">Preferences</div>
+    </div>
+
+    <div id="toolbarControl" class="toolbarControl">
+        <div id="toolbar" class="toolbar">
+          <!-- controls are currently added here when the document is loaded, see loadToolbar() -->
+        </div>
+        <div id="toolbarAccess" class="toolbarAccess">
+            <div id="toolbarButtonImage" class="toolbarAccessBar toolbarAccessBarInactive">
             </div>
         </div>
-        <article>
-          <p>background widget goes here...</p>
-        </article>
+    </div>
+    <article>
+      <p>background widget goes here...</p>
+    </article>
   </body>
 </html>
