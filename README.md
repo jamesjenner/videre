@@ -3,7 +3,7 @@ Videre
 
 View and interact with remote automated vehicles
 
-This project implements a cross platform multi-touch enabled application for the purpose of interacting with multiple autonomous vehicles. This project was initiated as a major project at QUT by James Jenner as part of James' masters course.
+This project implements a cross platform multi-touch enabled application for the purpose of interacting with multiple autonomous vehicles. This project was initialy developed as a major project at QUT.
 
 The software is designed to leverage html5, css3 and javascript for the purposes of code reuse and reduce the cost.
 
