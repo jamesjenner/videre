@@ -1,4 +1,4 @@
-videre
+Videre
 ======
 
 View and interact with remote automated vehicles
