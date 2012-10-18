@@ -69,28 +69,15 @@ function touchHandler(event) {
 
 var connected = false;
 var halEnabled = false;
+var sidebarDisplayed = false;
 
 $(document).ready(function() {
   
-  /* $('#toolbar').hide(); */
-
-  $('a.hidetoolbar').click(function() {
-    $('#toolbar').hide("slide", { direction: "right" }, 300);
-    $('#showToolbarControl').show("slide", { direction: "right" }, 300);
-    return false;
-  });
-
-  $('a.showtoolbar').click(function() {
-    $('#toolbar').show("slide", { direction: "right" }, 300);
-    $('#showToolbarControl').hide("slide", { direction: "right" }, 300);
-    return false;
-  });
-
   // load the toolbar
   loadToolbar();
   
-
-
+  configureLeftSidebar();
+  
   $('#toolbarAccess').swipe({
     swipeStatus:function(event, phase, direction, distance, fingerCount) {
       toolbarDisplay(direction, phase, distance);
@@ -99,8 +86,88 @@ $(document).ready(function() {
     threshold:null,
     fingers:'all'
   });
-
+  
+  $('#payloadTabControl').click(function() {
+    alert("payload dude");
+  });
 });
+
+function configureLeftSidebar() {
+  $('#leftSidebarControl').click(function() {
+    showLeftSidebar();
+    
+    return false;
+  });
+}
+
+function showLeftSidebar() {
+  var obj = $('#mainApplication');
+  var time = '300ms';
+  var width = $('#leftSidebar').width();
+  
+  // get the width of the side bar and move it by that much
+
+  if (obj.length > 0) {
+    obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
+    obj.css('-moz-transition', 'all ' + time + ' ease-in-out');
+    obj.css('-o-transition', 'all ' + time + ' ease-in-out');
+    obj.css('transition', 'all ' + time + ' ease-in-out');
+
+    obj.css('-webkit-transform', 'translate(' + width + 'px, 0px)');
+    obj.css('-moz-transform', 'translate(' + width + 'px, 0px)');
+    obj.css('-o-transform', 'translate(' + width + 'px, 0px)');
+    obj.css('transform', 'translate(' + width + 'px, 0px)');
+    sidebarDisplayed = true;
+
+    /*
+     * TODO: check if the overlay div should be animated at the same time as the main application
+     * if we don't do this, it may be possible that a person tries to abort the showing of the side
+     * panel by pressing/clicking on the content but it wont work due to how it doesn't cover
+     * everywhere yet...
+     */
+    
+    // check if the overlay div exists, if not then create it
+    // TODO: determine if the overlay div should always exist and remove this logic to add it
+    if ($('#mainApplicationOverlay').length <= 0) {
+      // create a div to overlay the main application
+      // this is to capture presses/clicks so as to restore the main application
+          
+      $(document.body).append('<div ' + 'id="mainApplicationOverlay" class="mainApplicationOverlay" ></div>');
+      $('#mainApplicationOverlay').css('left', width + 'px');
+
+      // setup listener to restore main application
+      $('#mainApplicationOverlay').on('click', hideLeftSidebar);
+    }
+    
+    // make the overlay div active by making it visible
+    $('#mainApplicationOverlay').css('visibility', 'visible');
+  }
+}
+
+function hideLeftSidebar() {
+  var obj = $('#mainApplication');
+  var time = '300ms';
+  var width = $('#leftSidebar').width();
+  
+  if (obj.length > 0) {
+    // make the overlay div inactive by making it invisible
+    $('#mainApplicationOverlay').css('visibility', 'hidden');
+    
+    obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
+    obj.css('-moz-transition', 'all ' + time + ' ease-in-out');
+    obj.css('-o-transition', 'all ' + time + ' ease-in-out');
+    obj.css('transition', 'all ' + time + ' ease-in-out');
+
+    obj.css('-webkit-transform', 'translate(0px, 0px)');
+    obj.css('-moz-transform', 'translate(0px, 0px)');
+    obj.css('-o-transform', 'translate(0px, 0px)');
+    obj.css('transform', 'translate(0px, 0px)');
+  }
+  
+
+  sidebarDisplayed = false;
+}
+
 
 // define gauges
 var videoGauge = new Gauge({name: 'video', title: 'Video', description: 'Live video feed',
@@ -310,8 +377,6 @@ function draw_next(step) { // step between 0 and 1
   }
 }
 
-
-				 
 				 
 /*
  * loadToolbar - loads the toolbar
@@ -753,21 +818,9 @@ function sendMessage() {
 }
 
 </script>
-  
-  
   </head>
   <body>
-    <div id="taskBar" class="taskBar boxLayout">
-      <div id="leftSidebarControl" class="sidebarControl noflex"></div>
-      <div id="tabBar" class="tabBar flex boxLayout">
-        <div id="payloadTabControl" class="tabControl centered">Payload</div>
-        <div id="telemetyTabControl" class="tabControl centered">Telemetry</div>
-        <div id="flightPlanTabControl" class="tabControl centered">Flight Plan</div>
-        <div id="flyByTheWireTabControl" class="tabControl centered">Fly by the Wire</div>
-      </div>
-      <div id="rightSidebarControl" class="sidebarControl noflex"></div>
-    </div>
-    <div id="rightSidebar" class="sideBar">
+    <div id="leftSidebar" class="sideBar">
       <div id="welcomeControl">Welcome</div>
       <div id="vehicleGroup">
         <div id="vehicleGroupTitle" class="groupTitle">Vehicles</div>
@@ -778,17 +831,31 @@ function sendMessage() {
       <div id="welcomeControl">Preferences</div>
     </div>
 
-    <div id="toolbarControl" class="toolbarControl">
-        <div id="toolbar" class="toolbar">
-          <!-- controls are currently added here when the document is loaded, see loadToolbar() -->
+    <div id="mainApplication" class="mainApplication">
+      <div id="taskBar" class="taskBar boxLayout">
+        <div id="leftSidebarControl" class="sidebarControl noflex centered">
+          <img src="icons/android/icon_xhdpi.png" class="centered" height="34px" width="34px" alt="icon">
         </div>
-        <div id="toolbarAccess" class="toolbarAccess">
-            <div id="toolbarButtonImage" class="toolbarAccessBar toolbarAccessBarInactive">
-            </div>
+        <div id="title" class="title">Thunderbird 1</div>
+        <div id="tabBar" class="tabBar flex boxLayout">
+          <div id="payloadTabControl" class="tabControl centered tabSelected">Payload</div>
+          <div id="telemetyTabControl" class="tabControl centered">Telemetry</div>
+          <div id="flightPlanTabControl" class="tabControl centered">Flight Plan</div>
+          <div id="flyByTheWireTabControl" class="tabControl centered">Fly by the Wire</div>
         </div>
+        <div id="rightSidebarControl" class="sidebarControl noflex"></div>
+      </div>
+      <div id="contentArea" class="content">
+      </div>
+      <div id="toolbarControl" class="toolbarControl">
+          <div id="toolbar" class="toolbar">
+            <!-- controls are currently added here when the document is loaded, see loadToolbar() -->
+          </div>
+          <div id="toolbarAccess" class="toolbarAccess">
+              <div id="toolbarButtonImage" class="toolbarAccessBar toolbarAccessBarInactive">
+              </div>
+          </div>
+      </div>
     </div>
-    <article>
-      <p>background widget goes here...</p>
-    </article>
   </body>
 </html>
