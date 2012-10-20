@@ -2,6 +2,12 @@
 <html>
   <head>
     <meta charset='UTF-8' />
+    <!-- need to invesitgate the use of the viewport option, it doesn't appear to be working, see
+         http://developer.android.com/guide/webapps/targeting.html
+         http://developer.android.com/guide/webapps/best-practices.html
+         
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0' />
+    -->
     <title>Videre</title>
     
     <link rel="stylesheet" type="text/css" href="style.css" />
@@ -9,6 +15,7 @@
     <script type='text/javascript' src='assets/js/jquery-ui-1.8.23.custom.min.js'></script>
     <script src="assets/js/jquery.touchSwipe.min.js"  type="text/javascript"></script>
     <script src="assets/js/gauge.js"  type="text/javascript"></script>
+    <script src="assets/js/swipe.js"  type="text/javascript"></script>
 
 <script type='text/javascript'>
 
@@ -70,6 +77,7 @@ function touchHandler(event) {
 var connected = false;
 var halEnabled = false;
 var sidebarDisplayed = false;
+var contentSlider;
 
 $(document).ready(function() {
   
@@ -88,9 +96,60 @@ $(document).ready(function() {
   });
   
   $('#payloadTabControl').click(function() {
-    alert("payload dude");
+    contentSlider.slide(PAYLOAD_TAB, 0);
+    contentTabChanged('', PAYLOAD_TAB);
   });
+  
+  $('#telemetyTabControl').click(function() {
+    contentSlider.slide(TELEMETY_TAB, 0);
+    contentTabChanged('', TELEMETY_TAB);
+  });
+  
+  $('#flightPlanTabControl').click(function() {
+    contentSlider.slide(FLIGHT_PLAN_TAB, 0);
+    contentTabChanged('', FLIGHT_PLAN_TAB);
+  });
+  
+  $('#remoteControlTabControl').click(function() {
+    contentSlider.slide(REMOTE_CONTROL_TAB, 0);
+    contentTabChanged('', REMOTE_CONTROL_TAB);
+  });
+  
+  // setup the swipe for the main content divs
+  contentSlider = new Swipe(document.getElementById('contentSlider'), {
+      callback: contentTabChanged,
+      slideCallback: function(position) { contentTabChanged('', position); },
+      slideEffect: 'android'
+    });
 });
+
+var PAYLOAD_TAB = 0;
+var TELEMETY_TAB = 1;
+var FLIGHT_PLAN_TAB = 2;
+var REMOTE_CONTROL_TAB = 3;
+
+function contentTabChanged2(position) {
+  contentTabChanged('', position);
+}
+
+function contentTabChanged(e, position) {
+  $('.tabSelected').removeClass('tabSelected');
+  
+  switch (position) {
+    case PAYLOAD_TAB:
+      $("#payloadTabControl").addClass('tabSelected');
+      break;
+    case TELEMETY_TAB:
+      $("#telemetyTabControl").addClass('tabSelected');
+      break;
+    case FLIGHT_PLAN_TAB:
+      $("#flightPlanTabControl").addClass('tabSelected');
+      break;
+    case REMOTE_CONTROL_TAB:
+      $("#remoteControlTabControl").addClass('tabSelected');
+      break;
+  }
+}
 
 function configureLeftSidebar() {
   $('#leftSidebarControl').click(function() {
@@ -821,19 +880,52 @@ function sendMessage() {
   </head>
   <body>
     <div id="leftSidebar" class="sideBar">
-      <div id="welcomeControl">Welcome</div>
-      <div id="vehicleGroup">
-        <div id="vehicleGroupTitle" class="groupTitle">Vehicles</div>
+      <div id="welcomeControl" class="sidebarControlBar">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Welcome</div>
       </div>
-      <div id="serversGroup">
-        <div id="serversGroupTitle" class="groupTitle">Servers</div>
+      <div class="sidebarGroupHeading">
+        <div id="vehicleGroupTitle" class="sidebarGroupTitle">Vehicles</div>
       </div>
-      <div id="welcomeControl">Preferences</div>
+      <div id="vehicle1" class="sidebarControlBar sidebarControlActive">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Thunderbird 1</div>
+      </div>
+      <div id="vehicle2" class="sidebarControlBar">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Thunderbird 2</div>
+      </div>
+      <div id="vehicle3" class="sidebarControlBar">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Thunderbird 3</div>
+      </div>
+      <div id="addVehicle" class="sidebarControlBar">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Add Vehicle</div>
+      </div>
+      <div class="sidebarGroupHeading">
+        <div id="serversGroupTitle" class="sidebarGroupTitle">Servers</div>
+      </div>
+      <div id="server1" class="sidebarControlBar">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Main Host</div>
+      </div>
+      <div id="addServer" class="sidebarControlBar">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Add Host</div>
+      </div>
+      <div class="sidebarGroupHeading">
+        <div id="vehicleGroupTitle" class="sidebarGroupTitle"></div>
+      </div>
+      <div id="preferencesControl" class="sidebarControlBar">
+        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+        <div class="sidebarControlText centered">Preferences</div>
+      </div>
     </div>
 
     <div id="mainApplication" class="mainApplication">
       <div id="taskBar" class="taskBar boxLayout">
-        <div id="leftSidebarControl" class="sidebarControl noflex centered">
+        <div id="leftSidebarControl" class="sidebarPanel noflex centered">
           <img src="icons/android/icon_xhdpi.png" class="centered" height="34px" width="34px" alt="icon">
         </div>
         <div id="title" class="title">Thunderbird 1</div>
@@ -844,20 +936,54 @@ function sendMessage() {
           <div class="tabDivider"></div>
           <div id="flightPlanTabControl" class="tabControl centered">Navigation</div>
           <div class="tabDivider"></div>
-          <div id="flyByTheWireTabControl" class="tabControl centered">Direct Control</div>
+          <div id="remoteControlTabControl" class="tabControl centered">Remote Control</div>
         </div>
-        <div id="rightSidebarControl" class="sidebarControl noflex"></div>
+        <div id="rightSidebarControl" class="sidebarPanel noflex"></div>
       </div>
-      <div id="contentArea" class="content">
-      </div>
-      <div id="toolbarControl" class="toolbarControl">
-          <div id="toolbar" class="toolbar">
-            <!-- controls are currently added here when the document is loaded, see loadToolbar() -->
-          </div>
-          <div id="toolbarAccess" class="toolbarAccess">
-              <div id="toolbarButtonImage" class="toolbarAccessBar toolbarAccessBarInactive">
+      <div id="contentSlider" class="contentSlider">
+        <div class="contentSlider">
+          <div id="payloadContentArea" class="content" style="">
+            <div class="message">
+              <div class="messageContents">
+                <span>NO PAYLOAD FOUND</span><br/>
+                <span>You can add payload monitors via settings</span>
               </div>
+            </div>
           </div>
+          <div id="telemetryContentArea" class="content">
+            <div class="message">
+              <div class="messageContents">
+                <span>NO TELEMETRY FOUND</span><br/>
+                <span>You can add telemetry gauges via settings</span>
+              </div>
+            </div>
+            <div id="toolbarControl" class="toolbarControl">
+                <div id="toolbar" class="toolbar">
+                  <!-- controls are currently added here when the document is loaded, see loadToolbar() -->
+                </div>
+                <div id="toolbarAccess" class="toolbarAccess">
+                    <div id="toolbarButtonImage" class="toolbarAccessBar toolbarAccessBarInactive">
+                    </div>
+                </div>
+            </div>
+          </div>
+          <div id="navigationContentArea" class="content">
+            <div class="message">
+              <div class="messageContents">
+                <span>NO NAVIGATION FOUND</span><br/>
+                <span>You can configure navigation options via settings</span>
+              </div>
+            </div>
+          </div>
+          <div id="remoteControlContentArea" class="content">
+            <div class="message">
+              <div class="messageContents">
+                <span>NO REMOTE CONTROL FOUND</span><br/>
+                <span>The selected vehicle is not configured for remote control</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </body>
