@@ -146,20 +146,51 @@ div.tabControl {
 	font-size: medium;
 	color: #9E9E9E;
 	height: 100%;
-	width: 250px;
+	width: 140px;
+	padding-left: 20px;
+	padding-right: 20px;
 	border-bottom-style: solid;
 	border-bottom-color: #33B5E5;
 	border-bottom-width: 2px;
 	padding-top: 2px;
+	/*
 	margin-left: 1px;
 	margin-right: 1px;
+	*/
 	
 	box-sizing:border-box;
 	-moz-box-sizing:border-box; /* Firefox */
-	-webkit-box-sizing:border-box; /* Safari */	
+	-webkit-box-sizing:border-box; /* Safari */
+
+	/* could use box-flex: 1.0, but it doesn't distribute the same
+	 * width. Maybe best option is the table layout... */
+}
+
+/* only required if using flex to setup widths */
+div.tabPad {
+	height: 100%;
+	-moz-box-flex:10.0; /* Firefox */
+	-webkit-box-flex:10.0; /* Safari and Chrome */
+	box-flex:10.0;
+}
+
+div.tabDivider {
+	width: 1px;
+	/*
+	 * should be able to use percentage for the margin-top, but according
+	 * to the w3c spec, % for margin-top is based on container's width,
+	 * not height (so damn annoying). So using hardcoding the values.
+	 * Would like to use:
+	 * height: 60%;
+	 * margin-top: 20%;
+	 */
+	height: 20px;
+	margin-top: 10px;
+	background-color: #525252;
 }
 
 div.tabSelected {
+	color: white;
 	border-bottom-width: 5px;
 	padding-top: 5px;
 }
