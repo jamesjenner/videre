@@ -175,7 +175,7 @@ function addActionBar(targetId, id, title) {
     '    <div id="leftSidebarControl' +  id + '" class="sidebarPanel noflex centered">' +
     '      <img src="icons/android/icon_xhdpi.png" class="centered" height="34px" width="34px" alt="icon">' +
     '    </div>' +
-    '    <div class="title">' + title + '</div>' +
+    '    <div id="leftSidebarControlText' +  id + '" class="title">' + title + '</div>' +
     '    <div id="' + id + 'TabBar" class="tabBar flex boxLayout">' +
     '    </div>' +
     '    <div id="rightSidebarControl" class="sidebarPanel noflex"></div>' +
@@ -183,6 +183,11 @@ function addActionBar(targetId, id, title) {
   
   // add listener to the control that activates the left sidebar
   $('#leftSidebarControl' + id).click(function() {
+    showLeftSidebar();
+    
+    return false;
+  });
+  $('#leftSidebarControlText' + id).click(function() {
     showLeftSidebar();
     
     return false;
@@ -388,12 +393,13 @@ function setFocus(controlId, contentId) {
   // update the focus to the set focus
   currentFocusControlId = controlId;
   
+  // display the selected content before hiding, so no flickering white stuff
+  $('#' + contentId).css('visibility', 'visible');
+  
   // change to the appropriate application contents
   if(currentFocusContentId != '') {
     $('#' + currentFocusContentId).css('visibility', 'hidden');
   }
-  
-  $('#' + contentId).css('visibility', 'visible');
   
   currentFocusContentId = contentId;
 }
