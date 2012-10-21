@@ -58,6 +58,15 @@ div.mainApplication {
 	top: 0;
 }
 
+div.applicationContents {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	visibility: hidden;
+}
+
 div.content {
 	background-color: #8D8D8D;
 	height: 100%;
