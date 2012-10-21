@@ -85,7 +85,10 @@ Swipe.prototype = {
     this.slide(this.index, 0); 
 
     // show slider element
-    this.container.style.visibility = 'visible';
+    // this.container.style.visibility = 'visible';
+    // TODO: confirm this works. set to blank otherwise using visible sets local style and
+    // thus higher level components cannot control visibility
+    this.container.style.visibility = '';
 
   },
 
