@@ -8,6 +8,8 @@
          
     <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0' />
     -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+
     <title>Videre</title>
     
     <link rel="stylesheet" type="text/css" href="style.css" />
@@ -16,6 +18,7 @@
     <script src="assets/js/jquery.touchSwipe.min.js"  type="text/javascript"></script>
     <script src="assets/js/gauge.js"  type="text/javascript"></script>
     <script src="assets/js/swipe.js"  type="text/javascript"></script>
+    <script src="assets/js/iscroll.js"  type="text/javascript"></script>
 
 <script type='text/javascript'>
 
@@ -36,6 +39,75 @@
  * along with this program. If not, see http://www.gnu.org/licenses/
  */
 
+/** iScroll logic  */
+ 
+var verticalScroll;
+// var horizontalScroll = new Array();
+function loaded() {
+  verticalScroll = new iScroll('leftSidebar');
+  /*
+  horizontalScroll[0] = new iScroll('vehicle1ContentSlider', {
+    snap: true,
+    hScroll: true,
+    vScroll: false,
+    momentum: false,
+    hScrollbar: false,
+    onScrollEnd: function () {
+      // document.querySelector('#indicator > li.active').className = '';
+      // document.querySelector('#indicator > li:nth-child(' + (this.currPageX+1) + ')').className = 'active';
+      // update what is currently displayed
+    }
+  });
+  horizontalScroll[1] = new iScroll('vehicle2ContentSlider', {
+    snap: true,
+    hScroll: true,
+    vScroll: false,
+    momentum: false,
+    hScrollbar: false
+  });
+  horizontalScroll[2] = new iScroll('vehicle3ContentSlider', {
+    snap: true,
+    hScroll: true,
+    vScroll: false,
+    momentum: false,
+    hScrollbar: false
+  });
+  */
+}
+
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
+
+/* * * * * * * *
+ *
+ * Use this for high compatibility (iDevice + Android)
+ *
+ */
+document.addEventListener('DOMContentLoaded', function () { setTimeout(loaded, 200); }, false);
+/*
+ * * * * * * * */
+
+
+/* * * * * * * *
+ *
+ * Use this for iDevice only
+ *
+ */
+//document.addEventListener('DOMContentLoaded', loaded, false);
+/*
+ * * * * * * * */
+
+
+/* * * * * * * *
+ *
+ * Use this if nothing else works
+ *
+ */
+//window.addEventListener('load', setTimeout(function () { loaded(); }, 200), false);
+/*
+ * * * * * * * */
+
+/** end iScroll logic */
+ 
 /* 
  * this detects touch events and changes them to mousedown, mousemove and mouseup 
  * this is to support dnd
@@ -211,6 +283,7 @@ function addTabToActionBar(id, partialTabId, tabId, tabName, tabNumber, vehicleC
     '      <div id="' + tabId + '" class="tabControl centered' +  (selected ? ' tabSelected' : '') + '">' + tabName + '</div>'
     );
   
+  // add a listener to each tab for navigating to the correct div
   $('#' + tabId).click(function() {
     vehicleContentSlider[vehicleContentNbr].slide(tabNumber, 0);
   });
@@ -248,6 +321,7 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
+//    '    <div id="scroller" class="contentSlider">' +
     '    <div class="contentSlider">' +
     '      <div id="payloadContentArea" class="content" style="">' +
     '        <div class="message">' +
@@ -311,10 +385,10 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
    * the issues with side bar navigation are sorted out
    */
-  // setup the swipe for the content 
+  // setup the swipe using Slider for the vehicle content
   vehicleContentSlider[vehicleContentNbr] = new Swipe(document.getElementById(id + 'ContentSlider'), {
 //      callback: function(e, position) { contentTabChanged(e, position, id); },
-      slideCallback: function(position) { contentTabChanged('', position, id, vehicleContentNbr); },
+      // slideCallback: function(position) { contentTabChanged('', position, id, vehicleContentNbr); },
       slideEffect: 'android'
     });
   
@@ -1125,6 +1199,7 @@ function sendMessage() {
   </head>
   <body>
     <div id="leftSidebar" class="sideBar">
+      <div id="scroller">
       <div class="sidebarGroupHeading">
 
       </div>
@@ -1148,6 +1223,7 @@ function sendMessage() {
       <div id="preferencesControl" class="sidebarControlBar">
         <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
         <div class="sidebarControlText centered">Preferences</div>
+      </div>
       </div>
     </div>
 
