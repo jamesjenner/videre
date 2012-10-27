@@ -40,11 +40,18 @@
  */
 
 /** iScroll logic  */
- 
-var verticalScroll;
+/* don't need to access the scroll bar for side panes  
+var verticalScrollLeftSidebar;
+var verticalScrollRightSidebar;
+*/
 // var horizontalScroll = new Array();
 function loaded() {
-  verticalScroll = new iScroll('leftSidebar');
+  new iScroll('leftSidebar');
+  new iScroll('rightSidebar');
+  /*
+  verticalScrollLeftSidebar = new iScroll('leftSidebar');
+  verticalScrollRightSidebar = new iScroll('rightSidebar');
+  */
   /*
   horizontalScroll[0] = new iScroll('vehicle1ContentSlider', {
     snap: true,
@@ -148,7 +155,6 @@ function touchHandler(event) {
 
 var connected = false;
 var halEnabled = false;
-var sidebarDisplayed = false;
 
 var PAYLOAD_TAB = 0;
 var TELEMETY_TAB = 1;
@@ -241,29 +247,40 @@ function configureApplication() {
 /*
  * addActionBar('mainApplication', 'vehicle1', 'Thunderbird 3');
  */
-function addActionBar(targetId, id, title) {
+function addActionBar(targetId, id, title, includeSettings) {
   $('#' + targetId).prepend(
     '  <div id="' + id + 'TaskBar" class="taskBar boxLayout">' +
-    '    <div id="leftSidebarControl' +  id + '" class="sidebarPanel noflex centered">' +
+    '    <div id="leftSidebarControl' + id + '" class="sidebarPanel noflex centered">' +
     '      <img src="icons/android/icon_xhdpi.png" class="centered" height="34px" width="34px" alt="icon">' +
     '    </div>' +
-    '    <div id="leftSidebarControlText' +  id + '" class="title">' + title + '</div>' +
+    '    <div id="leftSidebarControlText' + id + '" class="title">' + title + '</div>' +
     '    <div id="' + id + 'TabBar" class="tabBar flex boxLayout">' +
     '    </div>' +
-    '    <div id="rightSidebarControl" class="sidebarPanel noflex"></div>' +
+    (includeSettings ? 
+    '    <div id="rightSidebarControl' + id + '" class="sidebarPanel noflex">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_settings.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    </div>' : '') +
     '  </div>');
   
   // add listener to the control that activates the left sidebar
   $('#leftSidebarControl' + id).click(function() {
-    showLeftSidebar();
+    showSidebar('leftSidebar', 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
     
     return false;
   });
   $('#leftSidebarControlText' + id).click(function() {
-    showLeftSidebar();
+    showSidebar('leftSidebar', 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
     
     return false;
   });
+  
+  if(includeSettings) {
+    $('#rightSidebarControl' + id).click(function() {
+      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+      
+      return false;
+    });
+  }
 }
 
 /*
@@ -310,7 +327,7 @@ function addContentUI(id, title, subTitle) {
     '</div>');
 
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title);
+  addActionBar(id, actionBarId, title, false);
 
 }
 
@@ -323,7 +340,7 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
 //    '    <div id="scroller" class="contentSlider">' +
     '    <div class="contentSlider">' +
-    '      <div id="payloadContentArea" class="content" style="">' +
+    '      <div id="payloadContentArea" class="content" >' +
     '        <div class="message">' +
     '          <div class="messageContents">' +
     '            <span>NO PAYLOAD FOUND</span><br/>' +
@@ -370,7 +387,7 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title);
+  addActionBar(id, actionBarId, title, true);
   addTabToActionBar(actionBarId, id, id  + PAYLOAD_TAB_CONTROL, 'Payload', PAYLOAD_TAB, vehicleContentNbr, true);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleContentNbr);
@@ -388,7 +405,7 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   // setup the swipe using Slider for the vehicle content
   vehicleContentSlider[vehicleContentNbr] = new Swipe(document.getElementById(id + 'ContentSlider'), {
 //      callback: function(e, position) { contentTabChanged(e, position, id); },
-      // slideCallback: function(position) { contentTabChanged('', position, id, vehicleContentNbr); },
+      slideCallback: function(position) { contentTabChanged('', position, id, vehicleContentNbr); },
       slideEffect: 'android'
     });
   
@@ -409,7 +426,7 @@ function addControlToSidebar(groupId, id, icon, name) {
 function addListenerToSidebarControl(controlId, contentId) {
   $('#' + controlId).click(function() {
     setFocus(controlId, contentId);
-    hideLeftSidebar();
+    hideSidebar('mainApplication', 'mainApplicationOverlay', '300ms');
   });
 }
 
@@ -478,13 +495,20 @@ function setFocus(controlId, contentId) {
   currentFocusContentId = contentId;
 }
 
-function showLeftSidebar() {
-  var obj = $('#mainApplication');
-  var time = '300ms';
-  var width = $('#leftSidebar').width();
+/*
+ *
+ * showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms')
+ * showSidebar('leftSidebar', 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms')
+ * 
+ */
+function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPanelCSS, time) {
+  var obj = $('#' + mainPanelId);
+  var width = $('#' + sidebarId).width();
   
-  // get the width of the side bar and move it by that much
-
+  // determine the x adjustment based on the location of the side bar
+  // we move negative if the side bar is right, positive if the side bar is left
+  var x = location == 'right' ? width *= -1 : width;
+  
   if (obj.length > 0) {
     obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
     obj.css('-moz-transition', 'all ' + time + ' ease-in-out');
@@ -495,7 +519,6 @@ function showLeftSidebar() {
     obj.css('-moz-transform', 'translate(' + width + 'px, 0px)');
     obj.css('-o-transform', 'translate(' + width + 'px, 0px)');
     obj.css('transform', 'translate(' + width + 'px, 0px)');
-    sidebarDisplayed = true;
 
     /*
      * TODO: check if the overlay div should be animated at the same time as the main application
@@ -506,30 +529,34 @@ function showLeftSidebar() {
     
     // check if the overlay div exists, if not then create it
     // TODO: determine if the overlay div should always exist and remove this logic to add it
-    if ($('#mainApplicationOverlay').length <= 0) {
+    if ($('#' + overlayPanelId).length <= 0) {
       // create a div to overlay the main application
       // this is to capture presses/clicks so as to restore the main application
           
-      $(document.body).append('<div ' + 'id="mainApplicationOverlay" class="mainApplicationOverlay" ></div>');
-      $('#mainApplicationOverlay').css('left', width + 'px');
+      $(document.body).append('<div ' + 'id="' + overlayPanelId + '" class="' + overlayPanelCSS + '" ></div>');
+      $('#' + overlayPanelId).css('left', width + 'px');
 
       // setup listener to restore main application
-      $('#mainApplicationOverlay').on('click', hideLeftSidebar);
+      $('#' + overlayPanelId).on('click', function () { hideSidebar(mainPanelId, overlayPanelId, time) });
     }
     
     // make the overlay div active by making it visible
-    $('#mainApplicationOverlay').css('visibility', 'visible');
+    $('#' + overlayPanelId).css('visibility', 'visible');
   }
 }
 
-function hideLeftSidebar() {
-  var obj = $('#mainApplication');
-  var time = '300ms';
-  var width = $('#leftSidebar').width();
+/*
+ *
+ * hideSidebar('mainApplication', 'mainApplicationOverlay', '300ms')
+ * showSidebar('mainApplication', 'mainApplicationOverlay', '300ms')
+ * 
+ */
+function hideSidebar(mainPanelId, overlayPanelId, time) {
+  var obj = $('#' + mainPanelId);
   
   if (obj.length > 0) {
     // make the overlay div inactive by making it invisible
-    $('#mainApplicationOverlay').css('visibility', 'hidden');
+    $('#' + overlayPanelId).css('visibility', 'hidden');
     
     obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
     obj.css('-moz-transition', 'all ' + time + ' ease-in-out');
@@ -541,11 +568,7 @@ function hideLeftSidebar() {
     obj.css('-o-transform', 'translate(0px, 0px)');
     obj.css('transform', 'translate(0px, 0px)');
   }
-  
-
-  sidebarDisplayed = false;
 }
-
 
 // define gauges
 var videoGauge = new Gauge({name: 'video', title: 'Video', description: 'Live video feed',
@@ -1200,35 +1223,49 @@ function sendMessage() {
   <body>
     <div id="leftSidebar" class="sideBar">
       <div id="scroller">
-      <div class="sidebarGroupHeading">
-
-      </div>
-      <div id="welcomeControl" class="sidebarControlBar">
-        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
-        <div class="sidebarControlText centered">Welcome</div>
-      </div>
-      <div id="vehicleGroup" class="sidebarGroup">
         <div class="sidebarGroupHeading">
-          <div id="vehicleGroupTitle" class="sidebarGroupTitle">Vehicles</div>
+  
+        </div>
+        <div id="welcomeControl" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Welcome</div>
+        </div>
+        <div id="vehicleGroup" class="sidebarGroup">
+          <div class="sidebarGroupHeading">
+            <div id="vehicleGroupTitle" class="sidebarGroupTitle">Vehicles</div>
+          </div>
+        </div>
+        <div id="serverGroup" class="sidebarGroup">
+          <div class="sidebarGroupHeading">
+            <div id="serversGroupTitle" class="sidebarGroupTitle">Servers</div>
+          </div>
+        </div>
+        <div class="sidebarGroupHeading">
+          <div id="preferencsGroupTitle" class="sidebarGroupTitle"></div>
+        </div>
+        <div id="preferencesControl" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Preferences</div>
         </div>
       </div>
-      <div id="serverGroup" class="sidebarGroup">
+    </div>
+    
+    <div id="rightSidebar" class="sideBar rightSideBar">
+      <div id="scroller">
         <div class="sidebarGroupHeading">
-          <div id="serversGroupTitle" class="sidebarGroupTitle">Servers</div>
+  
         </div>
-      </div>
-      <div class="sidebarGroupHeading">
-        <div id="preferencsGroupTitle" class="sidebarGroupTitle"></div>
-      </div>
-      <div id="preferencesControl" class="sidebarControlBar">
-        <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
-        <div class="sidebarControlText centered">Preferences</div>
-      </div>
+        <div id="testGroup" class="sidebarGroup">
+          <div class="sidebarGroupHeading">
+            <div id="testGroupTitle" class="sidebarGroupTitle">Some stuff here...</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div id="mainApplication" class="mainApplication content">
       <!-- app content goes here -->
     </div>
+    
   </body>
 </html>

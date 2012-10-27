@@ -254,6 +254,11 @@ div.sideBar {
 	display: block;
 }
 
+div.rightSideBar {
+	right: 0px;
+	left: auto;
+}
+
 div.sidebarControlBar {
 	width: 245px;
 	height: 40px;
