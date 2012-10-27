@@ -82,13 +82,17 @@ Swipe.prototype = {
     }
 
     // set start position and force translate to remove initial flickering
-    this.slide(this.index, 0); 
+    this.slide(this.index, 0);
+    
+    // hide all the other slides
+    for (var i=0; i<this.length; ++i) {
+      if(i != this.index) {
+        this.slides[i].style.visibility = 'hidden';
+      }
+    }
 
-    // show slider element
-    // this.container.style.visibility = 'visible';
-    // TODO: confirm this works. set to blank otherwise using visible sets local style and
-    // thus higher level components cannot control visibility
-    this.container.style.visibility = '';
+    // set visibility to inherit, if set to visible then it overrides higher level settings
+    this.container.style.visibility = 'inherit';
 
   },
 
@@ -101,6 +105,9 @@ Swipe.prototype = {
         duration = this.speed;
     }
 
+    // reset the visibility style
+    this.slides[index].style.visibility = 'inherit';
+    
     // set duration speed (0 represents 1-to-1 scrolling)
     style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration = duration + 'ms';
 
@@ -108,6 +115,11 @@ Swipe.prototype = {
     style.MozTransform = style.webkitTransform = 'translate3d(' + -(index * this.width) + 'px,0,0)';
     style.msTransform = style.OTransform = 'translateX(' + -(index * this.width) + 'px)';
 
+    // hide the old slide
+    if(this.index != index) {
+      this.slides[this.index].style.visibility = 'hidden';
+    }
+    
     // set new index to allow for expression arguments
     this.index = index;
 
@@ -183,6 +195,18 @@ Swipe.prototype = {
     
     if (this.delay) this.begin();
 
+    /*
+     * two options, manage z layer for non visible slides and the visible slide or
+     * set visibility to hidden for non visible slides. This is to avoid issues where
+     * an app wishes to expose side panels by moving the appliction.
+     */
+
+    for (var i=0; i<this.length; ++i) {
+      if(i != this.index) {
+        this.slides[i].style.visibility = 'hidden';
+      }
+    }
+     
     this.callback(e, this.index, this.slides[this.index]);
 
   },
@@ -222,6 +246,12 @@ Swipe.prototype = {
     // determine if scrolling test has run - one time test
     if ( typeof this.isScrolling == 'undefined') {
       this.isScrolling = !!( this.isScrolling || Math.abs(this.deltaX) < Math.abs(e.touches[0].pageY - this.start.pageY) );
+      
+      for (var i=0; i<this.length; ++i) {
+        if(i != this.index) {
+          this.slides[i].style.visibility = 'inherit';
+        }
+      }
     }
 
     // if user is not trying to scroll vertically
