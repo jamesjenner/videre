@@ -202,43 +202,43 @@ function configureApplication() {
   // add welcome content
   addContentUI('welcome', 'Welcome', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
   // add welcome listener
-  addListenerToSidebarControl('welcomeControl', 'welcome');
+  addListenerToSidebarControl('leftSidebar', 'welcomeControl', 'welcome');
 
   var vehicleContentNbr = 0;
   // add vehicles
   addControlToSidebar('vehicleGroup', 'vehicle1Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Thunderbird 1');
   addVehicleContentUI('vehicle1', 'Thunderbird 1', vehicleContentNbr++);
-  addListenerToSidebarControl('vehicle1Control', 'vehicle1');
+  addListenerToSidebarControl('leftSidebar', 'vehicle1Control', 'vehicle1');
 
   addControlToSidebar('vehicleGroup', 'vehicle2Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Thunderbird 2');
   addVehicleContentUI('vehicle2', 'Thunderbird 2', vehicleContentNbr++);
-  addListenerToSidebarControl('vehicle2Control', 'vehicle2');
+  addListenerToSidebarControl('leftSidebar', 'vehicle2Control', 'vehicle2');
   
   addControlToSidebar('vehicleGroup', 'vehicle3Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Thunderbird 3');
   addVehicleContentUI('vehicle3', 'Thunderbird 3', vehicleContentNbr++);
-  addListenerToSidebarControl('vehicle3Control', 'vehicle3');
+  addListenerToSidebarControl('leftSidebar', 'vehicle3Control', 'vehicle3');
 
   // add the add vehicle
   addControlToSidebar('vehicleGroup', 'addVehicleControl', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Add Vehicle');
   addContentUI('addVehicle', 'Add Vehicle', 'Everything in life is somewhere else, and you get there in a car - E. B. White');
   // add listeners to the controls that adds a vehicle
-  addListenerToSidebarControl('addVehicleControl', 'addVehicle');
+  addListenerToSidebarControl('leftSidebar', 'addVehicleControl', 'addVehicle');
   
   // add servers
   addControlToSidebar('serverGroup', 'server1Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Main Host');
   addContentUI('server1', 'Main Host', 'This will have controls for the host, or at least some info about it');
-  addListenerToSidebarControl('server1Control', 'server1');
+  addListenerToSidebarControl('leftSidebar', 'server1Control', 'server1');
   
   // add the add server
   addControlToSidebar('serverGroup', 'addServerControl', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Add Host');
   addContentUI('addServer', 'Add Host', "If you hack the Vatican server, have you tampered in God's domain? - Aaron Allston");
   // add listeners to the controls that adds a server
-  addListenerToSidebarControl('addServerControl', 'addServer');
+  addListenerToSidebarControl('leftSidebar', 'addServerControl', 'addServer');
   
   // add the preferences content
   addContentUI('preferences', 'Preferences', "Here be dragons");
   // add listeners to the control for the preferences
-  addListenerToSidebarControl('preferencesControl', 'preferences');
+  addListenerToSidebarControl('leftSidebar', 'preferencesControl', 'preferences');
   
   // set the initial focus to the welcome control
   setFocus('welcomeControl', 'welcome');
@@ -247,7 +247,7 @@ function configureApplication() {
 /*
  * addActionBar('mainApplication', 'vehicle1', 'Thunderbird 3');
  */
-function addActionBar(targetId, id, title, includeSettings) {
+function addActionBar(targetId, id, title, includeSettings, settings) {
   $('#' + targetId).prepend(
     '  <div id="' + id + 'TaskBar" class="taskBar boxLayout">' +
     '    <div id="leftSidebarControl' + id + '" class="sidebarPanel noflex centered">' +
@@ -276,11 +276,68 @@ function addActionBar(targetId, id, title, includeSettings) {
   
   if(includeSettings) {
     $('#rightSidebarControl' + id).click(function() {
+      loadSidebar(targetId, 'rightScroller', settings);
       showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
       
       return false;
     });
   }
+}
+
+function loadSidebar(targetId, containerId, settings) {
+  
+  // check if contents of side bar is same as previous
+  
+  // it's different so destroy the contents of side bar
+  $('#' + containerId).empty();
+  
+  
+  // create the correct contents
+
+  $('#' + containerId).append(
+        '<div class="sidebarGroupHeading">' +
+        '</div>' +
+        '<div id="testGroup" class="sidebarGroup">' +
+        '  <div class="sidebarGroupHeading">' +
+        '    <div id="testGroupTitle" class="sidebarGroupTitle">Gauges</div>' +
+        '  </div>' +
+        '</div>'
+  );
+
+  console.log("loading sidebar. Target is " + targetId + " container is: " + containerId);
+  
+  addControlToToolbar(containerId, 'toggle' + speedGauge.name, speedGauge.icon, speedGauge.title, speedGauge.description);
+  addControlToToolbar(containerId, 'toggle' + attitudeGauge.name, attitudeGauge.icon, attitudeGauge.title, attitudeGauge.description);
+  addControlToToolbar(containerId, 'toggle' + altimeterGauge.name, altimeterGauge.icon, altimeterGauge.title, altimeterGauge.description);
+  addControlToToolbar(containerId, 'toggle' + headingGauge.name, headingGauge.icon, headingGauge.title, headingGauge.description);
+  addControlToToolbar(containerId, 'toggle' + vsiGauge.name, vsiGauge.icon, vsiGauge.title, vsiGauge.description);
+  addControlToToolbar(containerId, 'toggle' + thermometerGauge.name, thermometerGauge.icon, thermometerGauge.title, thermometerGauge.description);
+
+
+  // define the function for toggling the gauge control
+  var toggleGaugeFn = function(gauge) {
+    if(gauge.enabled) {
+      gauge.enabled = !hideGauge(gauge.id);
+      $('#toggle' + gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
+    } else {
+      gauge.enabled = showGauge(gauge);
+      $('#toggle'  + gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
+    }
+    return false;
+  }
+  
+  $('#toggle' + speedGauge.name).click(function() {toggleGaugeFn(speedGauge)});
+  $('#toggle' + attitudeGauge.name).click(function() {toggleGaugeFn(attitudeGauge)});
+  $('#toggle' + altimeterGauge.name).click(function() {toggleGaugeFn(altimeterGauge)});
+  $('#toggle' + headingGauge.name).click(function() {toggleGaugeFn(headingGauge)});
+  $('#toggle' + vsiGauge.name).click(function() {toggleGaugeFn(vsiGauge)});
+  $('#toggle' + thermometerGauge.name).click(function() {toggleGaugeFn(thermometerGauge)});
+
+
+  
+  // setup the values of the properties for the sidebar
+  
+  // refresh the scroller (so it knows about the new content and will behave appropriately)
 }
 
 /*
@@ -387,7 +444,9 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title, true);
+  addActionBar(id, actionBarId, title, true, {
+    speed: true,
+  });
   addTabToActionBar(actionBarId, id, id  + PAYLOAD_TAB_CONTROL, 'Payload', PAYLOAD_TAB, vehicleContentNbr, true);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleContentNbr);
@@ -423,10 +482,10 @@ function addControlToSidebar(groupId, id, icon, name) {
     '</div>');
 }
 
-function addListenerToSidebarControl(controlId, contentId) {
+function addListenerToSidebarControl(sidebarId, controlId, contentId) {
   $('#' + controlId).click(function() {
     setFocus(controlId, contentId);
-    hideSidebar('mainApplication', 'mainApplicationOverlay', '300ms');
+    hideSidebar(sidebarId, 'mainApplication', 'mainApplicationOverlay', '300ms');
   });
 }
 
@@ -502,23 +561,55 @@ function setFocus(controlId, contentId) {
  * 
  */
 function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPanelCSS, time) {
-  var obj = $('#' + mainPanelId);
+  var mainPanel = $('#' + mainPanelId);
   var width = $('#' + sidebarId).width();
+  var overlayPanel = $('#' + overlayPanelId);
   
   // determine the x adjustment based on the location of the side bar
   // we move negative if the side bar is right, positive if the side bar is left
-  var x = location == 'right' ? width *= -1 : width;
+  var x = location == 'right' ? width * -1 : width;
   
-  if (obj.length > 0) {
-    obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
-    obj.css('-moz-transition', 'all ' + time + ' ease-in-out');
-    obj.css('-o-transition', 'all ' + time + ' ease-in-out');
-    obj.css('transition', 'all ' + time + ' ease-in-out');
+  if (mainPanel.length > 0) {
+    // check if the overlay div exists, if not then create it
+    // TODO: determine if the overlay div should always exist and remove this logic to add it
+    if (overlayPanel.length <= 0) {
+      // create a div to overlay the main application
+      // this is to capture presses/clicks so as to restore the main application
+          
+      $(document.body).append('<div ' + 'id="' + overlayPanelId + '" class="' + overlayPanelCSS + '" ></div>');
 
-    obj.css('-webkit-transform', 'translate(' + width + 'px, 0px)');
-    obj.css('-moz-transform', 'translate(' + width + 'px, 0px)');
-    obj.css('-o-transform', 'translate(' + width + 'px, 0px)');
-    obj.css('transform', 'translate(' + width + 'px, 0px)');
+      // just created it, so set the var      
+      overlayPanel = $('#' + overlayPanelId);
+    }
+
+    overlayPanel.off('click');
+    // setup listener to restore main application
+    overlayPanel.on('click', function () { hideSidebar(sidebarId, mainPanelId, overlayPanelId, time) });
+    
+    overlayPanel.css('right', '');
+    overlayPanel.css('left', '');
+    overlayPanel.css(location, width + 'px');
+    
+    mainPanel.css('-webkit-transition', 'all ' + time + ' ease-in-out');
+    mainPanel.css('-moz-transition', 'all ' + time + ' ease-in-out');
+    mainPanel.css('-o-transition', 'all ' + time + ' ease-in-out');
+    mainPanel.css('transition', 'all ' + time + ' ease-in-out');
+
+    // listen to the end of the transition so the z-index can be updated
+    mainPanel.bind("webkitTransitionEnd oTransitionEnd transitionend msTransitionEnd", function(){
+      console.log("end transformation");
+      // at the end of the transformation, change the z-index of the side panel to a high value so
+      // there are no problems with slide scrolling stuff
+      $('#' + sidebarId).css('z-index', 200);
+
+      // remove the transition
+      mainPanel.unbind("webkitTransitionEnd oTransitionEnd transitionend msTransitionEnd");
+    });    
+    
+    mainPanel.css('-webkit-transform', 'translate(' + x + 'px, 0px)');
+    mainPanel.css('-moz-transform', 'translate(' + x + 'px, 0px)');
+    mainPanel.css('-o-transform', 'translate(' + x + 'px, 0px)');
+    mainPanel.css('transform', 'translate(' + x + 'px, 0px)');
 
     /*
      * TODO: check if the overlay div should be animated at the same time as the main application
@@ -526,19 +617,6 @@ function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPa
      * panel by pressing/clicking on the content but it wont work due to how it doesn't cover
      * everywhere yet...
      */
-    
-    // check if the overlay div exists, if not then create it
-    // TODO: determine if the overlay div should always exist and remove this logic to add it
-    if ($('#' + overlayPanelId).length <= 0) {
-      // create a div to overlay the main application
-      // this is to capture presses/clicks so as to restore the main application
-          
-      $(document.body).append('<div ' + 'id="' + overlayPanelId + '" class="' + overlayPanelCSS + '" ></div>');
-      $('#' + overlayPanelId).css('left', width + 'px');
-
-      // setup listener to restore main application
-      $('#' + overlayPanelId).on('click', function () { hideSidebar(mainPanelId, overlayPanelId, time) });
-    }
     
     // make the overlay div active by making it visible
     $('#' + overlayPanelId).css('visibility', 'visible');
@@ -551,22 +629,26 @@ function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPa
  * showSidebar('mainApplication', 'mainApplicationOverlay', '300ms')
  * 
  */
-function hideSidebar(mainPanelId, overlayPanelId, time) {
-  var obj = $('#' + mainPanelId);
+function hideSidebar(sidebarId, mainPanelId, overlayPanelId, time) {
+  var mainPanel = $('#' + mainPanelId);
   
-  if (obj.length > 0) {
+  if (mainPanel.length > 0) {
     // make the overlay div inactive by making it invisible
     $('#' + overlayPanelId).css('visibility', 'hidden');
     
-    obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
-    obj.css('-moz-transition', 'all ' + time + ' ease-in-out');
-    obj.css('-o-transition', 'all ' + time + ' ease-in-out');
-    obj.css('transition', 'all ' + time + ' ease-in-out');
+    // clear the z-index setting for the side bar    
+    $('#' + sidebarId).css('z-index', '');
 
-    obj.css('-webkit-transform', 'translate(0px, 0px)');
-    obj.css('-moz-transform', 'translate(0px, 0px)');
-    obj.css('-o-transform', 'translate(0px, 0px)');
-    obj.css('transform', 'translate(0px, 0px)');
+    // transform the main panel back into position    
+    mainPanel.css('-webkit-transition', 'all ' + time + ' ease-in-out');
+    mainPanel.css('-moz-transition', 'all ' + time + ' ease-in-out');
+    mainPanel.css('-o-transition', 'all ' + time + ' ease-in-out');
+    mainPanel.css('transition', 'all ' + time + ' ease-in-out');
+
+    mainPanel.css('-webkit-transform', 'translate(0px, 0px)');
+    mainPanel.css('-moz-transform', 'translate(0px, 0px)');
+    mainPanel.css('-o-transform', 'translate(0px, 0px)');
+    mainPanel.css('transform', 'translate(0px, 0px)');
   }
 }
 
@@ -797,17 +879,17 @@ function loadToolbar() {
   
   // TODO: load this information from remote source or from local storage...
   
-  addControlToToolbar('toggleConnection',  'assets/icons/drawable-xhdpi-v11/ic_stat_power.png',   'Connection',  'Connectivity to the vehicle');
-  addControlToToolbar('toggleHal',         'assets/icons/drawable-xhdpi-v11/ic_stat_gauge.png',   'Hal 9000',    'Test to control guages');
+  addControlToToolbar('toolbar', 'toggleConnection',  'assets/icons/drawable-xhdpi-v11/ic_stat_power.png',   'Connection',  'Connectivity to the vehicle');
+  addControlToToolbar('toolbar', 'toggleHal',         'assets/icons/drawable-xhdpi-v11/ic_stat_gauge.png',   'Hal 9000',    'Test to control guages');
   
-  addControlToToolbar('toggle' + videoGauge.name, videoGauge.icon, videoGauge.title, videoGauge.description);
+  addControlToToolbar('toolbar', 'toggle' + videoGauge.name, videoGauge.icon, videoGauge.title, videoGauge.description);
 
-  addControlToToolbar('toggle' + speedGauge.name, speedGauge.icon, speedGauge.title, speedGauge.description);
-  addControlToToolbar('toggle' + attitudeGauge.name, attitudeGauge.icon, attitudeGauge.title, attitudeGauge.description);
-  addControlToToolbar('toggle' + altimeterGauge.name, altimeterGauge.icon, altimeterGauge.title, altimeterGauge.description);
-  addControlToToolbar('toggle' + headingGauge.name, headingGauge.icon, headingGauge.title, headingGauge.description);
-  addControlToToolbar('toggle' + vsiGauge.name, vsiGauge.icon, vsiGauge.title, vsiGauge.description);
-  addControlToToolbar('toggle' + thermometerGauge.name, thermometerGauge.icon, thermometerGauge.title, thermometerGauge.description);
+  addControlToToolbar('toolbar', 'toggle' + speedGauge.name, speedGauge.icon, speedGauge.title, speedGauge.description);
+  addControlToToolbar('toolbar', 'toggle' + attitudeGauge.name, attitudeGauge.icon, attitudeGauge.title, attitudeGauge.description);
+  addControlToToolbar('toolbar', 'toggle' + altimeterGauge.name, altimeterGauge.icon, altimeterGauge.title, altimeterGauge.description);
+  addControlToToolbar('toolbar', 'toggle' + headingGauge.name, headingGauge.icon, headingGauge.title, headingGauge.description);
+  addControlToToolbar('toolbar', 'toggle' + vsiGauge.name, vsiGauge.icon, vsiGauge.title, vsiGauge.description);
+  addControlToToolbar('toolbar', 'toggle' + thermometerGauge.name, thermometerGauge.icon, thermometerGauge.title, thermometerGauge.description);
 
   $('#toggleConnection').click(function() {
     if(connected) {
@@ -853,14 +935,15 @@ function loadToolbar() {
 /*
  * addControlToToolbar - adds a new control entry to the toolbar
  *
- * id      the id for the control
- * icon    the icon representing the gaugue
- * name    the name of the control
- * subText a description of the control
+ * parentid the parent that the control will be added to
+ * id       the id for the control
+ * icon     the icon representing the gaugue
+ * name     the name of the control
+ * subText  a description of the control
  */
 
-function addControlToToolbar(id, icon, name, subText) {
-  $('#toolbar').append(
+function addControlToToolbar(parentId, id, icon, name, subText) {
+  $('#' + parentId).append(
     '<div id="' + id + '" class="controlBar">' +
     '  <div id="' + id + 'ControlArea" class="controlIconArea">' +
     '    <img class="controlIcon" src="' + icon + '" />' +
@@ -1222,7 +1305,7 @@ function sendMessage() {
   </head>
   <body>
     <div id="leftSidebar" class="sideBar">
-      <div id="scroller">
+      <div id="leftScroller">
         <div class="sidebarGroupHeading">
   
         </div>
@@ -1251,7 +1334,7 @@ function sendMessage() {
     </div>
     
     <div id="rightSidebar" class="sideBar rightSideBar">
-      <div id="scroller">
+      <div id="rightScroller">
         <div class="sidebarGroupHeading">
   
         </div>
