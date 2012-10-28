@@ -55,7 +55,8 @@ ContentManager.prototype = {
     },
     getFocusedTabSettings: function(paneId) {
         paneId = (typeof paneId === "undefined") ? this.focusedPaneId : paneId;
-        if(typeof this.panes[paneId].tabs[this.getFocusedTabId(paneId)].settings === "undefined") {
+        if(typeof this.panes[paneId].tabs[this.getFocusedTabId(paneId)] === "undefined" ||
+           typeof this.panes[paneId].tabs[this.getFocusedTabId(paneId)].settings === "undefined") {
             return undefined;
         } else {
             return this.panes[paneId].tabs[this.getFocusedTabId(paneId)].settings.settings;
