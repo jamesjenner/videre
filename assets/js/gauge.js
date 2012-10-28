@@ -27,7 +27,7 @@ var Gauge = function (argmap) {
         this.id = this.name + 'Panel';
     }
     this.canvasId = this.id + '_canvas';
-    
+
     if('title' in argmap) {
         this.title = argmap.title;
     }
