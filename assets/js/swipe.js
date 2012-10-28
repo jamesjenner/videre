@@ -69,7 +69,9 @@ Swipe.prototype = {
     if (!this.width) return null;
 
     // hide slider element but keep positioning during setup
+    var origVisibility = this.container.style.visibility;
     this.container.style.visibility = 'hidden';
+    
 
     // dynamic css
     this.element.style.width = (this.slides.length * this.width) + 'px';
@@ -92,7 +94,8 @@ Swipe.prototype = {
     }
 
     // set visibility to inherit, if set to visible then it overrides higher level settings
-    this.container.style.visibility = 'inherit';
+    // this.container.style.visibility = 'inherit';
+    this.container.style.visibility = origVisibility;
 
   },
 
