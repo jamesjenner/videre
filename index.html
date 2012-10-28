@@ -312,7 +312,33 @@ function loadSidebar(targetId, containerId, settings) {
         '  </div>' +
         '</div>'
   );
-
+  
+  /** TODO: tidy up use of setFocusedTab, setFocusedTabNbr and setFocusedTabId */
+  
+  // iterate through the settings for the current pane/tab
+  var tabSettings = contentManager.getFocusedTabSettings();
+  if(tabSettings != undefined) {
+    
+    console.log("settings...");
+    
+    tabSettings.forEach(function(s) {
+      console.log("  s: "+ s);
+    });
+    
+    /*
+     * TODO: do we use forEach or the for loop?
+    var len = tabSettings.length;
+    for(var i=0; i < len; i++) {
+      if(i in tabSettings) {
+        var s = tabSettings[i];
+        console.log("  s: "+ s);
+      }
+    }
+    */
+    
+    
+  }
+/*
   addControlToToolbar(containerId, 'toggle' + speedGauge.name, speedGauge.icon, speedGauge.title, speedGauge.description);
   addControlToToolbar(containerId, 'toggle' + attitudeGauge.name, attitudeGauge.icon, attitudeGauge.title, attitudeGauge.description);
   addControlToToolbar(containerId, 'toggle' + altimeterGauge.name, altimeterGauge.icon, altimeterGauge.title, altimeterGauge.description);
@@ -341,7 +367,7 @@ function loadSidebar(targetId, containerId, settings) {
   $('#toggle' + vsiGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), vsiGauge)});
   $('#toggle' + thermometerGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), thermometerGauge)});
 
-
+*/
   
   // setup the values of the properties for the sidebar
   
@@ -454,21 +480,38 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   // add the pane to the tab manager
   contentManager.addPane(id);
   
+  // setup the settings for the payload
+  var payloadSettings = new TabSettings();
+  payloadSettings.add(new HeadingSetting('some stuff'));
+  payloadSettings.add(new ToggleSetting(id  + PAYLOAD_SUB_ID + 'Graph', 'Graph'));
+  payloadSettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
+  
+  var telemetrySettings = new TabSettings();
+  telemetrySettings.add(new HeadingSetting('some stuff'));
+  telemetrySettings.add(new ToggleSetting(id  + PAYLOAD_SUB_ID + 'Graph', 'Graph'));
+  telemetrySettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
+  telemetrySettings.add(new HeadingSetting('Gauges'));
+  telemetrySettings.add(new GaugeSetting(id  + PAYLOAD_SUB_ID + 'Heading', headingGauge, {x: 100, y: 100, visible: true}));
+  
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
   addActionBar(id, actionBarId, title, true, {
     speed: true,
   });
   addTabToActionBar(actionBarId, id, id  + PAYLOAD_TAB_CONTROL, 'Payload', PAYLOAD_TAB, vehicleContentNbr, true);
+  contentManager.addTab(id, id  + PAYLOAD_SUB_ID, payloadSettings);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleContentNbr);
+  contentManager.addTab(id, id  + PAYLOAD_SUB_ID, telemetrySettings);
   addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_TAB_CONTROL, 'Navigation', FLIGHT_PLAN_TAB, vehicleContentNbr);
+  addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_SUB_ID, 'Navigation', FLIGHT_PLAN_TAB, vehicleContentNbr);
   addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicleContentNbr);
+  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_SUB_ID, 'Remote Control', REMOTE_CONTROL_TAB, vehicleContentNbr);
   
   // set the tab manager for this panel to the first tab (which is the selected tab)
-  contentManager.setFocusedTab(id, id  + PAYLOAD_TAB_CONTROL);
+  // todo: should this be PAYLOAD_SUB_ID and not PAYLOAD_TAB_CONTROL?
+  contentManager.setFocusedTabNbr(id, 0);
+  contentManager.setFocusedTabId(id, id  + PAYLOAD_SUB_ID);
   
   /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
    * the issues with side bar navigation are sorted out
@@ -501,7 +544,7 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId) {
 
 function contentTabChanged(e, position, id, contentNbr) {
   // turn off the currently selected tab
-  switch(contentManager.getFocusedTab(id)) {
+  switch(contentManager.getFocusedTabNbr(id)) {
     case PAYLOAD_TAB:
       $('#' + id + PAYLOAD_TAB_CONTROL).toggleClass('tabSelected');
       break;
@@ -518,7 +561,7 @@ function contentTabChanged(e, position, id, contentNbr) {
   
   // todo: remove following as replaced by contentManager
   // vehicleTabSelection[contentNbr] = position;
-  contentManager.setFocusedTab(id, position);
+  contentManager.setFocusedTabNbr(id, position);
   
   // turn on the new tab
   switch (position) {
