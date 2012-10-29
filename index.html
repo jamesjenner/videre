@@ -319,22 +319,20 @@ function loadSidebar(targetId, containerId, settings) {
   var tabSettings = contentManager.getFocusedTabSettings();
   if(tabSettings != undefined) {
     
-    console.log("settings...");
-    
-    tabSettings.forEach(function(s) {
-      console.log("  s: "+ s);
-    });
-    
-    /*
-     * TODO: do we use forEach or the for loop?
     var len = tabSettings.length;
     for(var i=0; i < len; i++) {
       if(i in tabSettings) {
-        var s = tabSettings[i];
-        console.log("  s: "+ s);
+        if(tabSettings[i] instanceof HeadingSetting) {
+          console.log("Settings: Adding heading");
+        } else if(tabSettings[i] instanceof ToggleSetting) {
+          console.log("Settings: Adding toggle");
+        } else if(tabSettings[i] instanceof TextSetting) {
+          console.log("Settings: Adding text");
+        } else if(tabSettings[i] instanceof GaugeSetting) {
+          console.log("Settings: Adding gauge");
+        }
       }
     }
-    */
     
     
   }
@@ -504,9 +502,9 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleContentNbr);
   contentManager.addTab(id, id  + PAYLOAD_SUB_ID, telemetrySettings);
   addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_SUB_ID, 'Navigation', FLIGHT_PLAN_TAB, vehicleContentNbr);
+  addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_TAB_CONTROL, 'Navigation', FLIGHT_PLAN_TAB, vehicleContentNbr);
   addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_SUB_ID, 'Remote Control', REMOTE_CONTROL_TAB, vehicleContentNbr);
+  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicleContentNbr);
   
   // set the tab manager for this panel to the first tab (which is the selected tab)
   // todo: should this be PAYLOAD_SUB_ID and not PAYLOAD_TAB_CONTROL?
@@ -566,19 +564,19 @@ function contentTabChanged(e, position, id, contentNbr) {
   // turn on the new tab
   switch (position) {
     case PAYLOAD_TAB:
-      $('#' + id + PAYLOAD_TAB_CONTROL).addClass('tabSelected');
+      $('#' + id + PAYLOAD_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + PAYLOAD_SUB_ID);
       break;
     case TELEMETY_TAB:
-      $('#' + id + TELEMETRY_TAB_CONTROL).addClass('tabSelected');
+      $('#' + id + TELEMETRY_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + TELEMETRY_SUB_ID);
       break;
     case FLIGHT_PLAN_TAB:
-      $('#' + id + FLIGHTPLAN_TAB_CONTROL).addClass('tabSelected');
+      $('#' + id + FLIGHTPLAN_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + FLIGHTPLAN_SUB_ID);
       break;
     case REMOTE_CONTROL_TAB:
-      $('#' + id + REMOTECONTROL_TAB_CONTROL).addClass('tabSelected');
+      $('#' + id + REMOTECONTROL_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + REMOTECONTROL_SUB_ID);
       break;
   }
