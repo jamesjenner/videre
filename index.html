@@ -295,6 +295,75 @@ function addActionBar(targetId, id, title, includeSettings, settings) {
   }
 }
 
+function addHeadingToSidebar(containerId, headingSetting) {
+  $('#' + containerId).append(
+        '<div class="sidebarGroupHeading">' +
+        '</div>' +
+        '<div id="testGroup" class="sidebarGroup">' +
+        '  <div class="sidebarGroupHeading">' +
+        '    <div id="testGroupTitle" class="sidebarGroupTitle">' + headingSetting.title + '</div>' +
+        '  </div>' +
+        '</div>'
+  );
+}
+
+function addToggleToSidebar() {
+  
+}
+
+function addTextToSidebar() {
+  
+}
+
+function addGaugeControlToSideBar(containerId, contentManager, gaugeSetting) {
+
+/*    
+    this.id = id;
+    this.gauge = gauge;
+    
+    this.options = options || {};
+
+    this.currentValue = this.options.currentValue || 0;
+    this.x = this.options.x || 0;
+    this.y = this.options.y || 0;
+    this.visible = this.options.visible || false;
+  */
+
+  $('#' + containerId).append(
+    '<div id="' + 'toggle' + gaugeSetting.gauge.name + '" class="controlBar">' +
+    '  <div id="' + 'toggle' + gaugeSetting.gauge.name + 'ControlArea" class="controlIconArea">' +
+    '    <img class="controlIcon" src="' + gaugeSetting.gauge.icon + '" />' +
+    '  </div>' +
+    '  <div class="controlText">' +
+    '    <div class="controlName">' +
+           gaugeSetting.gauge.title + 
+    '    </div>' +
+    '    <div class="controlSubText">' +
+           gaugeSetting.gauge.description + 
+    '    </div>' +
+    '  </div>' +
+    '</div>');
+
+  // if the gauge is visible then enable the control  
+  if(gaugeSetting.visible) {
+    $('#toggle'  + gaugeSetting.gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
+  }
+  
+  $('#toggle' + gaugeSetting.gauge.name).click(function() {
+    if(gaugeSetting.visible) {
+      gaugeSetting.visible = !hideGauge(gaugeSetting.gaugeId);
+    } else {
+      gaugeSetting.visible = showGauge(gaugeSetting, contentManager.getFocusedTabId());
+    }
+    
+    // toggle the control
+    $('#toggle'  + gaugeSetting.gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
+    
+    return false;
+  });
+}
+ 
+
 function loadSidebar(targetId, containerId, settings) {
   // check if contents of side bar is same as previous
   
@@ -303,16 +372,6 @@ function loadSidebar(targetId, containerId, settings) {
   
   // create the correct contents
 
-  $('#' + containerId).append(
-        '<div class="sidebarGroupHeading">' +
-        '</div>' +
-        '<div id="testGroup" class="sidebarGroup">' +
-        '  <div class="sidebarGroupHeading">' +
-        '    <div id="testGroupTitle" class="sidebarGroupTitle">Gauges</div>' +
-        '  </div>' +
-        '</div>'
-  );
-  
   /** TODO: tidy up use of setFocusedTab, setFocusedTabNbr and setFocusedTabId */
   
   // iterate through the settings for the current pane/tab
@@ -324,12 +383,16 @@ function loadSidebar(targetId, containerId, settings) {
       if(i in tabSettings) {
         if(tabSettings[i] instanceof HeadingSetting) {
           console.log("Settings: Adding heading");
+          addHeadingToSidebar(containerId, tabSettings[i]);
         } else if(tabSettings[i] instanceof ToggleSetting) {
           console.log("Settings: Adding toggle");
         } else if(tabSettings[i] instanceof TextSetting) {
           console.log("Settings: Adding text");
+        } else if(tabSettings[i] instanceof RangeSetting) {
+          console.log("Settings: Adding range");
         } else if(tabSettings[i] instanceof GaugeSetting) {
           console.log("Settings: Adding gauge");
+          addGaugeControlToSideBar(containerId, contentManager, tabSettings[i]);
         }
       }
     }
@@ -484,12 +547,38 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   payloadSettings.add(new ToggleSetting(id  + PAYLOAD_SUB_ID + 'Graph', 'Graph'));
   payloadSettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
   
+  // setup the telemetry settings  
   var telemetrySettings = new TabSettings();
+  var gaugeSetting;
   telemetrySettings.add(new HeadingSetting('some stuff'));
-  telemetrySettings.add(new ToggleSetting(id  + PAYLOAD_SUB_ID + 'Graph', 'Graph'));
-  telemetrySettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
+  telemetrySettings.add(new ToggleSetting(id  + TELEMETRY_SUB_ID + 'Graph', 'Graph'));
+  telemetrySettings.add(new TextSetting(id  + TELEMETRY_SUB_ID + 'Timeout', 'Timeout'));
   telemetrySettings.add(new HeadingSetting('Gauges'));
-  telemetrySettings.add(new GaugeSetting(id  + PAYLOAD_SUB_ID + 'Heading', headingGauge, {x: 100, y: 100, visible: true}));
+
+  // TODO: should this be here or outside this function scope?
+  function addGaugeToContentAreaSettings(contentAreaId, tabSettings, gaugeSetting) {
+    tabSettings.add(gaugeSetting);
+    
+    if(gaugeSetting.visible) {
+      showGauge(gaugeSetting, contentAreaId);
+    }
+  }
+  
+  // TODO: settings are to be persisted, change so that they're restored... 
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'SpeadGauge', speedGauge, {x: 0, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AttitudeGauge', attitudeGauge, {x: 150, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AltimeterGauge', altimeterGauge, {x: 300, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'ThermometerGauge', thermometerGauge, {x: 0, y: 150, width: 150, visible: false}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'HeadingGauge', headingGauge, {x: 150, y: 150, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'VSIGauge', vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
+
+  // setup the navigation settings  
+  var navigationSettings = new TabSettings();
+  navigationSettings.add(new HeadingSetting('some stuff'));
+  
+  // setup the remote control settings
+  var remoteControlSettings = new TabSettings();
+  remoteControlSettings.add(new HeadingSetting('some stuff'));
   
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
@@ -500,11 +589,13 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   contentManager.addTab(id, id  + PAYLOAD_SUB_ID, payloadSettings);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleContentNbr);
-  contentManager.addTab(id, id  + PAYLOAD_SUB_ID, telemetrySettings);
+  contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_TAB_CONTROL, 'Navigation', FLIGHT_PLAN_TAB, vehicleContentNbr);
+  contentManager.addTab(id, id  + FLIGHTPLAN_SUB_ID, navigationSettings);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicleContentNbr);
+  contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
   
   // set the tab manager for this panel to the first tab (which is the selected tab)
   // todo: should this be PAYLOAD_SUB_ID and not PAYLOAD_TAB_CONTROL?
@@ -522,6 +613,7 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
     });
 }
 
+
 /*
  * add a control to the sidebar
  */
@@ -537,6 +629,8 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId) {
   $('#' + controlId).click(function() {
     setFocus(controlId, paneId);
     hideSidebar(sidebarId, 'mainApplication', 'mainApplicationOverlay', '300ms');
+    // TODO: add logic to load the contents of each tab
+    // TODO: determine if the loading of each tab should be done on display of tab or not...
   });
 }
 
@@ -770,12 +864,12 @@ var thermometerGauge = new Gauge({name: 'thermometer', title: 'Thermometer', des
   var value = 1.615 * 100;
  * setInstrument('speed', 'needle', myWidgetAngle, 45, '200ms')
  */
-function setGaugeAngle(gauge, indicatorName, degree, time) {
+function setGaugeAngle(gaugeId, gauge, indicatorName, degree, time) {
   // lets play with the speed
   var currentAngle = 0; 
   var direction = 1;  // default positive
 
-  var obj = $('#instrument' + gauge.name + '_' + indicatorName);
+  var obj = $('#instrument' + gaugeId + '_' + indicatorName);
 
   if (obj.length > 0) {
     obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
@@ -797,12 +891,12 @@ function setGaugeAngle(gauge, indicatorName, degree, time) {
   }
 }
 
-function setGauge(gauge, indicatorName, degree, value, time) {
+function setGauge(gaugeId, gauge, indicatorName, degree, value, time) {
   // lets play with the speed
   var currentAngle = 0; 
   var direction = 1;  // default positive
 
-  var obj = $('#instrument' + gauge.name + '_' + indicatorName);
+  var obj = $('#instrument' + gaugeId + '_' + indicatorName);
 
   if (obj.length > 0) {
     obj.css('-webkit-transition', 'all ' + time + ' ease-in-out');
@@ -827,16 +921,17 @@ function setGauge(gauge, indicatorName, degree, value, time) {
 function enableHal() {
   halEnabled = true;
 
+  //TODO: need the id to set the gauge
   // lets play with the direction
-  setGaugeAngle(headingGauge, 'needle1', 176, '2s');
-  setGaugeAngle(thermometerGauge, 'needle1', 90, '750ms');
-  setGaugeAngle(vsiGauge, 'needle1', 98, '1s');
-  setGaugeAngle(altimeterGauge, 'needle1', 45, '1s');
-  setGaugeAngle(altimeterGauge, 'needle2', 36, '1s');
-  setGaugeAngle(speedGauge, 'needle1', 45, '500ms');
+  setGaugeAngle('gaugeId', headingGauge, 'needle1', 176, '2s');
+  setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 90, '750ms');
+  setGaugeAngle('gaugeId', vsiGauge, 'needle1', 98, '1s');
+  setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 45, '1s');
+  setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 36, '1s');
+  setGaugeAngle('gaugeId', speedGauge, 'needle1', 45, '500ms');
 
-  setGaugeAngle(attitudeGauge, 'needle2', 45, '750ms');
-  setGauge(attitudeGauge, 'needle1', 45, '25px', '750ms');
+  setGaugeAngle('gaugeId', attitudeGauge, 'needle2', 45, '750ms');
+  setGauge('gaugeId', attitudeGauge, 'needle1', 45, '25px', '750ms');
   
   performVideoCountdown(videoGauge);
 }
@@ -844,15 +939,15 @@ function enableHal() {
 function disableHal() {
   halEnabled = false;
 
-  setGaugeAngle(headingGauge, 'needle1', 0, '500ms');
-  setGaugeAngle(thermometerGauge, 'needle1', 0, '300ms');
-  setGaugeAngle(vsiGauge, 'needle1', 0, '300ms');
-  setGaugeAngle(altimeterGauge, 'needle1', 0, '300ms');
-  setGaugeAngle(altimeterGauge, 'needle2', 0, '300ms');
-  setGaugeAngle(speedGauge, 'needle1', 0, '300ms');
+  setGaugeAngle('gaugeId', headingGauge, 'needle1', 0, '500ms');
+  setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 0, '300ms');
+  setGaugeAngle('gaugeId', vsiGauge, 'needle1', 0, '300ms');
+  setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 0, '300ms');
+  setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 0, '300ms');
+  setGaugeAngle('gaugeId', speedGauge, 'needle1', 0, '300ms');
 
-  setGaugeAngle(attitudeGauge, 'needle2', -45, '750ms');
-  setGauge(attitudeGauge, 'needle1', -45, '-25px', '750ms');
+  setGaugeAngle('gaugeId', attitudeGauge, 'needle2', -45, '750ms');
+  setGauge('gaugeId', attitudeGauge, 'needle1', -45, '-25px', '750ms');
   
 }
 
@@ -1069,7 +1164,7 @@ function toolbarDisplay(direction, phase, distance) {
  *
  * returns true if the panel is sucessfully displayed
  */
-function showGauge(gauge, parentId) {
+function showGauge(gaugeSetting, parentId) {
   // default values
   /* TODO: add in x, y so as to be able to set where it is when displaying for the first time
   panelWidth = (typeof optionalArg === "undefined") ? '100%' : panelWidth;
@@ -1078,10 +1173,8 @@ function showGauge(gauge, parentId) {
   y = (typeof optionalArg === "undefined") ? '100px' : y;
   */
   
-  
-
   // if the panel doesn't exist then add it
-  if ($('#' + gauge.id).length <= 0) {
+  if ($('#' + gaugeSetting.gaugeId).length <= 0) {
     // create the div with the appropriate images
 			    
     // NOTE: when not using img to load the svg, need to overlay a transparent div so drag'n'drop will still work, don't really need it here
@@ -1090,62 +1183,62 @@ function showGauge(gauge, parentId) {
     var gaugeHTML = '';
 
     gaugeHTML +=
-      '<div ' + 'id="' + gauge.id + '" class="viewPanel">';
+      '<div ' + 'id="' + gaugeSetting.gaugeId + '" class="viewPanel">';
     
-    if(gauge.contentIsCanvas) {
+    if(gaugeSetting.gauge.contentIsCanvas) {
       gaugeHTML +=
-	'<canvas id="' + gauge.canvasId + '" class="gaugeOverlay" width="' + gauge.width + '" height="' + gauge.height + '" >no Canvas for you</canvas>';
+	'<canvas id="canvas' + gaugeSetting.gaugeId + '" class="gaugeOverlay" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" >no Canvas for you</canvas>';
     } else {
       // some gauges may not have a background
-      if(typeof gauge.backgroundImg != "undefined") {
+      if(typeof gaugeSetting.gauge.backgroundImg != "undefined") {
 	gaugeHTML += 
-	'<img id="instrument' + gauge.name + '_background" class="gaugeOverlay gaugeBackground" src="' + gauge.backgroundImg + '" width="' + gauge.width + '" height="' + gauge.height + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_background" class="gaugeOverlay gaugeBackground" src="' + gaugeSetting.gauge.backgroundImg + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
       }
 
       // add the dial image
-      if(typeof gauge.dialImg != "undefined") {
+      if(typeof gaugeSetting.gauge.dialImg != "undefined") {
 	gaugeHTML += 
-	'<img id="instrument' + gauge.name + '_dial" class="gaugeOverlay gaugeBackground" src="' + gauge.dialImg + '" width="' + gauge.width + '" height="' + gauge.height + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_dial" class="gaugeOverlay gaugeBackground" src="' + gaugeSetting.gauge.dialImg + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
       }
   
       // if the first needle is specified, then set
-      if(typeof gauge.needleImg1 != "undefined") {
-	if(typeof gauge.needleImg1XOffset != "undefined") {
+      if(typeof gaugeSetting.gauge.needleImg1 != "undefined") {
+	if(typeof gaugeSetting.gauge.needleImg1XOffset != "undefined") {
 	gaugeHTML += 
 	//'<img id="instrument' + gauge.name + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg1    + '" width="' + gauge.width + '" height="' + gauge.needleImg1Height + '" />';
-	'<img id="instrument' + gauge.name + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg1    + '" width="' + gauge.width + '" style="top: ' + gauge.needleImg1XOffset + '"/>';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg1    + '" width="' + gaugeSetting.gauge.width + '" style="top: ' + gaugeSetting.gauge.needleImg1XOffset + '"/>';
 	} else {
 	gaugeHTML += 
 	//'<img id="instrument' + gauge.name + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg1    + '" width="' + gauge.width + '" height="' + gauge.needleImg1Height + '" />';
-	'<img id="instrument' + gauge.name + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg1    + '" width="' + gauge.width + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg1    + '" width="' + gaugeSetting.gauge.width + '" />';
 	}
       }
 	
       // if the second needle is specified, then set
-      if(typeof gauge.needleImg2 != "undefined") {
+      if(typeof gaugeSetting.gauge.needleImg2 != "undefined") {
 	gaugeHTML += 
-	'<img id="instrument' + gauge.name + '_needle2"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg2    + '" width="' + gauge.width + '" height="' + gauge.height + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_needle2"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg2    + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
       }
 	
       // if the third needle is specified, then set
-      if(typeof gauge.needleImg3 != "undefined") {
+      if(typeof gaugeSetting.gauge.needleImg3 != "undefined") {
 	gaugeHTML += 
-	'<img id="instrument' + gauge.name + '_needle3"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg3    + '" width="' + gauge.width + '" height="' + gauge.height + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_needle3"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg3    + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
       }
 
-      if(typeof gauge.overlayImg != "undefined") {
+      if(typeof gaugeSetting.gauge.overlayImg != "undefined") {
 	gaugeHTML += 
-	  '<img id="instrument' + gauge.name + '_overlay" class="gaugeOverlay gaugeForeground" src="' + gauge.overlayImg + '" width="' + gauge.width + '" height="' + gauge.height + '" />';
+	  '<img id="instrument' + gaugeSetting.gaugeId + '_overlay" class="gaugeOverlay gaugeForeground" src="' + gaugeSetting.gauge.overlayImg + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
       }
 	
-      if(typeof gauge.foregroundImg != "undefined") {
+      if(typeof gaugeSetting.gauge.foregroundImg != "undefined") {
 	gaugeHTML += 
-	  '<img id="instrument' + gauge.name + '_foreground" class="gaugeOverlay gaugeForeground" src="' + gauge.foregroundImg + '" width="' + gauge.width + '" height="' + gauge.foregroundHeight + '" />';
+	  '<img id="instrument' + gaugeSetting.gaugeId + '_foreground" class="gaugeOverlay gaugeForeground" src="' + gaugeSetting.gauge.foregroundImg + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.foregroundHeight + '" />';
       }
     }
       
     gaugeHTML += 
-      '<div id="gauge_' + gauge.name + 'Drag" class="gaugeDrag" width="' + gauge.width + '" height="' + gauge.height + '" />' +
+      '<div id="gauge_' + gaugeSetting.gaugeId + 'Drag" class="gaugeDrag" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />' +
       '</div>';
 
     if(typeof parentId === "undefined") {
@@ -1155,11 +1248,11 @@ function showGauge(gauge, parentId) {
       $('#' + parentId).append(gaugeHTML);
     }
      
-    if(typeof gauge.mask != "undefined") {
-      $('#' + gauge.id).css('-webkit-mask-image', 'url(' + gauge.mask + ')');
+    if(typeof gaugeSetting.gauge.mask != "undefined") {
+      $('#' + gaugeSetting.gaugeId).css('-webkit-mask-image', 'url(' + gaugeSetting.gauge.mask + ')');
     }
      
-    panelElement = document.getElementById(gauge.id);
+    panelElement = document.getElementById(gaugeSetting.gaugeId);
       
     // add the touch handler for dragging
     panelElement.addEventListener("touchstart", touchHandler, true);
@@ -1170,7 +1263,7 @@ function showGauge(gauge, parentId) {
     // todo: only set to draggable based on condition
     // set it draggable
     // test if we can use panelElement instead of searching for it again
-    $("#" + gauge.id).draggable({
+    $("#" + gaugeSetting.gaugeId).draggable({
       grid: [5, 5],
       containment: 'parent',
       opacity: 0.50,
@@ -1182,17 +1275,17 @@ function showGauge(gauge, parentId) {
 
     // as we are creating it, set the position to top left
     
-    $('#' + gauge.id).css({
+    $('#' + gaugeSetting.gaugeId).css({
 	  position: 'absolute',
 	  'z-index': 50,
-      top : 50,
-      left : 50
+      top : gaugeSetting.y,
+      left : gaugeSetting.x
 	});
   }
   
   // show the panel 
   // todo: add animation
-  $('#' + gauge.id).show();
+  $('#' + gaugeSetting.gaugeId).show();
   
   return true;
 }

@@ -27,7 +27,7 @@ ContentManager.prototype = {
         this.panes[id] = new Pane();
     },
     addTab: function(paneId, tabId, settings) {
-        this.panes[paneId].tabs[tabId] = new Tab(settings);
+        this.panes[paneId].tabs[tabId] = new Tab(settings, tabId);
     },
     addGauge: function(pane, gaugeId, gauge) {
         this.panes[id].gauges[gaugeId] = gauge;
@@ -69,8 +69,12 @@ var Pane = function (options) {
     this.tabs = new Object();
 }
 
-var Tab = function (settings) {
+var Tab = function (settings, contentAreaId) {
     this.settings = settings;
+    this.contentAreaId = contentAreaId;
+    // todo: add contentAreaId to this
+    // this.x = this.options.x || 0;
+    // this.contentAreaId = 
 }
 
 var TabSettings = function() {
@@ -84,11 +88,11 @@ TabSettings.prototype = {
 };
 
 
-var GaugeSetting = function (id, gauge, options) {
-    if(!id) return null;
+var GaugeSetting = function (gaugeId, gauge, options) {
+    if(!gaugeId) return null;
     if(!gauge) return null;
     
-    this.id = id;
+    this.gaugeId = gaugeId;
     this.gauge = gauge;
     
     this.options = options || {};
@@ -96,6 +100,7 @@ var GaugeSetting = function (id, gauge, options) {
     this.currentValue = this.options.currentValue || 0;
     this.x = this.options.x || 0;
     this.y = this.options.y || 0;
+    this.width = this.options.width || 150;
     this.visible = this.options.visible || false;
 }
 
@@ -108,6 +113,16 @@ var ToggleSetting = function (id, label, value) {
     
     this.id = id;
     this.value = value || false;
+    this.label = label || 'undefined';
+}
+
+var RangeSetting = function (id, label, value, minValue, maxValue) {
+    if(!id) return null;
+    
+    this.id = id;
+    this.value = value || 0;
+    this.minValue = minValue || 0;
+    this.maxValue = maxValue || 100;
     this.label = label || 'undefined';
 }
 
