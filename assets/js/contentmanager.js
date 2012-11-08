@@ -20,9 +20,38 @@
 var ContentManager = function (options) {
     this.panes = new Object();
     this.focusedPaneId = '';
+    this.vehicles = new Array();
+    this.servers = new Array();
+    
+    function ioStoreObject(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+    }
+    
+    function ioRetreiveObject(key) {
+        var value = localStorage.getItem(key);
+        return value && JSON.parse(value);
+    }
+    
+    function ioDelete(key) {
+        localStorage.removeItem(key);
+    }
+    
+    function ioStoreValue(key, value) {
+        localStorage.setItem(key, value);
+    }
+    
+    function ioRetreiveValue(key) {
+        return localStorage.getItem(key);
+    }    
 }
     
 ContentManager.prototype = {
+    addVehicle: function(options) {
+        this.vehicles[this.settings.length] = new Vehicle(options);
+    },
+    deleteVehicle: function(index) {
+        this.vehicles.splice(index, 1);
+    },
     addPane: function(id) {
         this.panes[id] = new Pane();
     },
@@ -63,6 +92,12 @@ ContentManager.prototype = {
         }
     },
 };
+
+var Vehicle = function (options) {
+    this.options = options || {};
+    
+    this.name = this.options.name || "Thunderbird #3";
+}
 
 var Pane = function (options) {
     this.currentTab = 0;

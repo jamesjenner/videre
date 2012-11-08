@@ -217,32 +217,33 @@ function configureApplication() {
 
   var vehicleContentNbr = 0;
   // add vehicles
-  addControlToSidebar('vehicleGroup', 'vehicle1Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Thunderbird 1');
+  addControlToSidebar('vehicleGroup', 'vehicle1Control', 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png', 'Thunderbird 1');
   addVehicleContentUI('vehicle1', 'Thunderbird 1', vehicleContentNbr++);
   addListenerToSidebarControl('leftSidebar', 'vehicle1Control', 'vehicle1');
 
-  addControlToSidebar('vehicleGroup', 'vehicle2Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Thunderbird 2');
+  addControlToSidebar('vehicleGroup', 'vehicle2Control', 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png', 'Thunderbird 2');
   addVehicleContentUI('vehicle2', 'Thunderbird 2', vehicleContentNbr++);
   addListenerToSidebarControl('leftSidebar', 'vehicle2Control', 'vehicle2');
   
-  addControlToSidebar('vehicleGroup', 'vehicle3Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Thunderbird 3');
+  addControlToSidebar('vehicleGroup', 'vehicle3Control', 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png', 'Thunderbird 3');
   addVehicleContentUI('vehicle3', 'Thunderbird 3', vehicleContentNbr++);
   addListenerToSidebarControl('leftSidebar', 'vehicle3Control', 'vehicle3');
 
   // add the add vehicle
-  addControlToSidebar('vehicleGroup', 'addVehicleControl', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Add Vehicle');
-  addContentUI('addVehicle', 'Add Vehicle', 'Everything in life is somewhere else, and you get there in a car - E. B. White');
+  addControlToSidebar('vehicleGroup', 'addVehicleControl', 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Vehicle');
+  addVehicleCreateUI('addVehicle', 'Add Vehicle');
   // add listeners to the controls that adds a vehicle
   addListenerToSidebarControl('leftSidebar', 'addVehicleControl', 'addVehicle');
   
   // add servers
-  addControlToSidebar('serverGroup', 'server1Control', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Main Host');
-  addContentUI('server1', 'Main Host', 'This will have controls for the host, or at least some info about it');
+  addControlToSidebar('serverGroup', 'server1Control', 'assets/icons/drawable-xhdpi-v11/ic_action_server.png', 'Main Server');
+  addContentUI('server1', 'Main Server', 'This will have controls for the server, or at least some info about it');
   addListenerToSidebarControl('leftSidebar', 'server1Control', 'server1');
   
   // add the add server
-  addControlToSidebar('serverGroup', 'addServerControl', 'assets/icons/drawable-xhdpi-v11/ic_stat_compass.png', 'Add Host');
-  addContentUI('addServer', 'Add Host', "If you hack the Vatican server, have you tampered in God's domain? - Aaron Allston");
+  addControlToSidebar('serverGroup', 'addServerControl', 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Server');
+  addServerCreateUI('addServer', 'Add Server');
+  // addContentUI('addServer', 'Add Host', "If you hack the Vatican server, have you tampered in God's domain? - Aaron Allston");
   // add listeners to the controls that adds a server
   addListenerToSidebarControl('leftSidebar', 'addServerControl', 'addServer');
   
@@ -465,6 +466,103 @@ function addDividerToActionBar(id) {
       );
 }
 
+function addServerCreateUI(id, title) {  
+  $('#mainApplication').append(
+    '<div id="' + id + '" class="applicationContents">' +
+    '  <div id="' + id + 'Form" class="formContents">' +
+    '    <div class="formContents">' +
+    '      <div class="formContents">' +
+    '       <form>' +
+    '         <ul>' + 
+    '           <li>' + 
+    '             <label for="serverCreateName">Name</label>' +
+    '             <input type="text" name="name" id="serverCreateName" placeholder="Name" required><br>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '             <label for="serverCreateIPAddress">IP Address</label>' +
+    '             <input type="number" name="address" id="serverCreateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="serverCreatePort">Port</label>' +
+    '             <input type="number" min="1" max="99999" name="port" id="serverCreatePort" placeholder="Port"><br>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '             <label for="serverCreateProtocol">Protocol</label>' +
+    '             <input type="text" name="protocol" id="serverCreateProtocol" placeholder="Protocol"><br>' +
+    '           </li>' + 
+    '           <li class="alignbottom">' + 
+    '             <input type="submit" value="Submit">' +
+    '           </li>' + 
+    '       </form>' +
+    '      </div>' +
+    '    </div>' +
+    '  </div>' +
+    '</div>');
+
+  actionBarId = id + 'ActionBar';
+  addActionBar(id, actionBarId, title, false);
+}
+
+
+function createVehicle() {
+  alert("creating vehicle");
+}
+
+function addVehicleCreateUI(id, title) {
+  $('#mainApplication').append(
+    '<div id="' + id + '" class="applicationContents">' +
+    '  <div id="' + id + 'Form" class="formContents">' +
+    '    <div class="formContents">' +
+    '      <div class="formContents">' +
+    '       <form onsubmit="createVehicle(); return false;">' +
+    '         <ul>' + 
+    '           <li>' + 
+    '             <label for="vehicleCreateName">Name</label>' +
+    '             <input type="text" name="name" id="vehicleCreateName" placeholder="Name" required><br>' +
+    '           </li>' +
+    
+    '           <li class="breakTop">' +
+    '             <label for="vehicleCreateVehicleType">Type of vehicle</label>' +
+    '             <select name="vehicleCreateVehicleType">' +
+    '               <option value="air">Air</option>' + 
+    '               <option value="surface">Surface</option>' + 
+    '               <option value="submersible">Submersible</option>' + 
+    '             </select><br>' + 
+    '           </li>' +
+
+    '           <li class="breakTop">' +
+    '             <input type="checkbox" name="payload" id="vehicleCreatePayload" /><span class="checkboxLabel">Vehicle contains payload<span><br>' + 
+    '           </li>' +
+    
+    '           <li>' +
+    '             <input type="checkbox" name="navigation" id="vehicleCreateNavigation" /><span class="checkboxLabel">Vehicle supports navigation<span><br>' + 
+    '           </li>' + 
+
+    '           <li>' +
+    '             <input type="checkbox" name="remoteControl" id="vehicleCreateRemoteControl" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
+    '           </li>' + 
+    
+    '           <li class="alignbottom">' +
+
+    // TODO: need a way to stop buttons moving up the screen when the keyboard is displayed on devices, may require css.
+    /*
+    '             <input type="button" value="Cancel">' +
+    '             <input type="reset" value="Reset">' +
+    */
+    '             <input type="submit" value="Done">' +
+    '           </li>' + 
+    '         </ul>' + 
+    '       </form>' +
+    '      </div>' +
+    '    </div>' +
+    '  </div>' +
+    '</div>');
+
+  actionBarId = id + 'ActionBar';
+  addActionBar(id, actionBarId, title, false);
+}
+
+
 function addContentUI(id, title, subTitle) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
@@ -480,7 +578,6 @@ function addContentUI(id, title, subTitle) {
 
   actionBarId = id + 'ActionBar';
   addActionBar(id, actionBarId, title, false);
-
 }
 
 /*
@@ -550,6 +647,8 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   // setup the telemetry settings  
   var telemetrySettings = new TabSettings();
   var gaugeSetting;
+  
+  // TODO: should be populated 
   telemetrySettings.add(new HeadingSetting('some stuff'));
   telemetrySettings.add(new ToggleSetting(id  + TELEMETRY_SUB_ID + 'Graph', 'Graph'));
   telemetrySettings.add(new TextSetting(id  + TELEMETRY_SUB_ID + 'Timeout', 'Timeout'));
@@ -1478,7 +1577,7 @@ function sendMessage() {
           <div id="preferencsGroupTitle" class="sidebarGroupTitle"></div>
         </div>
         <div id="preferencesControl" class="sidebarControlBar">
-          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_settings.png' class="sidebarControlIcon"/></div>
           <div class="sidebarControlText centered">Preferences</div>
         </div>
       </div>

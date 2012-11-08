@@ -182,6 +182,122 @@ div.tabBar {
 	height: 100%;
 }
 
+div.formContents {
+	background: white;
+	color: #333333;
+	height: inherit;
+	width: inherit;
+}
+
+form label {
+	width: 200px;
+	margin-top: 3px;
+	display: inline-block;
+	float: left;
+	padding: 3px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: small;
+	color: #333333;
+}
+
+form input[type="submit"], input[type="reset"], input[type="cancel"], input[type="button"] {
+	border-width: 1px;
+	border-style: solid;
+	border-top-color: #CCCCCC;
+	border-left-color: #CCCCCC;
+	border-right-color: #CCCCCC;
+	border-bottom-color: #333333;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	padding-left: 25px;
+	padding-right: 25px;
+	color: #333333;
+	font-size: medium;
+	background-color: #CCCCCC;
+	margin-left: 30px;
+	bottom: 30px;
+}
+
+form input[type="checkbox"] {
+	float: left;
+	margin-top: 7px;
+	margin-left: 20px;
+}
+
+form span.checkboxLabel {
+	font-size: small;
+	margin-left: 20px;
+}
+
+/*
+form select {
+	outline: none;
+	background: none;
+	border: solid 1px #333333;
+}
+*/
+
+form input[type="text"], input[type="number"] {
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	border-bottom: solid 1px #333333;
+	font-size: medium;
+	color-background: #CCCCCC;
+}
+
+form input[type="text"]:focus, input[type="number"]:focus  {
+	outline: none;
+	border-width: 1px;
+	border-left: none;
+	border-right: none;
+	border-image: none;
+	border-bottom: solid 2px #33B5E5;
+}
+
+
+form input[type="checkbox"] {
+	outline: none;
+	border: solid 1px #CCCCCC;
+}
+
+
+form {
+	width: 90%;
+	margin-left: 5%;
+	height: 100%;
+}
+
+form ul {
+	width: 100%;
+	height: 100%;
+	list-style: none;
+	list-style-position: outside;
+	margin: 0px;
+	padding: 0px;
+}
+
+form li {
+	padding: 12px;
+	position: relative;
+}
+
+form li.breakTop {
+	border-top: 1px solid #CCCCCC;
+	margin-top: 3px;
+}
+
+form li.breakBottom {
+	border-bottom: 1px solid #CCCCCC;
+	margin-bottom: 3px;
+}
+
+form li.alignbottom {
+	position: absolute;
+	bottom: 31px;
+	padding-bottom: 30px;
+}
+
 div.tabControl {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: medium;
