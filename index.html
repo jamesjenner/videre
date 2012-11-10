@@ -597,7 +597,7 @@ function loadVehicleUIs(vehicle) {
   var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
   var vehicleContentId = VEHICLE_CONTENT + vehicleNumber;
 
-  // add the control that lets the user select the vehicle content UI before the add vehicle control on the side bar
+  // add the control that lets the user select the vehicle content UI on the side bar
   addControlToSidebarBeforeId(ADD_VEHICLE_CONTROL_ID, vehicleControlId, icon, vehicle.name);
   
   // add the ui content for the vehicle
@@ -911,6 +911,11 @@ function contentTabChanged(e, position, id, contentNbr) {
 }
 
 function setFocus(controlId, paneId) {
+  // if the current focus is the selected focus then no need to do anything
+  if(contentManager.focusedPaneId == paneId) {
+    return;
+  }
+  
   // turn off the control for the current focus, if set
   if(currentFocusControlId != '') {
     $('#' + currentFocusControlId).toggleClass('sidebarControlActive');
