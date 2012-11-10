@@ -208,8 +208,6 @@ $(document).ready(function() {
 
 // setup the options in the left sidebar
 function configureApplication() {
-  
-  
   // add welcome content
   addContentUI('welcome', 'Welcome', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
   // add welcome listener
@@ -400,51 +398,11 @@ function loadSidebar(targetId, containerId, settings) {
     
     
   }
-/*
-  addControlToToolbar(containerId, 'toggle' + speedGauge.name, speedGauge.icon, speedGauge.title, speedGauge.description);
-  addControlToToolbar(containerId, 'toggle' + attitudeGauge.name, attitudeGauge.icon, attitudeGauge.title, attitudeGauge.description);
-  addControlToToolbar(containerId, 'toggle' + altimeterGauge.name, altimeterGauge.icon, altimeterGauge.title, altimeterGauge.description);
-  addControlToToolbar(containerId, 'toggle' + headingGauge.name, headingGauge.icon, headingGauge.title, headingGauge.description);
-  addControlToToolbar(containerId, 'toggle' + vsiGauge.name, vsiGauge.icon, vsiGauge.title, vsiGauge.description);
-  addControlToToolbar(containerId, 'toggle' + thermometerGauge.name, thermometerGauge.icon, thermometerGauge.title, thermometerGauge.description);
-
-
-  // todo: gauges are not associated to their specific panel, thus they hide when displayed on different panes...
-  // define the function for toggling the gauge control
-  var toggleGaugeFn = function(targetId, gauge) {
-    if(gauge.enabled) {
-      gauge.enabled = !hideGauge(gauge.id);
-      $('#toggle' + gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
-    } else {
-      gauge.enabled = showGauge(gauge, targetId);
-      $('#toggle'  + gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
-    }
-    return false;
-  }
-  
-  $('#toggle' + speedGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), speedGauge)});
-  $('#toggle' + attitudeGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), attitudeGauge)});
-  $('#toggle' + altimeterGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), altimeterGauge)});
-  $('#toggle' + headingGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), headingGauge)});
-  $('#toggle' + vsiGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), vsiGauge)});
-  $('#toggle' + thermometerGauge.name).click(function() {toggleGaugeFn(contentManager.getFocusedTabId(), thermometerGauge)});
-
-*/
   
   // setup the values of the properties for the sidebar
   
   // refresh the scroller (so it knows about the new content and will behave appropriately)
 }
-
-/*
- * addTabToActionBar('vehicle1', 'vehicle1PayloadTab', 'Payload');
- * addDividerToActionBar('vehicle1');
- * addTabToActionBar('vehicle1', 'vehicle1TelemetryTab', 'Telemetry');
- * addDividerToActionBar('vehicle1');
- * addTabToActionBar('vehicle1', 'vehicle1FlightPlanTab', 'Navigation');
- * addDividerToActionBar('vehicle1');
- * addTabToActionBar('vehicle1', 'vehicle1RemoteControlTab', 'Remote Control');
- */
 
 function addTabToActionBar(id, partialTabId, tabId, tabName, tabNumber, vehicleContentNbr, selected) {
   selected = (typeof selected === "undefined") ? false : selected;
@@ -466,13 +424,17 @@ function addDividerToActionBar(id) {
       );
 }
 
+function createServer() {
+  
+}
+
 function addServerCreateUI(id, title) {  
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'Form" class="formContents">' +
     '    <div class="formContents">' +
     '      <div class="formContents">' +
-    '       <form>' +
+    '       <form id="createServerForm">' +
     '         <ul>' + 
     '           <li>' + 
     '             <label for="serverCreateName">Name</label>' +
@@ -499,13 +461,36 @@ function addServerCreateUI(id, title) {
     '  </div>' +
     '</div>');
 
+  $('#createVehicleForm').on('submit', createServer);
+    
+    
   actionBarId = id + 'ActionBar';
   addActionBar(id, actionBarId, title, false);
 }
 
-
 function createVehicle() {
-  alert("creating vehicle");
+  
+  // get form contents
+  // TODO: determine if using seralizeArray is more efficient than getting the value for each one individually
+  // note that the serializeArray doesn't provide values for unchecked checkboxes
+  // var data = $('#createVehicleForm').serializeArray();
+  
+  var vehicleName = $('#vehicleCreateName').val();
+  var vehicleType = $('#vehicleCreateVehicleType').val();
+  var payloadEnabled = $('#vehicleCreatePayload').is(':checked');
+  var navigationEnabled = $('#vehicleCreateNavigationEnabled').is(':checked');
+  var remoteControlEnabled = $('#vehicleCreateRemoteControl').is(':checked');
+  
+  // persist the information
+  
+  // add the ui for the new vehicle
+  // addVehicleContentUI('vehicle2', 'Thunderbird 2', vehicleContentNbr++);
+  
+  // TODO: should adding the listner be moved to inside the addVehicleContentUI method?
+  // add the listener fro the ui to activate the side bar 
+  // addListenerToSidebarControl('leftSidebar', 'vehicle2Control', 'vehicle2');
+  
+  return false;
 }
 
 function addVehicleCreateUI(id, title) {
@@ -514,7 +499,7 @@ function addVehicleCreateUI(id, title) {
     '  <div id="' + id + 'Form" class="formContents">' +
     '    <div class="formContents">' +
     '      <div class="formContents">' +
-    '       <form onsubmit="createVehicle(); return false;">' +
+    '       <form id="createVehicleForm">' +
     '         <ul>' + 
     '           <li>' + 
     '             <label for="vehicleCreateName">Name</label>' +
@@ -523,7 +508,7 @@ function addVehicleCreateUI(id, title) {
     
     '           <li class="breakTop">' +
     '             <label for="vehicleCreateVehicleType">Type of vehicle</label>' +
-    '             <select name="vehicleCreateVehicleType">' +
+    '             <select name="vehicleType" id="vehicleCreateVehicleType">' +
     '               <option value="air">Air</option>' + 
     '               <option value="surface">Surface</option>' + 
     '               <option value="submersible">Submersible</option>' + 
@@ -532,17 +517,17 @@ function addVehicleCreateUI(id, title) {
 
     '           <li class="breakTop">' +
     '             <span class="checkboxLabel">Vehicle contains payload</span> ' +
-    '             <div class="switch"><span class="thumb"></span><input type="checkbox"></div>' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="payloadEnabled" id="vehicleCreatePayload"></div>' +
     // TODO: testing the iOS style of toggle, determine if this is the way to go...
     // '             <input type="checkbox" name="payload" id="vehicleCreatePayload" /><span class="checkboxLabel">Vehicle contains payload<span><br>' + 
     '           </li>' +
     
     '           <li>' +
-    '             <input type="checkbox" name="navigation" id="vehicleCreateNavigation" /><span class="checkboxLabel">Vehicle supports navigation<span><br>' + 
+    '             <input type="checkbox" name="navigationEnabled" id="vehicleCreateNavigationEnabled" /><span class="checkboxLabel">Vehicle supports navigation<span><br>' + 
     '           </li>' + 
 
     '           <li>' +
-    '             <input type="checkbox" name="remoteControl" id="vehicleCreateRemoteControl" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
+    '             <input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControl" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
     '           </li>' + 
     
     '           <li class="alignbottom">' +
@@ -564,6 +549,8 @@ function addVehicleCreateUI(id, title) {
   actionBarId = id + 'ActionBar';
   addActionBar(id, actionBarId, title, false);
 
+  $('#createVehicleForm').on('submit', createVehicle);
+  
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
 }
