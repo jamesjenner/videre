@@ -531,7 +531,10 @@ function addVehicleCreateUI(id, title) {
     '           </li>' +
 
     '           <li class="breakTop">' +
-    '             <input type="checkbox" name="payload" id="vehicleCreatePayload" /><span class="checkboxLabel">Vehicle contains payload<span><br>' + 
+    '             <span class="checkboxLabel">Vehicle contains payload</span> ' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox"></div>' +
+    // TODO: testing the iOS style of toggle, determine if this is the way to go...
+    // '             <input type="checkbox" name="payload" id="vehicleCreatePayload" /><span class="checkboxLabel">Vehicle contains payload<span><br>' + 
     '           </li>' +
     
     '           <li>' +
@@ -560,8 +563,25 @@ function addVehicleCreateUI(id, title) {
 
   actionBarId = id + 'ActionBar';
   addActionBar(id, actionBarId, title, false);
+
+  // add the toggle switch to switch classed checkboxes  
+  $(".switch").on("click", toggleSwitch);
 }
 
+/**
+ * toggleSwitch() Toggles a checkbox hidden by css.
+ *
+ * This is dependant on the classes switch, on and off.
+ */
+function toggleSwitch() {
+    if (this.className === "switch on") {
+      this.className = 'switch off';
+    } else {
+      this.className = ("switch on");
+    }
+    checkbox = this.lastElementChild;
+    checkbox.checked = !checkbox.checked;
+}
 
 function addContentUI(id, title, subTitle) {
   $('#mainApplication').append(
