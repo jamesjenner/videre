@@ -167,10 +167,29 @@ var TELEMETRY_TAB_CONTROL = 'TelemetryTabControl';
 var FLIGHTPLAN_TAB_CONTROL = 'FlightPlanTabControl';
 var REMOTECONTROL_TAB_CONTROL = 'RemoteControlTabControl';
 
+var ADD_VEHICLE_CONTROL_ID = 'addVehicleControl';
+var ADD_SERVER_CONTROL_ID = 'addServerControl';
+
 var PAYLOAD_SUB_ID = 'PayloadContentArea';
 var TELEMETRY_SUB_ID = 'TelemetryContentArea';
 var FLIGHTPLAN_SUB_ID = 'FlightPlanContentArea';
 var REMOTECONTROL_SUB_ID = 'RemoteControlContentArea';
+
+var VEHICLE_GROUP = 'vehicleGroup';
+var VEHICLE_CONTROL = 'vehicleControl';
+var VEHICLE_CONTENT = 'vehicle';
+
+var SERVER_GROUP = 'serverGroup';
+var SERVER_CONTROL = 'serverControl';
+var SERVER_CONTENT = 'server';
+
+var ADD_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_create.png';
+
+var SERVER_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_server.png';
+
+var AIRPLANE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
+var SURFACE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
+var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
 
 
 // the currently selected control on the left side pane
@@ -204,8 +223,6 @@ $(document).ready(function() {
 
 });
 
-var ADD_VEHICLE_CONTROL_ID = 'addVehicleControl';
-
 // setup the options in the left sidebar
 function configureApplication() {
   // add welcome content
@@ -214,18 +231,13 @@ function configureApplication() {
   addListenerToSidebarControl('leftSidebar', 'welcomeControl', 'welcome');
 
   // add the add vehicle
-  appendControlToSidebar('vehicleGroup', ADD_VEHICLE_CONTROL_ID, 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Vehicle');
+  appendControlToSidebar('vehicleGroup', ADD_VEHICLE_CONTROL_ID, ADD_ICON, 'Add Vehicle');
   addVehicleCreateUI('addVehicle', 'Add Vehicle');
   // add listeners to the controls that adds a vehicle
   addListenerToSidebarControl('leftSidebar', 'addVehicleControl', 'addVehicle');
   
-  // add servers
-  appendControlToSidebar('serverGroup', 'server1Control', 'assets/icons/drawable-xhdpi-v11/ic_action_server.png', 'Main Server');
-  addContentUI('server1', 'Main Server', 'This will have controls for the server, or at least some info about it');
-  addListenerToSidebarControl('leftSidebar', 'server1Control', 'server1');
-  
   // add the add server
-  appendControlToSidebar('serverGroup', 'addServerControl', 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Server');
+  appendControlToSidebar('serverGroup', 'addServerControl', ADD_ICON, 'Add Server');
   addServerCreateUI('addServer', 'Add Server');
   // addContentUI('addServer', 'Add Host', "If you hack the Vatican server, have you tampered in God's domain? - Aaron Allston");
   // add listeners to the controls that adds a server
@@ -272,8 +284,18 @@ function configureApplication() {
   });
   
   loadVehicleUIs(vehicle);
+
+  // add servers
+  // TODO: change this to load the vehicles instead of hardcoded
+  var server = new Server({
+    'name':'Obelix',
+    'ipAddress':'192.168.1.128',
+    'port':'9001'
+  });
   
+  loadServerUIs(server);
   
+
 }
 
 /*
@@ -441,13 +463,73 @@ function addTabToActionBar(id, partialTabId, tabId, tabName, tabNumber, vehicleC
 }
 
 function addDividerToActionBar(id) {
-    $('#' + id + 'TabBar').append(
-      '      <div class="tabDivider centered"></div>'
-      );
+  $('#' + id + 'TabBar').append(
+    '      <div class="tabDivider centered"></div>'
+    );
+}
+
+function resetForm(formId) {
+  // todo: needs to support the custom css for toggles
+  
+  var form = $(formId);
+  
+  form.find('input:text, input:password, input:file, select, textarea').val('');
+  form.find('input[type="number"]').val('');
+  form.find('input:radio, input:checkbox')
+    .removeAttr('checked').removeAttr('selected');
+
+  form.find(".switch.on").toggleClass('on');
 }
 
 function createServer() {
+  // get form contents
   
+  server = new Server({
+    'name':$('#serverCreateName').val(),
+    'ipAddress':$('#serverCreateIPAddress').val(),
+    'port':$('#serverCreatePort').val(),
+    'protocol':$('#serverCreateProtocol').val()});
+  
+  // add the vehicle to the content manager
+  contentManager.addServer(server);
+  
+  // persist the information
+  
+  // load the ui for the vehicle
+  loadServerUIs(server);
+
+  // TODO: add a message to state that the action has been performed
+  
+  // reset the ui  
+  resetForm('#createServerForm');
+  
+  return false;
+}
+
+/**
+ * loadServerUI()
+ *
+ * loads the ui elements to support the passed server
+ * 
+ */
+function loadServerUIs(server) {
+  contentManager.addServer(server);
+  
+  // adding the server to the content manager sets it's position
+  var serverNumber = server.position;
+  var serverControlId = SERVER_CONTROL + serverNumber;
+  var serverContentId = SERVER_CONTENT + serverNumber;
+
+  // add the control that lets the user select the server details UI before the add server control on the side bar
+  addControlToSidebarBeforeId(ADD_SERVER_CONTROL_ID, serverControlId, SERVER_ICON, server.name);
+  
+  // add the ui content for the vehicle
+  // TODO: change this to add a form to maintain the settings for the server
+  addContentUI(serverContentId, server.name, 'This will have controls for the server, or at least some info about it');
+  
+  // TODO: should adding the listner be moved to inside the addVehicleContentUI method?
+  // add the listener fro the ui to activate the side bar 
+  addListenerToSidebarControl('leftSidebar', serverControlId, serverContentId);
 }
 
 function addServerCreateUI(id, title) {  
@@ -464,7 +546,9 @@ function addServerCreateUI(id, title) {
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <label for="serverCreateIPAddress">IP Address</label>' +
-    '             <input type="number" name="address" id="serverCreateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
+    //'             <input type="text" name="address" id="serverCreateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
+    // TODO: figure out the ip address pattern for front end validation
+    '             <input type="text" name="address" id="serverCreateIPAddress" placeholder="IP Address" required ><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreatePort">Port</label>' +
@@ -483,7 +567,7 @@ function addServerCreateUI(id, title) {
     '  </div>' +
     '</div>');
 
-  $('#createVehicleForm').on('submit', createServer);
+  $('#createServerForm').on('submit', createServer);
     
     
   actionBarId = id + 'ActionBar';
@@ -507,17 +591,14 @@ function createVehicle() {
   
   // load the ui for the vehicle
   loadVehicleUIs(vehicle);
+
+  // TODO: add a message to state that the action has been performed
+  
+  // reset the form  
+  resetForm('#createVehicleForm');
   
   return false;
 }
-
-var VEHICLE_GROUP = 'vehicleGroup';
-var VEHICLE_CONTROL = 'vehicleControl';
-var VEHICLE_CONTENT = 'vehicle';
-
-var AIRPLANE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
-var SURFACE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
-var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
 
 /**
  * loadVehicleUI()
@@ -558,6 +639,7 @@ function loadVehicleUIs(vehicle) {
   // add the listener fro the ui to activate the side bar 
   addListenerToSidebarControl('leftSidebar', vehicleControlId, vehicleContentId);
   
+  // TODO: we have no UI to maintain the settings for the vehicle, need to add an option to provide this
   // add the ui to maintain the information for the vehicle
 }
 

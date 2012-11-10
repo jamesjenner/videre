@@ -54,6 +54,11 @@ ContentManager.prototype = {
     deleteVehicle: function(index) {
         this.vehicles.splice(index, 1);
     },
+    addServer: function(server) {
+        var i = this.servers.length;
+        this.servers[i] = server;
+        this.servers[i].position = i;
+    },
     addPane: function(id) {
         this.panes[id] = new Pane();
     },
@@ -98,6 +103,7 @@ ContentManager.prototype = {
 var VEHICLE_AIR = 'air';
 var VEHICLE_SURFACE = 'surface';
 var VEHICLE_SUBMERSIBLE = 'submersible';
+var DEFAULT_NAME = 'Thunderbird 1';
 
 var Vehicle = function (options) {
     
@@ -112,8 +118,8 @@ var Vehicle = function (options) {
     
     this.position = this.options.position || 0;
     
-    this.name = this.options.name || "Thunderbird 1";
-    this.type = this.options.type || "air";
+    this.name = this.options.name || DEFAULT_NAME;
+    this.type = this.options.type || VEHICLE_AIR;
     
     // check that the type if valid, if not then assign to the first entry
     this.isTypeValid = false;
@@ -131,6 +137,21 @@ var Vehicle = function (options) {
     this.payloadEnabled = this.options.payloadEnabled || false;
     this.navigationEnabled = this.options.navigationEnabled || false;
     this.remoteControlEnabled = this.options.remoteControlEnabled || false;
+}
+
+var DEFAULT_IP_ADDRESS = '172.0.0.1';
+var DEFAULT_PORT = '8080';
+var DEFAULT_PROTOCOL = 'VIDERE';
+
+var Server = function (options) {
+    this.options = options || {};
+    
+    this.position = this.options.position || 0;
+    
+    this.name = this.options.name || "Server";
+    this.ipAddress = this.options.ipAddress || DEFAULT_IP_ADDRESS;
+    this.port = this.options.port || DEFAULT_PORT;
+    this.protocol = this.options.protocol || DEFAULT_PROTOCOL;
 }
 
 var Pane = function (options) {
