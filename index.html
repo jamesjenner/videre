@@ -250,52 +250,18 @@ function configureApplication() {
   
   // set the initial focus to the welcome control
   setFocus('welcomeControl', 'welcome');
-  
-  // add vehicles
-  // TODO: change this to load the vehicles instead of hardcoded
-  var vehicle;
-  
-  vehicle = new Vehicle({
-    'name':'Thunderbird 1',
-    'type':VEHICLE_AIR,
-    'payloadEnabled':true,
-    'navigationEnabled':true,
-    'remoteControlEnabled':true
-  });
-  
-  loadVehicleUIs(vehicle);
-  
-  vehicle = new Vehicle({
-    'name':'Thunderbird 2',
-    'type':VEHICLE_SURFACE,
-    'payloadEnabled':true,
-    'navigationEnabled':true,
-    'remoteControlEnabled':true
-  });
-  
-  loadVehicleUIs(vehicle);
-  
-  vehicle = new Vehicle({
-    'name':'Thunderbird 3',
-    'type':VEHICLE_SUBMERSIBLE,
-    'payloadEnabled':true,
-    'navigationEnabled':true,
-    'remoteControlEnabled':true
-  });
-  
-  loadVehicleUIs(vehicle);
 
-  // add servers
-  // TODO: change this to load the vehicles instead of hardcoded
-  var server = new Server({
-    'name':'Obelix',
-    'ipAddress':'192.168.1.128',
-    'port':'9001'
-  });
+  contentManager.loadData();
   
-  loadServerUIs(server);
-  
+  // iterate through the vehicles and load them
+  for(var vehicle in contentManager.vehicles) {
+    loadVehicleUIs(contentManager.vehicles[vehicle]);
+  }
 
+  // iterate through the servers and load them
+  for(var server in contentManager.servers) {
+    loadServerUIs(contentManager.servers[server]);
+  }
 }
 
 /*
@@ -491,7 +457,7 @@ function createServer() {
     'protocol':$('#serverCreateProtocol').val()});
   
   // add the vehicle to the content manager
-  contentManager.addServer(server);
+  contentManager.addServer(server, true);
   
   // persist the information
   
@@ -513,7 +479,8 @@ function createServer() {
  * 
  */
 function loadServerUIs(server) {
-  contentManager.addServer(server);
+  // TODO: test and remove if not required. it's a duplicate
+  // contentManager.addServer(server, true);
   
   // adding the server to the content manager sets it's position
   var serverNumber = server.position;
@@ -585,7 +552,7 @@ function createVehicle() {
     'remoteControlEnabled':$('#vehicleCreateRemoteControl').is(':checked')});
   
   // add the vehicle to the content manager
-  contentManager.addVehicle(vehicle);
+  contentManager.addVehicle(vehicle, true);
   
   // persist the information
   
@@ -622,7 +589,8 @@ function loadVehicleUIs(vehicle) {
       break;
   }
   
-  contentManager.addVehicle(vehicle);
+  // TODO: test and remove if not required. it's a duplicate
+  // contentManager.addVehicle(vehicle, true);
   
   // adding the vehicle to the content manager sets it's position
   var vehicleNumber = vehicle.position;

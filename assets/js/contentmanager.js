@@ -16,13 +16,6 @@
  * along with this program. If not, see http://www.gnu.org/licenses/
  */
 
-
-var ContentManager = function (options) {
-    this.panes = new Object();
-    this.focusedPaneId = '';
-    this.vehicles = new Array();
-    this.servers = new Array();
-    
     function ioStoreObject(key, value) {
         localStorage.setItem(key, JSON.stringify(value));
     }
@@ -43,21 +36,64 @@ var ContentManager = function (options) {
     function ioRetreiveValue(key) {
         return localStorage.getItem(key);
     }    
+
+var ContentManager = function (options) {
+    this.panes = new Object();
+    this.focusedPaneId = '';
+    this.vehicles = new Array();
+    this.servers = new Array();
+    
 }
     
 ContentManager.prototype = {
-    addVehicle: function(vehicle) {
+    loadData: function() {
+        var obj;
+        var i;
+        var key;
+        
+        for(var prop in localStorage) {
+            console.log("prop:" + prop);
+            i = prop.indexOf('_');
+            if(i > -1) {
+                key = prop.substring(0, i);
+                
+                switch(key) {
+                    case VEHICLE_KEY:
+                        // we have a vehicle object
+                        obj = ioRetreiveObject(prop);
+                        this.addVehicle(new Vehicle(obj.options), false);
+                        break;
+                    case SERVER_KEY:
+                        // we have a server object
+                        obj = ioRetreiveObject(prop);
+                        this.addServer(new Server(obj.options), false);
+                        break;
+                }
+            }
+        }
+    },
+    addVehicle: function(vehicle, persist) {
         var i = this.vehicles.length;
         this.vehicles[i] = vehicle;
         this.vehicles[i].position = i;
+        
+        // persist the data
+        if(persist) {
+            ioStoreObject(VEHICLE_KEY + '_' + this.vehicles[i].position, vehicle);
+        }
     },
     deleteVehicle: function(index) {
         this.vehicles.splice(index, 1);
     },
-    addServer: function(server) {
+    addServer: function(server, persist) {
         var i = this.servers.length;
         this.servers[i] = server;
         this.servers[i].position = i;
+        
+        // persist the data
+        if(persist) {
+            ioStoreObject(SERVER_KEY + '_' + this.vehicles[i].position, server);
+        }
     },
     addPane: function(id) {
         this.panes[id] = new Pane();
@@ -100,6 +136,7 @@ ContentManager.prototype = {
     },
 };
 
+var VEHICLE_KEY = 'Vehicle';
 var VEHICLE_AIR = 'air';
 var VEHICLE_SURFACE = 'surface';
 var VEHICLE_SUBMERSIBLE = 'submersible';
@@ -139,6 +176,7 @@ var Vehicle = function (options) {
     this.remoteControlEnabled = this.options.remoteControlEnabled || false;
 }
 
+var SERVER_KEY = 'Server';
 var DEFAULT_IP_ADDRESS = '172.0.0.1';
 var DEFAULT_PORT = '8080';
 var DEFAULT_PROTOCOL = 'VIDERE';
