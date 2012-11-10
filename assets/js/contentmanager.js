@@ -46,8 +46,10 @@ var ContentManager = function (options) {
 }
     
 ContentManager.prototype = {
-    addVehicle: function(options) {
-        this.vehicles[this.settings.length] = new Vehicle(options);
+    addVehicle: function(vehicle) {
+        var i = this.vehicles.length;
+        this.vehicles[i] = vehicle;
+        this.vehicles[i].position = i;
     },
     deleteVehicle: function(index) {
         this.vehicles.splice(index, 1);
@@ -93,10 +95,42 @@ ContentManager.prototype = {
     },
 };
 
+var VEHICLE_AIR = 'air';
+var VEHICLE_SURFACE = 'surface';
+var VEHICLE_SUBMERSIBLE = 'submersible';
+
 var Vehicle = function (options) {
+    
+    this.validTypes = new Object();
+    this.validTypes[VEHICLE_AIR] = 'Air';
+    this.validTypes[VEHICLE_SURFACE] = 'Surface';
+    this.validTypes[VEHICLE_SUBMERSIBLE] = 'Submersible';
+    
+    // this.validTypes = {'air':'Air','surface':'Surface','submersible':'Submersible'};
+    
     this.options = options || {};
     
-    this.name = this.options.name || "Thunderbird #3";
+    this.position = this.options.position || 0;
+    
+    this.name = this.options.name || "Thunderbird 1";
+    this.type = this.options.type || "air";
+    
+    // check that the type if valid, if not then assign to the first entry
+    this.isTypeValid = false;
+    
+    for(var i in this.validTypes) {
+        if(this.type == i) {
+          this.isTypeValid = true;
+          break;
+        }
+    }
+    if(!this.isTypeValid) {
+        this.type = 'air';
+    }
+    
+    this.payloadEnabled = this.options.payloadEnabled || false;
+    this.navigationEnabled = this.options.navigationEnabled || false;
+    this.remoteControlEnabled = this.options.remoteControlEnabled || false;
 }
 
 var Pane = function (options) {

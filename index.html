@@ -204,7 +204,7 @@ $(document).ready(function() {
 
 });
 
-
+var ADD_VEHICLE_CONTROL_ID = 'addVehicleControl';
 
 // setup the options in the left sidebar
 function configureApplication() {
@@ -213,33 +213,19 @@ function configureApplication() {
   // add welcome listener
   addListenerToSidebarControl('leftSidebar', 'welcomeControl', 'welcome');
 
-  var vehicleContentNbr = 0;
-  // add vehicles
-  addControlToSidebar('vehicleGroup', 'vehicle1Control', 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png', 'Thunderbird 1');
-  addVehicleContentUI('vehicle1', 'Thunderbird 1', vehicleContentNbr++);
-  addListenerToSidebarControl('leftSidebar', 'vehicle1Control', 'vehicle1');
-
-  addControlToSidebar('vehicleGroup', 'vehicle2Control', 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png', 'Thunderbird 2');
-  addVehicleContentUI('vehicle2', 'Thunderbird 2', vehicleContentNbr++);
-  addListenerToSidebarControl('leftSidebar', 'vehicle2Control', 'vehicle2');
-  
-  addControlToSidebar('vehicleGroup', 'vehicle3Control', 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png', 'Thunderbird 3');
-  addVehicleContentUI('vehicle3', 'Thunderbird 3', vehicleContentNbr++);
-  addListenerToSidebarControl('leftSidebar', 'vehicle3Control', 'vehicle3');
-
   // add the add vehicle
-  addControlToSidebar('vehicleGroup', 'addVehicleControl', 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Vehicle');
+  appendControlToSidebar('vehicleGroup', ADD_VEHICLE_CONTROL_ID, 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Vehicle');
   addVehicleCreateUI('addVehicle', 'Add Vehicle');
   // add listeners to the controls that adds a vehicle
   addListenerToSidebarControl('leftSidebar', 'addVehicleControl', 'addVehicle');
   
   // add servers
-  addControlToSidebar('serverGroup', 'server1Control', 'assets/icons/drawable-xhdpi-v11/ic_action_server.png', 'Main Server');
+  appendControlToSidebar('serverGroup', 'server1Control', 'assets/icons/drawable-xhdpi-v11/ic_action_server.png', 'Main Server');
   addContentUI('server1', 'Main Server', 'This will have controls for the server, or at least some info about it');
   addListenerToSidebarControl('leftSidebar', 'server1Control', 'server1');
   
   // add the add server
-  addControlToSidebar('serverGroup', 'addServerControl', 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Server');
+  appendControlToSidebar('serverGroup', 'addServerControl', 'assets/icons/drawable-xhdpi-v11/ic_action_create.png', 'Add Server');
   addServerCreateUI('addServer', 'Add Server');
   // addContentUI('addServer', 'Add Host', "If you hack the Vatican server, have you tampered in God's domain? - Aaron Allston");
   // add listeners to the controls that adds a server
@@ -252,6 +238,42 @@ function configureApplication() {
   
   // set the initial focus to the welcome control
   setFocus('welcomeControl', 'welcome');
+  
+  // add vehicles
+  // TODO: change this to load the vehicles instead of hardcoded
+  var vehicle;
+  
+  vehicle = new Vehicle({
+    'name':'Thunderbird 1',
+    'type':VEHICLE_AIR,
+    'payloadEnabled':true,
+    'navigationEnabled':true,
+    'remoteControlEnabled':true
+  });
+  
+  loadVehicleUIs(vehicle);
+  
+  vehicle = new Vehicle({
+    'name':'Thunderbird 2',
+    'type':VEHICLE_SURFACE,
+    'payloadEnabled':true,
+    'navigationEnabled':true,
+    'remoteControlEnabled':true
+  });
+  
+  loadVehicleUIs(vehicle);
+  
+  vehicle = new Vehicle({
+    'name':'Thunderbird 3',
+    'type':VEHICLE_SUBMERSIBLE,
+    'payloadEnabled':true,
+    'navigationEnabled':true,
+    'remoteControlEnabled':true
+  });
+  
+  loadVehicleUIs(vehicle);
+  
+  
 }
 
 /*
@@ -469,28 +491,74 @@ function addServerCreateUI(id, title) {
 }
 
 function createVehicle() {
-  
   // get form contents
-  // TODO: determine if using seralizeArray is more efficient than getting the value for each one individually
-  // note that the serializeArray doesn't provide values for unchecked checkboxes
-  // var data = $('#createVehicleForm').serializeArray();
   
-  var vehicleName = $('#vehicleCreateName').val();
-  var vehicleType = $('#vehicleCreateVehicleType').val();
-  var payloadEnabled = $('#vehicleCreatePayload').is(':checked');
-  var navigationEnabled = $('#vehicleCreateNavigationEnabled').is(':checked');
-  var remoteControlEnabled = $('#vehicleCreateRemoteControl').is(':checked');
+  vehicle = new Vehicle({
+    'name':$('#vehicleCreateName').val(),
+    'type':$('#vehicleCreateVehicleType').val(),
+    'payloadEnabled':$('#vehicleCreatePayload').is(':checked'),
+    'navigationEnabled':$('#vehicleCreateNavigationEnabled').is(':checked'),
+    'remoteControlEnabled':$('#vehicleCreateRemoteControl').is(':checked')});
+  
+  // add the vehicle to the content manager
+  contentManager.addVehicle(vehicle);
   
   // persist the information
   
-  // add the ui for the new vehicle
-  // addVehicleContentUI('vehicle2', 'Thunderbird 2', vehicleContentNbr++);
+  // load the ui for the vehicle
+  loadVehicleUIs(vehicle);
+  
+  return false;
+}
+
+var VEHICLE_GROUP = 'vehicleGroup';
+var VEHICLE_CONTROL = 'vehicleControl';
+var VEHICLE_CONTENT = 'vehicle';
+
+var AIRPLANE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
+var SURFACE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
+var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
+
+/**
+ * loadVehicleUI()
+ *
+ * loads the ui elements to support the passed vehicle
+ * 
+ */
+function loadVehicleUIs(vehicle) {
+  // determine the icon for the vehicle
+  var icon = AIRPLANE_ICON;
+  
+  switch(vehicle.type) {
+    case VEHICLE_AIR:
+      icon = AIRPLANE_ICON;
+      break;
+    case VEHICLE_SURFACE:
+      icon = SURFACE_ICON;
+      break;
+    case VEHICLE_SUBMERSIBLE:
+      icon = SUBMERSIBLE_ICON;
+      break;
+  }
+  
+  contentManager.addVehicle(vehicle);
+  
+  // adding the vehicle to the content manager sets it's position
+  var vehicleNumber = vehicle.position;
+  var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
+  var vehicleContentId = VEHICLE_CONTENT + vehicleNumber;
+
+  // add the control that lets the user select the vehicle content UI before the add vehicle control on the side bar
+  addControlToSidebarBeforeId(ADD_VEHICLE_CONTROL_ID, vehicleControlId, icon, vehicle.name);
+  
+  // add the ui content for the vehicle
+  addVehicleContentUI(vehicleContentId, vehicle.name, vehicleNumber);
   
   // TODO: should adding the listner be moved to inside the addVehicleContentUI method?
   // add the listener fro the ui to activate the side bar 
-  // addListenerToSidebarControl('leftSidebar', 'vehicle2Control', 'vehicle2');
+  addListenerToSidebarControl('leftSidebar', vehicleControlId, vehicleContentId);
   
-  return false;
+  // add the ui to maintain the information for the vehicle
 }
 
 function addVehicleCreateUI(id, title) {
@@ -721,15 +789,25 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
 
 
 /*
- * add a control to the sidebar
+ * add a control to the sidebar, before the specified id
  */
-function addControlToSidebar(groupId, id, icon, name) {
+function addControlToSidebarBeforeId(beforeId, id, icon, name) {
+  $('#' + beforeId).before(
+    '<div id="' + id + '" class="sidebarControlBar">' +
+    '  <div class="sidebarControlIcon"><img src="' + icon + '" class="sidebarControlIcon"/></div>' +
+    '  <div class="sidebarControlText centered">' + name + '</div>' +
+    '</div>');
+}
+
+function appendControlToSidebar(groupId, id, icon, name) {
   $('#' + groupId).append(
     '<div id="' + id + '" class="sidebarControlBar">' +
     '  <div class="sidebarControlIcon"><img src="' + icon + '" class="sidebarControlIcon"/></div>' +
     '  <div class="sidebarControlText centered">' + name + '</div>' +
     '</div>');
 }
+
+
 
 function addListenerToSidebarControl(sidebarId, controlId, paneId) {
   $('#' + controlId).click(function() {
