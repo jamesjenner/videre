@@ -208,6 +208,7 @@ var contentManager = new ContentManager();
 $(document).ready(function() {
 
   // load the toolbar
+  // TODO: remove the loadToolbar logic, only retained now to show how connectivity was performed
   // loadToolbar();
 
   configureApplication();
@@ -267,7 +268,24 @@ function configureApplication() {
 /*
  * addActionBar('mainApplication', 'vehicle1', 'Thunderbird 3');
  */
-function addActionBar(targetId, id, title, includeSettings, settings) {
+function addActionBar(targetId, id, title, includeSettings, options) {
+
+  options = options || {};
+
+  var createServerAction = options.createServer || false;
+  var createServerFunction = options.createServerFunction || '';
+  var createVehicleAction = options.createVehicle || false;
+  var createVehicleFunction = options.createVehicleFunction || '';
+  var saveAction = options.save || false;
+  var saveFunction = options.saveFunction || '';
+  var removeAction = options.remove || false;
+  var removeFunction = options.removeFunction || '';
+  var disconnectAction = options.disconnect || false;
+  var disconnectFunction = options.disconnectFunction || '';
+  var connectAction = options.connect || false;
+  var connectFunction = options.connectFunction || '';
+
+  
   $('#' + targetId).prepend(
     '  <div id="' + id + 'TaskBar" class="taskBar boxLayout">' +
     '    <div id="leftSidebarControl' + id + '" class="sidebarPanel noflex centered">' +
@@ -276,10 +294,38 @@ function addActionBar(targetId, id, title, includeSettings, settings) {
     '    <div id="leftSidebarControlText' + id + '" class="title">' + title + '</div>' +
     '    <div id="' + id + 'TabBar" class="tabBar flex boxLayout">' +
     '    </div>' +
+    
+    // check the actions that are to be available... settings (if enabled) always goes last
+    (createServerAction ? 
+    '    <div id="createServerActionControl' + id + '" class="sidebarPanel noflex">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    </div>' : '') +
+    (createVehicleAction ? 
+    '    <div id="createVehicleActionControl' + id + '" class="sidebarPanel noflex">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    </div>' : '') +
+    (saveAction ? 
+    '    <div id="saveActionControl' + id + '" class="sidebarPanel noflex">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_save.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    </div>' : '') +
+    (removeAction ? 
+    '    <div id="removeActionControl' + id + '" class="sidebarPanel noflex">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_delete.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    </div>' : '') +
+    (disconnectAction ? 
+    '    <div id="disconnectActionControl' + id + '" class="sidebarPanel noflex">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_disable.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    </div>' : '') +
+    (connectAction ? 
+    '    <div id="connectActionControl' + id + '" class="sidebarPanel noflex">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_enable.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    </div>' : '') +
+  
     (includeSettings ? 
     '    <div id="rightSidebarControl' + id + '" class="sidebarPanel noflex">' +
     '      <img src="assets/icons/drawable-hdpi-v11/ic_action_settings.png" class="centered" height="34px" width="34px" alt="icon">' +
     '    </div>' : '') +
+    
     '  </div>');
   
   // add listener to the control that activates the left sidebar
@@ -293,14 +339,46 @@ function addActionBar(targetId, id, title, includeSettings, settings) {
     
     return false;
   });
+
+  // check the actions that are to be available... settings (if enabled) always goes last
+  
+  // add the click events for the actions that are to be available
+  if(createServerAction) {
+    $('#createServerActionControl' + id).on('click', createServerFunction);
+  }
+  if(createVehicleAction) {
+    $('#createVehicleActionControl' + id).click(function() {
+      return false;
+    });
+  }
+  if(saveAction) {
+    $('#saveActionControl' + id).on('click', saveFunction);
+  }
+  if(removeAction) {
+    $('#removeActionControl' + id).on('click', removeFunction);
+  }
+  if(disconnectAction) {
+    $('#disconnectActionControl' + id).on('click', disconnectFunction);
+  }
+  if(connectAction) {
+    $('#connectActionControl' + id).on('click', connectFunction);
+  }
   
   if(includeSettings) {
-    $('#rightSidebarControl' + id).click(function() {
-      loadSidebar(targetId, 'rightScroller', settings);
+    $('#rightSidebarControl' + id).on('click', function() {
+      loadSidebar(targetId, 'rightScroller');
       showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
       
       return false;
     });
+    /*
+    $('#rightSidebarControl' + id).click(function() {
+      loadSidebar(targetId, 'rightScroller');
+      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+      
+      return false;
+    });
+    */
   }
 }
 
@@ -373,7 +451,7 @@ function addGaugeControlToSideBar(containerId, contentManager, gaugeSetting) {
 }
  
 
-function loadSidebar(targetId, containerId, settings) {
+function loadSidebar(targetId, containerId) {
   // check if contents of side bar is same as previous
   
   // it's different so destroy the contents of side bar
@@ -524,26 +602,22 @@ function addServerCreateUI(id, title) {
     '           <li class="breakTop">' + 
     '             <label for="serverCreateProtocol">Protocol</label>' +
     '             <input type="text" name="protocol" id="serverCreateProtocol" placeholder="Protocol"><br>' +
-    '           </li>' + 
-    '           <li class="alignbottom">' + 
-    '             <input type="submit" value="Submit">' +
-    '           </li>' + 
+    '           </li>' +
     '       </form>' +
     '      </div>' +
     '    </div>' +
     '  </div>' +
     '</div>');
 
-  $('#createServerForm').on('submit', createServer);
-    
-    
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title, false);
+  addActionBar(id, actionBarId, title, false, {
+    save: true,
+    saveFunction: createServer,
+  });
 }
 
 function createVehicle() {
-  // get form contents
-  
+  // create a new vehicle from the form
   vehicle = new Vehicle({
     'name':$('#vehicleCreateName').val(),
     'type':$('#vehicleCreateVehicleType').val(),
@@ -647,16 +721,6 @@ function addVehicleCreateUI(id, title) {
     '           <li>' +
     '             <input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControl" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
     '           </li>' + 
-    
-    '           <li class="alignbottom">' +
-
-    // TODO: need a way to stop buttons moving up the screen when the keyboard is displayed on devices, may require css.
-    /*
-    '             <input type="button" value="Cancel">' +
-    '             <input type="reset" value="Reset">' +
-    */
-    '             <input type="submit" value="Done">' +
-    '           </li>' + 
     '         </ul>' + 
     '       </form>' +
     '      </div>' +
@@ -665,10 +729,11 @@ function addVehicleCreateUI(id, title) {
     '</div>');
 
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title, false);
+  addActionBar(id, actionBarId, title, false, {
+    save: true,
+    saveFunction: createVehicle
+  });
 
-  $('#createVehicleForm').on('submit', createVehicle);
-  
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
 }
@@ -806,9 +871,7 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title, true, {
-    speed: true,
-  });
+  addActionBar(id, actionBarId, title, true);
   addTabToActionBar(actionBarId, id, id  + PAYLOAD_TAB_CONTROL, 'Payload', PAYLOAD_TAB, vehicleContentNbr, true);
   contentManager.addTab(id, id  + PAYLOAD_SUB_ID, payloadSettings);
   addDividerToActionBar(actionBarId);
