@@ -47,10 +47,10 @@ var verticalScrollRightSidebar;
 */
 // var horizontalScroll = new Array();
 function loaded() {
-  new iScroll('leftSidebar');
+  new iScroll(LEFT_SIDEBAR_ID);
   new iScroll('rightSidebar');
   /*
-  verticalScrollLeftSidebar = new iScroll('leftSidebar');
+  verticalScrollLeftSidebar = new iScroll(LEFT_SIDEBAR_ID);
   verticalScrollRightSidebar = new iScroll('rightSidebar');
   */
   /*
@@ -191,6 +191,10 @@ var AIRPLANE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
 var SURFACE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
 var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
 
+var WELCOME_CONTROL_ID = 'welcomeControl';
+var WELCOME_CONTENT_ID = 'welcome';
+
+var LEFT_SIDEBAR_ID = 'leftSidebar';
 
 // the currently selected control on the left side pane
 var currentFocusControlId = '';
@@ -202,8 +206,6 @@ var vehicleTabSelection = new Array();
 var vehicleContentSlider = new Array();
 
 var contentManager = new ContentManager();
-
-
 
 $(document).ready(function() {
 
@@ -227,30 +229,30 @@ $(document).ready(function() {
 // setup the options in the left sidebar
 function configureApplication() {
   // add welcome content
-  addContentUI('welcome', 'Welcome', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
+  addContentUI(WELCOME_CONTENT_ID, 'Welcome', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
   // add welcome listener
-  addListenerToSidebarControl('leftSidebar', 'welcomeControl', 'welcome');
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
 
   // add the add vehicle
   appendControlToSidebar('vehicleGroup', ADD_VEHICLE_CONTROL_ID, ADD_ICON, 'Add Vehicle');
   addVehicleCreateUI('addVehicle', 'Add Vehicle');
   // add listeners to the controls that adds a vehicle
-  addListenerToSidebarControl('leftSidebar', 'addVehicleControl', 'addVehicle');
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'addVehicleControl', 'addVehicle');
   
   // add the add server
   appendControlToSidebar('serverGroup', 'addServerControl', ADD_ICON, 'Add Server');
   addServerCreateUI('addServer', 'Add Server');
   // addContentUI('addServer', 'Add Host', "If you hack the Vatican server, have you tampered in God's domain? - Aaron Allston");
   // add listeners to the controls that adds a server
-  addListenerToSidebarControl('leftSidebar', 'addServerControl', 'addServer');
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'addServerControl', 'addServer');
   
   // add the preferences content
   addContentUI('preferences', 'Preferences', "Here be dragons");
   // add listeners to the control for the preferences
-  addListenerToSidebarControl('leftSidebar', 'preferencesControl', 'preferences');
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'preferencesControl', 'preferences');
   
   // set the initial focus to the welcome control
-  setFocus('welcomeControl', 'welcome');
+  setFocus(WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
 
   contentManager.loadData();
   
@@ -264,6 +266,8 @@ function configureApplication() {
     loadServerUIs(contentManager.servers[server]);
   }
 }
+
+var LEFT_SIDEBAR_CONTROL_TEXT = 'leftSidebarControlText';
 
 /*
  * addActionBar('mainApplication', 'vehicle1', 'Thunderbird 3');
@@ -291,51 +295,64 @@ function addActionBar(targetId, id, title, includeSettings, options) {
     '    <div id="leftSidebarControl' + id + '" class="sidebarPanel noflex centered">' +
     '      <img src="icons/android/icon_xhdpi.png" class="centered" height="34px" width="34px" alt="icon">' +
     '    </div>' +
-    '    <div id="leftSidebarControlText' + id + '" class="title">' + title + '</div>' +
+    '    <div id="' + LEFT_SIDEBAR_CONTROL_TEXT + id + '" class="title">' + title + '</div>' +
     '    <div id="' + id + 'TabBar" class="tabBar flex boxLayout">' +
     '    </div>' +
     
     // check the actions that are to be available... settings (if enabled) always goes last
     (createServerAction ? 
-    '    <div id="createServerActionControl' + id + '" class="sidebarPanel noflex">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="centered" height="34px" width="34px" alt="icon">' +
-    '    </div>' : '') +
+    '    <div id="createServerActionControl' + id + '" class="actionBarAction noflex centered">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+    '      <span class="actionBarText">Add server</span>' +
+    '    </div>'
+    : '') +
     (createVehicleAction ? 
-    '    <div id="createVehicleActionControl' + id + '" class="sidebarPanel noflex">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="centered" height="34px" width="34px" alt="icon">' +
-    '    </div>' : '') +
+    '    <div id="createVehicleActionControl' + id + '" class="actionBarAction noflex centered">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+    '      <span class="actionBarText">Add vehicle</span>' +
+    '    </div>'
+    : '') +
     (saveAction ? 
-    '    <div id="saveActionControl' + id + '" class="sidebarPanel noflex">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_save.png" class="centered" height="34px" width="34px" alt="icon">' +
-    '    </div>' : '') +
-    (removeAction ? 
-    '    <div id="removeActionControl' + id + '" class="sidebarPanel noflex">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_delete.png" class="centered" height="34px" width="34px" alt="icon">' +
-    '    </div>' : '') +
-    (disconnectAction ? 
-    '    <div id="disconnectActionControl' + id + '" class="sidebarPanel noflex">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_disable.png" class="centered" height="34px" width="34px" alt="icon">' +
-    '    </div>' : '') +
+    '    <div id="saveActionControl' + id + '" class="actionBarAction noflex centered">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_save.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+    '      <span class="actionBarText">Save</span>' +
+    '    </div>'
+    : '') +
+    (disconnectAction ?
+    '    <div id="disconnectActionControl' + id + '" class="actionBarAction noflex centered">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_disable.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+    '      <span class="actionBarText">Disconnect</span>' +
+    '    </div>'
+    : '') +
     (connectAction ? 
-    '    <div id="connectActionControl' + id + '" class="sidebarPanel noflex">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_enable.png" class="centered" height="34px" width="34px" alt="icon">' +
-    '    </div>' : '') +
+    '    <div id="connectActionControl' + id + '" class="actionBarAction noflex centered">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_enable.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+    '      <span class="actionBarText">Connect</span>' +
+    '    </div>'
+    : '') +
   
+    (removeAction ? 
+    '    <div id="removeActionControl' + id + '" class="actionBarAction noflex centered">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_delete.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+    '      <span class="actionBarText">Delete</span>' +
+    '    </div>'
+    : '') +
+    
     (includeSettings ? 
-    '    <div id="rightSidebarControl' + id + '" class="sidebarPanel noflex">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_settings.png" class="centered" height="34px" width="34px" alt="icon">' +
+    '    <div id="rightSidebarControl' + id + '" class="actionBarAction noflex centered">' +
+    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_settings.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
     '    </div>' : '') +
     
     '  </div>');
   
   // add listener to the control that activates the left sidebar
   $('#leftSidebarControl' + id).click(function() {
-    showSidebar('leftSidebar', 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+    showSidebar(LEFT_SIDEBAR_ID, 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
     
     return false;
   });
-  $('#leftSidebarControlText' + id).click(function() {
-    showSidebar('leftSidebar', 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+  $('#' + LEFT_SIDEBAR_CONTROL_TEXT + id).click(function() {
+    showSidebar(LEFT_SIDEBAR_ID, 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
     
     return false;
   });
@@ -539,15 +556,26 @@ function createServer() {
   
   // persist the information
   
-  // load the ui for the vehicle
+  // load the ui for the server
   loadServerUIs(server);
 
   // TODO: add a message to state that the action has been performed
   
   // reset the ui  
   resetForm('#createServerForm');
-  
-  return false;
+}
+
+/**
+ * unloadServersUIs(server)
+ *
+ * unloads the ui elements that are used for a server
+ */
+function unloadServerUIs(server) {
+  var serverControlId = SERVER_CONTROL + server.position;
+  var serverContentId = SERVER_CONTENT + server.position;
+
+  // remove the control for accessing the server
+  $('#' + serverControlId).remove();
 }
 
 /**
@@ -557,9 +585,6 @@ function createServer() {
  * 
  */
 function loadServerUIs(server) {
-  // TODO: test and remove if not required. it's a duplicate
-  // contentManager.addServer(server, true);
-  
   // adding the server to the content manager sets it's position
   var serverNumber = server.position;
   var serverControlId = SERVER_CONTROL + serverNumber;
@@ -568,13 +593,12 @@ function loadServerUIs(server) {
   // add the control that lets the user select the server details UI before the add server control on the side bar
   addControlToSidebarBeforeId(ADD_SERVER_CONTROL_ID, serverControlId, SERVER_ICON, server.name);
   
-  // add the ui content for the vehicle
-  // TODO: change this to add a form to maintain the settings for the server
-  addContentUI(serverContentId, server.name, 'This will have controls for the server, or at least some info about it');
-  
   // TODO: should adding the listner be moved to inside the addVehicleContentUI method?
   // add the listener fro the ui to activate the side bar 
-  addListenerToSidebarControl('leftSidebar', serverControlId, serverContentId);
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, serverControlId, serverContentId, function() {
+    // add the ui content for the server
+    addServerContentUI(serverContentId, server);
+  });
 }
 
 function addServerCreateUI(id, title) {  
@@ -642,6 +666,20 @@ function createVehicle() {
 }
 
 /**
+ * unloadVehiclesUIs(vehicle)
+ *
+ * unloads the ui elements that are used for a vehicle
+ */
+function unloadVehicleUIs(vehicle) {
+  // adding the vehicle to the content manager sets it's position
+  var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
+  var vehicleContentId = VEHICLE_CONTENT + vehicleNumber;
+
+  // remove the control for accessing the vehicle
+  $('#' + vehicleControlId).remove();
+}
+
+/**
  * loadVehicleUI()
  *
  * loads the ui elements to support the passed vehicle
@@ -663,9 +701,6 @@ function loadVehicleUIs(vehicle) {
       break;
   }
   
-  // TODO: test and remove if not required. it's a duplicate
-  // contentManager.addVehicle(vehicle, true);
-  
   // adding the vehicle to the content manager sets it's position
   var vehicleNumber = vehicle.position;
   var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
@@ -679,7 +714,7 @@ function loadVehicleUIs(vehicle) {
   
   // TODO: should adding the listner be moved to inside the addVehicleContentUI method?
   // add the listener fro the ui to activate the side bar 
-  addListenerToSidebarControl('leftSidebar', vehicleControlId, vehicleContentId);
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, vehicleControlId, vehicleContentId);
   
   // TODO: we have no UI to maintain the settings for the vehicle, need to add an option to provide this
   // add the ui to maintain the information for the vehicle
@@ -728,7 +763,7 @@ function addVehicleCreateUI(id, title) {
     '  </div>' +
     '</div>');
 
-  actionBarId = id + 'ActionBar';
+  actionBarId = id + ACTION_BAR;
   addActionBar(id, actionBarId, title, false, {
     save: true,
     saveFunction: createVehicle
@@ -737,6 +772,8 @@ function addVehicleCreateUI(id, title) {
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
 }
+
+var ACTION_BAR = 'ActionBar';
 
 /**
  * toggleSwitch() Toggles a checkbox hidden by css.
@@ -766,8 +803,109 @@ function addContentUI(id, title, subTitle) {
     '  </div>' +
     '</div>');
 
-  actionBarId = id + 'ActionBar';
+  actionBarId = id + ACTION_BAR;
   addActionBar(id, actionBarId, title, false);
+}
+
+function addServerContentUI(id, server) {
+
+  $('#mainApplication').append(
+    '<div id="' + id + '" class="applicationContents">' +
+    '  <div id="' + id + 'Form" class="formContents">' +
+    '    <div class="formContents">' +
+    '      <div class="formContents">' +
+    '       <form id="updateServerForm">' +
+    '         <ul>' + 
+    '           <li>' + 
+    '             <label for="serverUpdateName">Name</label>' +
+    '             <input type="text" name="name" id="serverUpdateName" placeholder="Name" required><br>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '             <label for="serverUpdateIPAddress">IP Address</label>' +
+    //'             <input type="text" name="address" id="serverUpdateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
+    // TODO: figure out the ip address pattern for front end validation
+    '             <input type="text" name="address" id="serverUpdateIPAddress" placeholder="IP Address" required><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="serverUpdatePort">Port</label>' +
+    '             <input type="number" min="1" max="99999" name="port" id="serverUpdatePort" placeholder="Port"><br>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '             <label for="serverUpdateProtocol">Protocol</label>' +
+    '             <input type="text" name="protocol" id="serverUpdateProtocol" placeholder="Protocol"><br>' +
+    '           </li>' +
+    '       </form>' +
+    '      </div>' +
+    '    </div>' +
+    '  </div>' +
+    '</div>');
+
+  // set values
+  $('#serverUpdateName').val(server.name);
+  $('#serverUpdateIPAddress').val(server.ipAddress);
+  $('#serverUpdatePort').val(server.port);
+  $('#serverUpdateProtocol').val(server.protocol);
+    
+  actionBarId = id + 'ActionBar';
+
+  addActionBar(id, actionBarId, server.name, false, {
+    remove: true,
+    removeFunction: function() {
+        removeServer(server);
+    },
+    save: true,
+    saveFunction: function() {
+      updateServer(server);
+    },
+    disconnect: true,
+    disconnectFunction: disconnectServer,
+    connect: true,
+    connectFunction: connectServer,
+  });
+}
+
+function removeServer(server) {
+  // TODO: prompt to confirm the action
+  
+  // set the focus to the welcome screen
+  setFocus(WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
+  
+  // unload the ui for the server
+  unloadServerUIs(server);
+  
+  // remove the server via the content manager
+  contentManager.removeServer(server);
+}
+
+function updateServer(server) {
+  // retrieve the values from the form and set to the server instance\
+  var newName = $('#serverUpdateName').val();
+  var nameModified = server.name !== newName;
+  
+  server.name = newName;
+  server.ipAddress = $('#serverUpdateIPAddress').val();
+  server.port = $('#serverUpdatePort').val();
+  server.protocol = $('#serverUpdateProtocol').val();
+
+  // persist the changes  
+  contentManager.updateServer(server);
+  
+  // update the ui if the name changes
+  if(nameModified) {
+    var serverControlId = SERVER_CONTROL + server.position;
+    
+    // update the control's text to the new name
+    updateControlOnSidebar(serverControlId, server.name);
+    
+    // update the on screen label to the new name
+    $('#' + LEFT_SIDEBAR_CONTROL_TEXT + SERVER_CONTENT + server.position + ACTION_BAR).text(server.name);
+  }
+}
+
+function disconnectServer() {
+}
+
+function connectServer() {
 }
 
 /*
@@ -900,6 +1038,18 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
     });
 }
 
+function removeVehicle(vehicle) {
+  // TODO: prompt to confirm the action
+  
+  // set the focus to the welcome screen
+  setFocus(WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
+  
+  // unload the ui for the server
+  unloadVehicleUIs(vehicle);
+  
+  // remove the vehicle via the content manager
+  contentManager.removeVehicle(vehicle);
+}
 
 /*
  * add a control to the sidebar, before the specified id
@@ -908,8 +1058,12 @@ function addControlToSidebarBeforeId(beforeId, id, icon, name) {
   $('#' + beforeId).before(
     '<div id="' + id + '" class="sidebarControlBar">' +
     '  <div class="sidebarControlIcon"><img src="' + icon + '" class="sidebarControlIcon"/></div>' +
-    '  <div class="sidebarControlText centered">' + name + '</div>' +
+    '  <div id="' + id + 'Name" class="sidebarControlText centered">' + name + '</div>' +
     '</div>');
+}
+
+function updateControlOnSidebar(id, name) {
+  $('#' + id + 'Name').text(name);
 }
 
 function appendControlToSidebar(groupId, id, icon, name) {
@@ -920,14 +1074,34 @@ function appendControlToSidebar(groupId, id, icon, name) {
     '</div>');
 }
 
+var deletePreviousContent = false;
+var previousContentId;
 
-
-function addListenerToSidebarControl(sidebarId, controlId, paneId) {
+function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFunction) {
   $('#' + controlId).click(function() {
-    setFocus(controlId, paneId);
+    // if reselecting the same then nothing to do other than hide the sidebar
+    if(paneId !== previousContentId) {
+    
+      // if the previous content is deletable then delete it
+      if(deletePreviousContent) {
+        $('#' + previousContentId).remove();
+      }
+      
+      previousContentId = paneId;
+      deletePreviousContent = false;
+      
+      // if the contentLoadFunction is defined then execute it to load the content
+      if(typeof contentLoadFunction !== 'undefined') {
+        contentLoadFunction();
+        deletePreviousContent = true;
+      }
+  
+      // set the focus, which switches the view to the content
+      setFocus(controlId, paneId);
+    }
+    
+    // hide the sidebar as it is hidden when a content selection is made
     hideSidebar(sidebarId, 'mainApplication', 'mainApplicationOverlay', '300ms');
-    // TODO: add logic to load the contents of each tab
-    // TODO: determine if the loading of each tab should be done on display of tab or not...
   });
 }
 
@@ -1005,7 +1179,7 @@ function setFocus(controlId, paneId) {
 /*
  *
  * showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms')
- * showSidebar('leftSidebar', 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms')
+ * showSidebar(LEFT_SIDEBAR_ID, 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms')
  * 
  */
 function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPanelCSS, time) {

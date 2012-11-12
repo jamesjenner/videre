@@ -152,9 +152,33 @@ div.taskBar {
 	/* position: absolute; */
 }
 
+div.actionBarAction {
+	height: 100%;
+}
+
+img.actionBarImage {
+	vertical-align: middle;
+	cursor: hand;
+	cursor: pointer;
+}
+
+span.actionBarText {
+	height: 100%;
+	padding-right: 20px;
+	font-size: medium;
+	cursor: hand;
+	cursor: pointer;
+}
+
+div.actionBarText {
+	
+}
+
 div.sidebarPanel {
 	height: 100%;
 	width: 40px;
+	cursor: hand;
+	cursor: pointer;
 }
 
 div.title {
@@ -176,6 +200,9 @@ div.title {
 	/* W3C */
 	display:box;
 	box-align:center;
+	
+	cursor: hand;
+	cursor: pointer;
 }
 
 div.tabBar {
@@ -471,6 +498,8 @@ div.sidebarControlBar {
 	border-left-width: 5px;
 	border-left-style: solid;
 	border-left-color: rgba(0, 0, 0, 0.0);
+	cursor: hand;
+	cursor: pointer;
 }
 
 div.sidebarControlActive {

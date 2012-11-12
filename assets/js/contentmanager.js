@@ -50,6 +50,7 @@ ContentManager.prototype = {
         var obj;
         var i;
         var key;
+        var temp;
         
         for(var prop in localStorage) {
             console.log("prop:" + prop);
@@ -66,7 +67,9 @@ ContentManager.prototype = {
                     case SERVER_KEY:
                         // we have a server object
                         obj = ioRetreiveObject(prop);
-                        this.addServer(new Server(obj.options), false);
+                        temp = new Server();
+                        temp.load(obj);
+                        this.addServer(temp, false);
                         break;
                 }
             }
@@ -82,8 +85,15 @@ ContentManager.prototype = {
             ioStoreObject(VEHICLE_KEY + '_' + this.vehicles[i].position, vehicle);
         }
     },
-    deleteVehicle: function(index) {
-        this.vehicles.splice(index, 1);
+    removeVehicle: function(vehicle) {
+        // remove the persisted vehicle
+        ioDelete(VEHICLE_KEY + '_' + vehicle.position);
+        
+        // remove from the array
+        this.vehicles.splice(vehicle.position, 1);
+    },
+    updateVehicle: function(vehicle) {
+        ioStoreObject(VEHICLE_KEY + '_' + vehicle.position, vehicle);
     },
     addServer: function(server, persist) {
         var i = this.servers.length;
@@ -92,8 +102,18 @@ ContentManager.prototype = {
         
         // persist the data
         if(persist) {
-            ioStoreObject(SERVER_KEY + '_' + this.vehicles[i].position, server);
+            ioStoreObject(SERVER_KEY + '_' + this.servers[i].position, server);
         }
+    },
+    removeServer: function(server) {
+        // remove the persisted server
+        ioDelete(SERVER_KEY + '_' + server.position);
+        
+        // remove from the array
+        this.servers.splice(server.position, 1);
+    },
+    updateServer: function(server) {
+        ioStoreObject(SERVER_KEY + '_' + server.position, server);
     },
     addPane: function(id) {
         this.panes[id] = new Pane();
@@ -191,6 +211,16 @@ var Server = function (options) {
     this.port = this.options.port || DEFAULT_PORT;
     this.protocol = this.options.protocol || DEFAULT_PROTOCOL;
 }
+
+Server.prototype = {
+    load: function(obj) {
+        this.position = obj.position || 0;
+        this.name = obj.name || "Server";
+        this.ipAddress = obj.ipAddress || DEFAULT_IP_ADDRESS;
+        this.port = obj.port || DEFAULT_PORT;
+        this.protocol = obj.protocol || DEFAULT_PROTOCOL;
+    },
+};
 
 var Pane = function (options) {
     this.currentTab = 0;
