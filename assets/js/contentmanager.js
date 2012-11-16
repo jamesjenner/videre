@@ -210,6 +210,8 @@ var Server = function (options) {
     this.ipAddress = this.options.ipAddress || DEFAULT_IP_ADDRESS;
     this.port = this.options.port || DEFAULT_PORT;
     this.protocol = this.options.protocol || DEFAULT_PROTOCOL;
+    this.isConnected = false;
+    this.nbrVehicles = 0;
 }
 
 Server.prototype = {

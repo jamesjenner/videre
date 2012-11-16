@@ -216,6 +216,12 @@ div.formContents {
 	width: inherit;
 }
 
+form span {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: medium;
+	color: #333333;
+}
+
 form label {
 	width: 200px;
 	margin-top: 3px;
@@ -255,14 +261,6 @@ form span.checkboxLabel {
 	font-size: small;
 	margin-left: 20px;
 }
-
-/*
-form select {
-	outline: none;
-	background: none;
-	border: solid 1px #333333;
-}
-*/
 
 form input[type="text"], input[type="number"] {
 	border-top: none;
@@ -411,6 +409,14 @@ form li.alignbottom {
 }
 
 /* end switch for iOS style for checkbox */
+
+/* map css */
+.map {
+	height: 400px;
+	width: 600px
+}
+
+/* end map css */
 
 
 div.tabControl {

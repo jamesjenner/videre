@@ -13,6 +13,7 @@
     <title>Videre</title>
     
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="assets/css/leaflet.css" />
     <script type='text/javascript' src='assets/js/jquery-1.8.0.min.js'></script>
     <script type='text/javascript' src='assets/js/jquery-ui-1.8.23.custom.min.js'></script>
     <script src="assets/js/jquery.touchSwipe.min.js"  type="text/javascript"></script>
@@ -20,6 +21,7 @@
     <script src="assets/js/iscroll.js"  type="text/javascript"></script>
     <script src="assets/js/gauge.js"  type="text/javascript"></script>
     <script src="assets/js/contentmanager.js"  type="text/javascript"></script>
+    <script src="assets/js/leaflet-src.js"  type="text/javascript"></script>
 
 <script type='text/javascript'>
 
@@ -214,7 +216,8 @@ $(document).ready(function() {
   // loadToolbar();
 
   configureApplication();
-  
+  // jgj todo: is this still required?
+  /*
   $('#toolbarAccess').swipe({
     swipeStatus:function(event, phase, direction, distance, fingerCount) {
       toolbarDisplay(direction, phase, distance);
@@ -223,6 +226,7 @@ $(document).ready(function() {
     threshold:null,
     fingers:'all'
   });
+  */
 
 });
 
@@ -593,7 +597,6 @@ function loadServerUIs(server) {
   // add the control that lets the user select the server details UI before the add server control on the side bar
   addControlToSidebarBeforeId(ADD_SERVER_CONTROL_ID, serverControlId, SERVER_ICON, server.name);
   
-  // TODO: should adding the listner be moved to inside the addVehicleContentUI method?
   // add the listener fro the ui to activate the side bar 
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, serverControlId, serverContentId, function() {
     // add the ui content for the server
@@ -709,12 +712,11 @@ function loadVehicleUIs(vehicle) {
   // add the control that lets the user select the vehicle content UI on the side bar
   addControlToSidebarBeforeId(ADD_VEHICLE_CONTROL_ID, vehicleControlId, icon, vehicle.name);
   
-  // add the ui content for the vehicle
-  addVehicleContentUI(vehicleContentId, vehicle.name, vehicleNumber);
-  
-  // TODO: should adding the listner be moved to inside the addVehicleContentUI method?
-  // add the listener fro the ui to activate the side bar 
-  addListenerToSidebarControl(LEFT_SIDEBAR_ID, vehicleControlId, vehicleContentId);
+  // add the listener for the ui to activate the side bar 
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, vehicleControlId, vehicleContentId, function() {
+    // add the ui content for the vehicle
+    addVehicleContentUI(vehicleContentId, vehicle);
+  });
   
   // TODO: we have no UI to maintain the settings for the vehicle, need to add an option to provide this
   // add the ui to maintain the information for the vehicle
@@ -816,7 +818,15 @@ function addServerContentUI(id, server) {
     '      <div class="formContents">' +
     '       <form id="updateServerForm">' +
     '         <ul>' + 
-    '           <li>' + 
+    '           <li>' +
+    '               <label>Status</label>' +
+    '               <span>' + (server.isConnected ? 'Connected' : 'Disconnected') + '</span>' +
+    '           </li>' + 
+    '           <li>' +
+    '               <label>Available vehicles</label>' +
+    '               <span>' + server.nbrVehicles + '</span>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
     '             <label for="serverUpdateName">Name</label>' +
     '             <input type="text" name="name" id="serverUpdateName" placeholder="Name" required><br>' +
     '           </li>' + 
@@ -911,18 +921,25 @@ function connectServer() {
 /*
  * addVehicleContentUI('vehicle1', 'Thunderbird 1');
  */
-function addVehicleContentUI(id, title, vehicleContentNbr) {
+function addVehicleContentUI(id, vehicle) {
+  vehicleContentNbr = vehicle.position;
+  // addVehicleContentUI(vehicleContentId, vehicle.name, vehicleNumber);
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
     '    <div class="contentSlider">' +
     '      <div id="' + id + PAYLOAD_SUB_ID + '" class="content" >' +
+    /*
     '        <div class="message">' +
     '          <div class="messageContents">' +
     '            <span>NO PAYLOAD FOUND</span><br/>' +
     '            <span>You can add payload monitors via settings</span>' +
     '          </div>' +
     '        </div>' +
+    */
+    '        <div id="map" class="map">' +
+    '        </div>' +
+    
     '      </div>' +
     '      <div id="' + id + TELEMETRY_SUB_ID + '" class="content">' +
     '        <div class="message">' +
@@ -944,11 +961,15 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
     */
     '      </div>' +
     '      <div id="' + id + FLIGHTPLAN_SUB_ID + '" class="content">' +
+    /*
     '        <div class="message">' +
     '          <div class="messageContents">' +
     '            <span>NO NAVIGATION FOUND</span><br/>' +
     '            <span>You can configure navigation options via settings</span>' +
     '          </div>' +
+    '        </div>' +
+    */
+    '        <div id="flightPlanMap" class="map">' +
     '        </div>' +
     '      </div>' +
     '      <div id="' + id + REMOTECONTROL_SUB_ID + '" class="content">' +
@@ -962,6 +983,68 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
     '    </div>' +
     '  </div>' +
     '</div>');
+  
+  // setup the map
+  var flightPlanMap = L.map('flightPlanMap').setView([51.505, -0.09], 13);
+  
+  L.tileLayer('http://{s}.tile.cloudmade.com/21AE2933E8054FF8B90A537357289E78/997/256/{z}/{x}/{y}.png', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+    maxZoom: 18
+  }).addTo(flightPlanMap);
+
+  // setup the map
+  var map = L.map('map').setView([51.505, -0.09], 13);
+
+  L.tileLayer('http://{s}.tile.cloudmade.com/21AE2933E8054FF8B90A537357289E78/997/256/{z}/{x}/{y}.png', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+    maxZoom: 18
+  }).addTo(map);
+
+  
+  
+  var marker = L.marker([51.5, -0.09]).addTo(map);
+  
+  marker.setZIndexOffset(900);
+  
+  var circle = L.circle([51.508, -0.11], 500, {
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.5
+  }).addTo(map);
+  
+  var polygon = L.polygon([
+    [51.509, -0.08],
+    [51.503, -0.06],
+    [51.51, -0.047]
+  ]).addTo(map);
+  
+  marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+  circle.bindPopup("I am a circle.");
+  polygon.bindPopup("I am a polygon.");  
+
+  var popup = L.popup()
+    .setLatLng([51.5, -0.09])
+    .setContent("I am a standalone popup.")
+    .openOn(map);
+  
+  var popup = L.popup();
+  
+  
+  function onMapClick(e) {
+      popup
+          .setLatLng(e.latlng)
+          .setContent("You clicked the map at " + e.latlng.toString())
+          .openOn(map);
+  }
+  function onFlightPlanMapClick(e) {
+      popup
+          .setLatLng(e.latlng)
+          .setContent("You clicked the map at " + e.latlng.toString())
+          .openOn(flightPlanMap);
+  }
+  
+  map.on('click', onMapClick);
+  flightPlanMap.on('click', onFlightPlanMapClick);
 
   // add the pane to the tab manager
   contentManager.addPane(id);
@@ -1009,17 +1092,17 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
   
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title, true);
-  addTabToActionBar(actionBarId, id, id  + PAYLOAD_TAB_CONTROL, 'Payload', PAYLOAD_TAB, vehicleContentNbr, true);
+  addActionBar(id, actionBarId, vehicle.name, true);
+  addTabToActionBar(actionBarId, id, id  + PAYLOAD_TAB_CONTROL, 'Payload', PAYLOAD_TAB, vehicle.position, true);
   contentManager.addTab(id, id  + PAYLOAD_SUB_ID, payloadSettings);
   addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleContentNbr);
+  addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position);
   contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
   addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_TAB_CONTROL, 'Navigation', FLIGHT_PLAN_TAB, vehicleContentNbr);
+  addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_TAB_CONTROL, 'Navigation', FLIGHT_PLAN_TAB, vehicle.position);
   contentManager.addTab(id, id  + FLIGHTPLAN_SUB_ID, navigationSettings);
   addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicleContentNbr);
+  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
   contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
   
   // set the tab manager for this panel to the first tab (which is the selected tab)
@@ -1031,9 +1114,10 @@ function addVehicleContentUI(id, title, vehicleContentNbr) {
    * the issues with side bar navigation are sorted out
    */
   // setup the swipe using Slider for the vehicle content
-  vehicleContentSlider[vehicleContentNbr] = new Swipe(document.getElementById(id + 'ContentSlider'), {
+  
+  vehicleContentSlider[vehicle.position] = new Swipe(document.getElementById(id + 'ContentSlider'), {
 //      callback: function(e, position) { contentTabChanged(e, position, id); },
-      slideCallback: function(position) { contentTabChanged('', position, id, vehicleContentNbr); },
+      slideCallback: function(position) { contentTabChanged('', position, id, vehicle.position); },
       slideEffect: 'android'
     });
 }
@@ -1588,7 +1672,7 @@ function addControlToToolbar(parentId, id, icon, name, subText) {
     */
     '</div>');
 }
-
+/* jgj TODO: is this still required?
 var toolbarHidden = true;
 
 function toolbarDisplay(direction, phase, distance) {
@@ -1632,7 +1716,7 @@ function toolbarDisplay(direction, phase, distance) {
     
   }
 }
-
+*/
 /*
  * showGauge() displays a panel, creating it if it doesn't exist
  * 
