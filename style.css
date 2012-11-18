@@ -32,9 +32,11 @@
 }
 */
 
+
+/* the following is to stop flickering issues on android, however it is messing up zlayer selection under chrome */
 * {
      margin: 0 auto;
-    -webkit-transform: translateZ(0);
+    /* -webkit-transform: translateZ(0); */
 }
 
 /* reset everything */
@@ -412,8 +414,16 @@ form li.alignbottom {
 
 /* map css */
 .map {
+	/*
 	height: 400px;
-	width: 600px
+	width: 600px;
+	*/
+	
+	height: 95%;
+	/*
+	width: 100%;
+	*/
+	color: black;
 }
 
 /* end map css */

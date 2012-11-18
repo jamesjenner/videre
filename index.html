@@ -937,7 +937,7 @@ function addVehicleContentUI(id, vehicle) {
     '          </div>' +
     '        </div>' +
     */
-    '        <div id="map" class="map">' +
+    '        <div id="payloadMap" class="map">' +
     '        </div>' +
     
     '      </div>' +
@@ -985,67 +985,177 @@ function addVehicleContentUI(id, vehicle) {
     '</div>');
   
   // setup the map
-  var flightPlanMap = L.map('flightPlanMap').setView([51.505, -0.09], 13);
-  
-  L.tileLayer('http://{s}.tile.cloudmade.com/21AE2933E8054FF8B90A537357289E78/997/256/{z}/{x}/{y}.png', {
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
-    maxZoom: 18
-  }).addTo(flightPlanMap);
+  var mapquestOsmTileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+      mapquestOsmAttribution = "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>, Tiles Courtesy of <a href='http://open.mapquest.com' target='_blank'>MapQuest</a>";
 
+  var mapquestOpenAerialTileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.png',
+      mapquestOpenAerialAttribution = "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>, Tiles Courtesy of <a href='http://open.mapquest.com' target='_blank'>MapQuest</a>, Portions Courtesy NASA/JPL-Caltech and U.S. Depart. of Agriculture, Farm Service Agency";
+
+  var opencyclemapLandscapeUrl = 'http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png',
+      opencyclemapLandscapeAttribution = '&copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
+      
+      
+  var esriWorldTopographicalUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+      esriWorldTopographicalAttribution = 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community';
+  
+  var esriWorldImageryUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      esriWorldImageryAttribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+
+  var esriWorldImageryTileLayer = new L.TileLayer(esriWorldImageryUrl, {maxZoom: 18, attribution: esriWorldImageryAttribution,subdomains: ['1', '2', '3', '4']});
+  var esriWorldTopographicalTileLayer = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
+
+  var flightPlanTileLayer = new L.TileLayer(mapquestOsmTileUrl, {
+    maxZoom: 18,
+    attribution: mapquestOsmAttribution,
+    subdomains: ['1', '2', '3', '4']
+  });
+  var flightPlanSatTileLayer = new L.TileLayer(mapquestOpenAerialTileUrl, {
+    maxZoom: 18,
+    attribution: mapquestOpenAerialAttribution,
+    subdomains: ['1', '2', '3', '4']
+  });
+  
+  var cloudmadeTilesUrl = 'http://{s}.tile.cloudmade.com/21AE2933E8054FF8b90A537357289E78/{styleId}/256/{z}/{x}/{y}.png',
+      cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+
+  var minimal   = L.tileLayer(cloudmadeTilesUrl, {styleId: 22677, attribution: cloudmadeAttribution}),
+    fresh  = L.tileLayer(cloudmadeTilesUrl, {styleId: 997, attribution: cloudmadeAttribution}),
+    midnightCommander  = L.tileLayer(cloudmadeTilesUrl, {styleId: 999, attribution: cloudmadeAttribution}),
+    nightVision  = L.tileLayer(cloudmadeTilesUrl, {styleId: 78125, attribution: cloudmadeAttribution}),
+    minimalMarkers = L.tileLayer(cloudmadeTilesUrl, {styleId: 63044, attribution: cloudmadeAttribution}),
+    motorways = L.tileLayer(cloudmadeTilesUrl, {styleId: 46561, attribution: cloudmadeAttribution});
+
+  var icon = L.icon({
+    iconUrl: 'assets/img/marker-icon.png',
+    shadowUrl: 'assets/img/marker-shadow.png'
+  });
+
+  var flightPlanMap = new L.Map('flightPlanMap', {
+    center: new L.LatLng(-27.632600, 153.146466),
+    zoom: 16,
+    layers: [flightPlanTileLayer, flightPlanSatTileLayer, esriWorldImageryTileLayer, esriWorldTopographicalTileLayer],
+    zoomControl: false
+  });
+
+  var flightPlanBaseLayers = {
+    "Map Quest Street": flightPlanTileLayer,
+    "Map Quest Satelite": flightPlanSatTileLayer,
+    "ESRI World Imagery": esriWorldImageryTileLayer,
+    "ESRI World Topographical": esriWorldTopographicalTileLayer
+  };
+  
+  L.control.layers(flightPlanBaseLayers).addTo(flightPlanMap);
+  
+  var littleton = L.marker([39.61, -105.02], {icon: icon}).bindPopup('This is Littleton, Co.'),
+    denver    = L.marker([39.74, -104.99], {icon: icon}).bindPopup('This is Denver, Co.'),
+    aurora    = L.marker([39.73, -104.8], {icon: icon}).bindPopup('This is Aurora, Co.'),
+    golden    = L.marker([39.77, -105.23], {icon: icon}).bindPopup('This is Golden, Co.');
+    
+  var cities = L.layerGroup([littleton, denver, aurora, golden]);
+  
   // setup the map
-  var map = L.map('map').setView([51.505, -0.09], 13);
+  var payloadMap = new L.Map('payloadMap', {
+    center: [39.73, -104.99],
+    zoom: 10,
+    layers: [minimal, motorways, cities],
+    zoomControl: false
+  });
+  
+  L.control.scale().addTo(payloadMap);
+  
+  var baseLayers = {
+    "Fresh": fresh,
+    "Minimal": minimal,
+    "Minimal 2": minimalMarkers,
+    "Night Vision": nightVision,
+    "Night View": midnightCommander
+  };
 
-  L.tileLayer('http://{s}.tile.cloudmade.com/21AE2933E8054FF8B90A537357289E78/997/256/{z}/{x}/{y}.png', {
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
-    maxZoom: 18
-  }).addTo(map);
+  var overlays = {
+    "Motorways": motorways,
+    "Cities": cities
+  };
+  
+  L.control.layers(baseLayers, overlays).addTo(payloadMap);
 
+  payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
+  payloadMap.addLayer(nightVision);
   
   
-  var marker = L.marker([51.5, -0.09]).addTo(map);
-  
-  marker.setZIndexOffset(900);
-  
-  var circle = L.circle([51.508, -0.11], 500, {
-    color: 'red',
+
+  var circle = L.circle([-27.62499, 153.16169], 50, {
+    color: 'blue',
     fillColor: '#f03',
-    fillOpacity: 0.5
-  }).addTo(map);
-  
+    fillOpacity: 0.5,
+  }).addTo(payloadMap);
+  /*
   var polygon = L.polygon([
-    [51.509, -0.08],
-    [51.503, -0.06],
-    [51.51, -0.047]
-  ]).addTo(map);
-  
-  marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
-  circle.bindPopup("I am a circle.");
-  polygon.bindPopup("I am a polygon.");  
+    [-27.62531, 153.14351],
+    [-27.61957, 153.15287],
+    [-27.62499, 153.16169],
+    [-27.63523, 153.16038],
+    [-27.63252, 153.14302],  
+  ]).addTo(payloadMap);
+  */
+  var marker = L.marker([-27.62531, 153.14351], { draggable: true, opacity: 0.5}).addTo(payloadMap);
+  var marker = L.marker([-27.61957, 153.15287], { draggable: true, opacity: 0.5}).addTo(payloadMap);
+  var marker = L.marker([-27.62499, 153.16169], { draggable: true, opacity: 0.5}).addTo(payloadMap);
+  var marker = L.marker([-27.63523, 153.16038], { draggable: true, opacity: 0.5}).addTo(payloadMap);
+  var marker = L.marker([-27.63252, 153.14302], { draggable: true, opacity: 0.5}).addTo(payloadMap);
 
-  var popup = L.popup()
+  var polyline = L.polyline([[-27.62531, 153.14351],
+    [-27.61957, 153.15287],
+    [-27.62499, 153.16169],
+    [-27.63523, 153.16038],
+    [-27.63252, 153.14302]], {color: 'blue'}).addTo(payloadMap);
+  
+
+  
+  /* marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup(); */
+  /*
+  circle.bindPopup("I am a circle.");
+  polygon.bindPopup("I am a polygon.");
+  */
+
+  // note that adding a popup forces the map to navigate to that location
+  /*
+  var popup1 = L.popup()
     .setLatLng([51.5, -0.09])
     .setContent("I am a standalone popup.")
-    .openOn(map);
+    .openOn(payloadMap);
   
-  var popup = L.popup();
+  var popup2 = L.popup()
+    .setLatLng([51.5, -0.09])
+    .setContent("I am a standalone popup.")
+    .openOn(flightPlanMap);
+    */
+  /*
+  var popup1 = L.popup()
+    .setLatLng([51.5, -0.09])
+    .setContent("I am a standalone popup.");
   
-  
-  function onMapClick(e) {
+  var popup2 = L.popup()
+    .setLatLng([51.5, -0.09])
+    .setContent("I am a standalone popup.");
+  */
+
+
+  function onPayloadMapMapClick(e) {
       popup
           .setLatLng(e.latlng)
           .setContent("You clicked the map at " + e.latlng.toString())
-          .openOn(map);
+          .openOn(payloadMap);
   }
   function onFlightPlanMapClick(e) {
-      popup
+      popup2
           .setLatLng(e.latlng)
           .setContent("You clicked the map at " + e.latlng.toString())
           .openOn(flightPlanMap);
   }
   
-  map.on('click', onMapClick);
+  payloadMap.on('click', onPayloadMapMapClick);
   flightPlanMap.on('click', onFlightPlanMapClick);
-
+  
   // add the pane to the tab manager
   contentManager.addPane(id);
   
