@@ -12,8 +12,8 @@
 
     <title>Videre</title>
     
-    <link rel="stylesheet" type="text/css" href="style.css" />
     <link rel="stylesheet" type="text/css" href="assets/css/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
     <script type='text/javascript' src='assets/js/jquery-1.8.0.min.js'></script>
     <script type='text/javascript' src='assets/js/jquery-ui-1.8.23.custom.min.js'></script>
     <script src="assets/js/jquery.touchSwipe.min.js"  type="text/javascript"></script>
@@ -927,7 +927,8 @@ function addVehicleContentUI(id, vehicle) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
-    '    <div class="contentSlider">' +
+    
+    '    <div class="sliderWrapper">' +
     '      <div id="' + id + PAYLOAD_SUB_ID + '" class="content" >' +
     /*
     '        <div class="message">' +
@@ -985,6 +986,9 @@ function addVehicleContentUI(id, vehicle) {
     '</div>');
   
   // setup the map
+  
+  // TODO: tidy up the mapping logic
+  
   var mapquestOsmTileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
       mapquestOsmAttribution = "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>, Tiles Courtesy of <a href='http://open.mapquest.com' target='_blank'>MapQuest</a>";
 
@@ -1025,11 +1029,9 @@ function addVehicleContentUI(id, vehicle) {
     minimalMarkers = L.tileLayer(cloudmadeTilesUrl, {styleId: 63044, attribution: cloudmadeAttribution}),
     motorways = L.tileLayer(cloudmadeTilesUrl, {styleId: 46561, attribution: cloudmadeAttribution});
 
-  var icon = L.icon({
-    iconUrl: 'assets/img/marker-icon.png',
-    shadowUrl: 'assets/img/marker-shadow.png'
-  });
-
+  // set the default image path for te icon
+  L.Icon.Default.imagePath = 'assets/img/';
+    
   var flightPlanMap = new L.Map('flightPlanMap', {
     center: new L.LatLng(-27.632600, 153.146466),
     zoom: 16,
@@ -1046,10 +1048,10 @@ function addVehicleContentUI(id, vehicle) {
   
   L.control.layers(flightPlanBaseLayers).addTo(flightPlanMap);
   
-  var littleton = L.marker([39.61, -105.02], {icon: icon}).bindPopup('This is Littleton, Co.'),
-    denver    = L.marker([39.74, -104.99], {icon: icon}).bindPopup('This is Denver, Co.'),
-    aurora    = L.marker([39.73, -104.8], {icon: icon}).bindPopup('This is Aurora, Co.'),
-    golden    = L.marker([39.77, -105.23], {icon: icon}).bindPopup('This is Golden, Co.');
+  var littleton = L.marker([39.61, -105.02]).bindPopup('This is Littleton, Co.'),
+    denver    = L.marker([39.74, -104.99]).bindPopup('This is Denver, Co.'),
+    aurora    = L.marker([39.73, -104.8]).bindPopup('This is Aurora, Co.'),
+    golden    = L.marker([39.77, -105.23]).bindPopup('This is Golden, Co.');
     
   var cities = L.layerGroup([littleton, denver, aurora, golden]);
   
@@ -1080,36 +1082,40 @@ function addVehicleContentUI(id, vehicle) {
 
   payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
   payloadMap.addLayer(nightVision);
-  
-  
 
   var circle = L.circle([-27.62499, 153.16169], 50, {
     color: 'blue',
     fillColor: '#f03',
     fillOpacity: 0.5,
   }).addTo(payloadMap);
-  /*
-  var polygon = L.polygon([
+
+  // setup the initial points
+  // TODO: this should be loaded, uncertain where from...
+  var flightPathPoints = new Array(
     [-27.62531, 153.14351],
     [-27.61957, 153.15287],
     [-27.62499, 153.16169],
     [-27.63523, 153.16038],
-    [-27.63252, 153.14302],  
-  ]).addTo(payloadMap);
-  */
-  var marker = L.marker([-27.62531, 153.14351], { draggable: true, opacity: 0.5}).addTo(payloadMap);
-  var marker = L.marker([-27.61957, 153.15287], { draggable: true, opacity: 0.5}).addTo(payloadMap);
-  var marker = L.marker([-27.62499, 153.16169], { draggable: true, opacity: 0.5}).addTo(payloadMap);
-  var marker = L.marker([-27.63523, 153.16038], { draggable: true, opacity: 0.5}).addTo(payloadMap);
-  var marker = L.marker([-27.63252, 153.14302], { draggable: true, opacity: 0.5}).addTo(payloadMap);
-
-  var polyline = L.polyline([[-27.62531, 153.14351],
-    [-27.61957, 153.15287],
-    [-27.62499, 153.16169],
-    [-27.63523, 153.16038],
-    [-27.63252, 153.14302]], {color: 'blue'}).addTo(payloadMap);
+    [-27.63252, 153.14302]);
   
-
+  // create the flight path polyline
+  var flightPathPolyLine = L.polyline(flightPathPoints, {color: 'blue'}).addTo(payloadMap);
+  
+  var markerDragged = function (i) {
+    return function(e) {
+      newPoint = e.target.getLatLng();
+      flightPathPoints[i].lat = newPoint.lat;
+      flightPathPoints[i].lng = newPoint.lng;
+      
+      flightPathPolyLine.setLatLngs(flightPathPoints);
+    }
+  }
+  
+  // iterate through the array and add a marker for each point
+  // TODO: special marker for special events, or for landing/takeoff?
+  for(var i=0, l=flightPathPoints.length; i < l; i++) {
+    L.marker(flightPathPoints[i], { draggable: true, opacity: 0.5}).addTo(payloadMap).on('drag', markerDragged(i));
+  }
   
   /* marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup(); */
   /*

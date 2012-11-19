@@ -122,7 +122,20 @@ div.messageContents {
 
 div.contentSlider {
 	width:100%;
-	height:100%;
+	
+	/* display: table; */
+	position: absolute;
+	/* top is to be the height of the task bar, refer taskBar */
+	top: 40px;
+	left: 0;
+	bottom: 0;
+}
+
+div.sliderWrapper {
+	width:100%;
+	height: 100%;
+	top:0px;
+	left:0px;
 	display: table;
 }
 
@@ -145,13 +158,18 @@ div.noflex {
 	box-flex:0.0;
 }
 
+.leaflet-control-layers-toggle {
+	background-image: url(assets/img/layers.png);
+}
+
+
 div.taskBar {
 	top: 0;
 	left: 0;
 	background-color: black;
 	width: 100%;
 	height: 40px;
-	/* position: absolute; */
+	position: absolute;
 }
 
 div.actionBarAction {
@@ -419,10 +437,8 @@ form li.alignbottom {
 	width: 600px;
 	*/
 	
-	height: 95%;
-	/*
+	height: 100%;
 	width: 100%;
-	*/
 	color: black;
 }
 
