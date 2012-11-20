@@ -122,8 +122,15 @@ div.messageContents {
 
 div.contentSlider {
 	width:100%;
-	
-	/* display: table; */
+	position: absolute;
+	/* top is to be the height of the task bar, refer taskBar */
+	top: 40px;
+	left: 0;
+	bottom: 0;
+}
+
+div.formContainer {
+	width:100%;
 	position: absolute;
 	/* top is to be the height of the task bar, refer taskBar */
 	top: 40px;
@@ -232,8 +239,8 @@ div.tabBar {
 div.formContents {
 	background: white;
 	color: #333333;
-	height: inherit;
-	width: inherit;
+	height: 100%;
+	width: 100%;
 }
 
 form span {
