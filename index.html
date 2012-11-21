@@ -752,11 +752,16 @@ function addVehicleCreateUI(id, title) {
     '           </li>' +
     
     '           <li>' +
-    '             <input type="checkbox" name="navigationEnabled" id="vehicleCreateNavigationEnabled" /><span class="checkboxLabel">Vehicle supports navigation<span><br>' + 
+    // '             <input type="checkbox" name="navigationEnabled" id="vehicleCreateNavigationEnabled" /><span class="checkboxLabel">Vehicle supports navigation<span><br>' +
+    '             <span class="checkboxLabel">Vehicle supports navigation</span> ' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="navigationEnabled" id="vehicleCreateNavigationEnabled"></div>' +
+
     '           </li>' + 
 
     '           <li>' +
-    '             <input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControl" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
+    // '             <input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControl" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
+    '             <span class="checkboxLabel">Vehicle can be controlled remotely</span> ' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControl"></div>' +
     '           </li>' + 
     '         </ul>' + 
     '       </form>' +
@@ -1026,8 +1031,8 @@ function addVehicleContentUI(id, vehicle) {
     fresh  = L.tileLayer(cloudmadeTilesUrl, {styleId: 997, attribution: cloudmadeAttribution}),
     midnightCommander  = L.tileLayer(cloudmadeTilesUrl, {styleId: 999, attribution: cloudmadeAttribution}),
     nightVision  = L.tileLayer(cloudmadeTilesUrl, {styleId: 78125, attribution: cloudmadeAttribution}),
-    minimalMarkers = L.tileLayer(cloudmadeTilesUrl, {styleId: 63044, attribution: cloudmadeAttribution}),
-    motorways = L.tileLayer(cloudmadeTilesUrl, {styleId: 46561, attribution: cloudmadeAttribution});
+    minimalMarkers = L.tileLayer(cloudmadeTilesUrl, {styleId: 63044, attribution: cloudmadeAttribution});
+//    motorways = L.tileLayer(cloudmadeTilesUrl, {styleId: 46561, attribution: cloudmadeAttribution});
 
   // set the default image path for te icon
   L.Icon.Default.imagePath = 'assets/img/';
@@ -1048,18 +1053,11 @@ function addVehicleContentUI(id, vehicle) {
   
   L.control.layers(flightPlanBaseLayers).addTo(flightPlanMap);
   
-  var littleton = L.marker([39.61, -105.02]).bindPopup('This is Littleton, Co.'),
-    denver    = L.marker([39.74, -104.99]).bindPopup('This is Denver, Co.'),
-    aurora    = L.marker([39.73, -104.8]).bindPopup('This is Aurora, Co.'),
-    golden    = L.marker([39.77, -105.23]).bindPopup('This is Golden, Co.');
-    
-  var cities = L.layerGroup([littleton, denver, aurora, golden]);
-  
   // setup the map
   var payloadMap = new L.Map('payloadMap', {
     center: [39.73, -104.99],
     zoom: 10,
-    layers: [minimal, motorways, cities],
+    layers: [minimal],
     zoomControl: false
   });
   
@@ -1073,12 +1071,7 @@ function addVehicleContentUI(id, vehicle) {
     "Night View": midnightCommander
   };
 
-  var overlays = {
-    "Motorways": motorways,
-    "Cities": cities
-  };
-  
-  L.control.layers(baseLayers, overlays).addTo(payloadMap);
+  L.control.layers(baseLayers).addTo(payloadMap);
 
   payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
   payloadMap.addLayer(nightVision);
@@ -1117,37 +1110,11 @@ function addVehicleContentUI(id, vehicle) {
     L.marker(flightPathPoints[i], { draggable: true, opacity: 0.5}).addTo(payloadMap).on('drag', markerDragged(i));
   }
   
-  /* marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup(); */
-  /*
-  circle.bindPopup("I am a circle.");
-  polygon.bindPopup("I am a polygon.");
-  */
-
-  // note that adding a popup forces the map to navigate to that location
-  /*
-  var popup1 = L.popup()
-    .setLatLng([51.5, -0.09])
-    .setContent("I am a standalone popup.")
-    .openOn(payloadMap);
-  
-  var popup2 = L.popup()
-    .setLatLng([51.5, -0.09])
-    .setContent("I am a standalone popup.")
-    .openOn(flightPlanMap);
-    */
-  /*
-  var popup1 = L.popup()
-    .setLatLng([51.5, -0.09])
-    .setContent("I am a standalone popup.");
-  
-  var popup2 = L.popup()
-    .setLatLng([51.5, -0.09])
-    .setContent("I am a standalone popup.");
-  */
-
+  var popup1 = L.popup();
+  var popup2 = L.popup();
 
   function onPayloadMapMapClick(e) {
-      popup
+      popup1
           .setLatLng(e.latlng)
           .setContent("You clicked the map at " + e.latlng.toString())
           .openOn(payloadMap);

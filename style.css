@@ -37,6 +37,7 @@
 * {
      margin: 0 auto;
     /* -webkit-transform: translateZ(0); */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* reset everything */
@@ -167,6 +168,9 @@ div.noflex {
 
 .leaflet-control-layers-toggle {
 	background-image: url(assets/img/layers.png);
+}
+.leaflet-container {
+	cursor: auto;
 }
 
 
