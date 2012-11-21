@@ -975,7 +975,7 @@ function addVehicleContentUI(id, vehicle) {
     '          </div>' +
     '        </div>' +
     */
-    '        <div id="flightPlanMap" class="map">' +
+    '        <div id="navigationMap" class="map">' +
     '        </div>' +
     '      </div>' +
     '      <div id="' + id + REMOTECONTROL_SUB_ID + '" class="content">' +
@@ -997,9 +997,6 @@ function addVehicleContentUI(id, vehicle) {
   var mapquestOsmTileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
       mapquestOsmAttribution = "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>, Tiles Courtesy of <a href='http://open.mapquest.com' target='_blank'>MapQuest</a>";
 
-  var mapquestOpenAerialTileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.png',
-      mapquestOpenAerialAttribution = "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>, Tiles Courtesy of <a href='http://open.mapquest.com' target='_blank'>MapQuest</a>, Portions Courtesy NASA/JPL-Caltech and U.S. Depart. of Agriculture, Farm Service Agency";
-
   var opencyclemapLandscapeUrl = 'http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png',
       opencyclemapLandscapeAttribution = '&copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
       
@@ -1010,23 +1007,15 @@ function addVehicleContentUI(id, vehicle) {
   var esriWorldImageryUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       esriWorldImageryAttribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
 
-  var esriWorldImageryTileLayer = new L.TileLayer(esriWorldImageryUrl, {maxZoom: 18, attribution: esriWorldImageryAttribution,subdomains: ['1', '2', '3', '4']});
-  var esriWorldTopographicalTileLayer = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
-
-  var flightPlanTileLayer = new L.TileLayer(mapquestOsmTileUrl, {
-    maxZoom: 18,
-    attribution: mapquestOsmAttribution,
-    subdomains: ['1', '2', '3', '4']
-  });
-  var flightPlanSatTileLayer = new L.TileLayer(mapquestOpenAerialTileUrl, {
-    maxZoom: 18,
-    attribution: mapquestOpenAerialAttribution,
-    subdomains: ['1', '2', '3', '4']
-  });
-  
   var cloudmadeTilesUrl = 'http://{s}.tile.cloudmade.com/21AE2933E8054FF8b90A537357289E78/{styleId}/256/{z}/{x}/{y}.png',
       cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
 
+  var esriWorldImageryTileLayer = new L.TileLayer(esriWorldImageryUrl, {maxZoom: 18, attribution: esriWorldImageryAttribution,subdomains: ['1', '2', '3', '4']});
+  var esriWorldTopographicalTileLayer = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
+  var esriWorldTopographicalTileLayer2 = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
+
+  var mapquestOsmTileLayer = new L.TileLayer(mapquestOsmTileUrl, {maxZoom: 18, attribution: mapquestOsmAttribution, subdomains: ['1', '2', '3', '4']});
+  
   var minimal   = L.tileLayer(cloudmadeTilesUrl, {styleId: 22677, attribution: cloudmadeAttribution}),
     fresh  = L.tileLayer(cloudmadeTilesUrl, {styleId: 997, attribution: cloudmadeAttribution}),
     midnightCommander  = L.tileLayer(cloudmadeTilesUrl, {styleId: 999, attribution: cloudmadeAttribution}),
@@ -1037,54 +1026,62 @@ function addVehicleContentUI(id, vehicle) {
   // set the default image path for te icon
   L.Icon.Default.imagePath = 'assets/img/';
     
-  var flightPlanMap = new L.Map('flightPlanMap', {
-    center: new L.LatLng(-27.632600, 153.146466),
-    zoom: 16,
-    layers: [flightPlanTileLayer, flightPlanSatTileLayer, esriWorldImageryTileLayer, esriWorldTopographicalTileLayer],
-    zoomControl: false
-  });
-
-  var flightPlanBaseLayers = {
-    "Map Quest Street": flightPlanTileLayer,
-    "Map Quest Satelite": flightPlanSatTileLayer,
+  var payloadLayers = {
+    "Fresh": fresh,
+    "Minimal": minimal,
+    "Minimal 2": minimalMarkers,
+    "Night Vision": nightVision,
+    "Night View": midnightCommander,
+    "Map Quest Street": mapquestOsmTileLayer,
     "ESRI World Imagery": esriWorldImageryTileLayer,
     "ESRI World Topographical": esriWorldTopographicalTileLayer
   };
   
-  L.control.layers(flightPlanBaseLayers).addTo(flightPlanMap);
+  var flightPlanLayers = {
+    "Cloudmade Fresh": fresh,
+    "Cloudmade Minimal": minimal,
+    "Cloudmade Minimal 2": minimalMarkers,
+    "Cloudmade Night Vision": nightVision,
+    "Cloudmade Night View": midnightCommander,
+    "Map Quest Street": mapquestOsmTileLayer,
+    "ESRI World Imagery": esriWorldImageryTileLayer,
+    "ESRI World Topographical": esriWorldTopographicalTileLayer
+  };
+  
+  var navigationMap = new L.Map('navigationMap', {
+    center: [-27.632600, 153.146466],
+    zoom: 14,
+    layers: [mapquestOsmTileLayer],
+    zoomControl: false
+  });
+
+  L.control.layers(flightPlanLayers).addTo(navigationMap);
   
   // setup the map
   var payloadMap = new L.Map('payloadMap', {
-    center: [39.73, -104.99],
+    center: [-27.632600, 153.146466],
     zoom: 10,
-    layers: [minimal],
+    layers: [esriWorldTopographicalTileLayer2],
     zoomControl: false
   });
   
   L.control.scale().addTo(payloadMap);
   
-  var baseLayers = {
-    "Fresh": fresh,
-    "Minimal": minimal,
-    "Minimal 2": minimalMarkers,
-    "Night Vision": nightVision,
-    "Night View": midnightCommander
-  };
+  // L.control.layers(payloadLayers).addTo(payloadMap);
 
-  L.control.layers(baseLayers).addTo(payloadMap);
-
-  payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
-  payloadMap.addLayer(nightVision);
-
+  // payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
+  
+/*
   var circle = L.circle([-27.62499, 153.16169], 50, {
     color: 'blue',
     fillColor: '#f03',
     fillOpacity: 0.5,
   }).addTo(payloadMap);
+*/
 
   // setup the initial points
   // TODO: this should be loaded, uncertain where from...
-  var flightPathPoints = new Array(
+  var navigationPoints = new Array(
     [-27.62531, 153.14351],
     [-27.61957, 153.15287],
     [-27.62499, 153.16169],
@@ -1092,22 +1089,22 @@ function addVehicleContentUI(id, vehicle) {
     [-27.63252, 153.14302]);
   
   // create the flight path polyline
-  var flightPathPolyLine = L.polyline(flightPathPoints, {color: 'blue'}).addTo(payloadMap);
+  var navigationPolyLine = L.polyline(navigationPoints, {color: 'blue'}).addTo(navigationMap);
   
   var markerDragged = function (i) {
     return function(e) {
       newPoint = e.target.getLatLng();
-      flightPathPoints[i].lat = newPoint.lat;
-      flightPathPoints[i].lng = newPoint.lng;
+      navigationPoints[i].lat = newPoint.lat;
+      navigationPoints[i].lng = newPoint.lng;
       
-      flightPathPolyLine.setLatLngs(flightPathPoints);
+      navigationPolyLine.setLatLngs(navigationPoints);
     }
   }
   
   // iterate through the array and add a marker for each point
   // TODO: special marker for special events, or for landing/takeoff?
-  for(var i=0, l=flightPathPoints.length; i < l; i++) {
-    L.marker(flightPathPoints[i], { draggable: true, opacity: 0.5}).addTo(payloadMap).on('drag', markerDragged(i));
+  for(var i=0, l=navigationPoints.length; i < l; i++) {
+    L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i));
   }
   
   var popup1 = L.popup();
@@ -1119,15 +1116,15 @@ function addVehicleContentUI(id, vehicle) {
           .setContent("You clicked the map at " + e.latlng.toString())
           .openOn(payloadMap);
   }
-  function onFlightPlanMapClick(e) {
+  function onNavigationMapClick(e) {
       popup2
           .setLatLng(e.latlng)
           .setContent("You clicked the map at " + e.latlng.toString())
-          .openOn(flightPlanMap);
+          .openOn(navigationMap);
   }
   
   payloadMap.on('click', onPayloadMapMapClick);
-  flightPlanMap.on('click', onFlightPlanMapClick);
+  navigationMap.on('click', onNavigationMapClick);
   
   // add the pane to the tab manager
   contentManager.addPane(id);

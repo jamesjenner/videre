@@ -160,7 +160,7 @@ var VEHICLE_KEY = 'Vehicle';
 var VEHICLE_AIR = 'air';
 var VEHICLE_SURFACE = 'surface';
 var VEHICLE_SUBMERSIBLE = 'submersible';
-var DEFAULT_NAME = 'Thunderbird 1';
+var DEFAULT_NAME = 'Thunderbird #';
 
 var Vehicle = function (options) {
     
@@ -191,9 +191,27 @@ var Vehicle = function (options) {
         this.type = 'air';
     }
     
-    this.payloadEnabled = this.options.payloadEnabled || false;
     this.navigationEnabled = this.options.navigationEnabled || false;
     this.remoteControlEnabled = this.options.remoteControlEnabled || false;
+
+    this.payloadMap = this.options.payloadMap || new Map();
+    this.navigationMap = this.options.navigationMap || new Map();
+}
+
+var MAP_DEFAULT_LAYER = '';
+var MAP_DEFAULT_ZOOM = '';
+var MAP_DEFAULT_CENTER = '';
+
+var Map = function (options) {
+    this.options = options || {};
+
+    this.trackToUserPosition = this.options.trackToUserPosition || false;
+    this.trackToVehiclePosition = this.options.trackToVehiclePosition || false;
+    this.locationLat = this.options.locationLat || 0;
+    this.locationLng = this.options.locationLng || 0;
+    this.center = this.options.center || MAP_DEFAULT_CENTER;
+    this.zoom = this.options.zoom || MAP_DEFAULT_ZOOM;
+    this.layer = this.options.layer || MAP_DEFAULT_LAYER;
 }
 
 var SERVER_KEY = 'Server';
