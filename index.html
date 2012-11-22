@@ -22,6 +22,8 @@
     <script src="assets/js/gauge.js"  type="text/javascript"></script>
     <script src="assets/js/contentmanager.js"  type="text/javascript"></script>
     <script src="assets/js/leaflet-src.js"  type="text/javascript"></script>
+    <script src="assets/js/sylvester.js"  type="text/javascript"></script>
+    <script src="assets/js/transform.js"  type="text/javascript"></script>
 
 <script type='text/javascript'>
 
@@ -192,6 +194,8 @@ var SERVER_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_server.png';
 var AIRPLANE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
 var SURFACE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
 var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
+
+var AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
 var WELCOME_CONTROL_ID = 'welcomeControl';
 var WELCOME_CONTENT_ID = 'welcome';
@@ -1079,7 +1083,7 @@ function addVehicleContentUI(id, vehicle) {
   }).addTo(payloadMap);
 */
 
-  // setup the initial points
+  // setup the initial waypoints to the navigation
   // TODO: this should be loaded, uncertain where from...
   var navigationPoints = new Array(
     [-27.62531, 153.14351],
@@ -1088,9 +1092,10 @@ function addVehicleContentUI(id, vehicle) {
     [-27.63523, 153.16038],
     [-27.63252, 153.14302]);
   
-  // create the flight path polyline
+  // create the navigation polyline
   var navigationPolyLine = L.polyline(navigationPoints, {color: 'blue'}).addTo(navigationMap);
-  
+
+  // define the function for supporting dragging of waypoints
   var markerDragged = function (i) {
     return function(e) {
       newPoint = e.target.getLatLng();
@@ -1101,11 +1106,52 @@ function addVehicleContentUI(id, vehicle) {
     }
   }
   
-  // iterate through the array and add a marker for each point
-  // TODO: special marker for special events, or for landing/takeoff?
+  // iterate through the array and add a marker for each navigation waypoint
+  // TODO: special marker for special events, and/or for landing/takeoff
   for(var i=0, l=navigationPoints.length; i < l; i++) {
     L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i));
   }
+  
+  // add the vehicle icon to the map
+  var vehicleIcon = L.icon({iconUrl: AIRPLANE_MAP_ICON, iconAnchor: [21, 21]});
+  // use the div icon so we can rotate it based on the custom class
+  var vehicleIconDiv = L.divIcon({className: 'vehicleIcon', iconAnchor: [17, 21], iconSize: [35, 42]});
+  var vehicleMarker = L.marker([-27.61657, 153.15387], {icon: vehicleIconDiv}).addTo(navigationMap);
+
+  var currentTransform = $(".vehicleIcon").css("-webkit-transform");
+  var vehicleIconElement = $(".vehicleIcon");
+  
+  // $(".vehicleIcon").css("-webkit-transform", "rotate(30deg)");
+  
+  // get the transform matrix
+  var t = _T.fromString(vehicleIconElement.css('-webkit-transform'));
+  // create a rotate matrix
+  var r = _T.rotate(50);
+  // multiply the two matrixes together
+  var n = t.x(r);
+
+  // apply the new matrix
+  vehicleIconElement.css({
+     '-webkit-transform': _T.toString(n)
+  });
+
+  
+  
+  // add the flight path points to the map
+  var flightPathPoints = new Array(
+    [-27.62531, 153.14351],
+    [-27.62297, 153.14487],
+    [-27.62057, 153.14587],
+    [-27.61857, 153.14687],
+    [-27.61657, 153.14787],
+    [-27.61557, 153.14887],
+    [-27.61457, 153.14987],
+    [-27.61427, 153.15087],
+    [-27.61457, 153.15187],
+    [-27.61557, 153.15287],
+    [-27.61657, 153.15387]);
+  var flightPathPolyLine = L.polyline(flightPathPoints, {color: 'red'}).addTo(navigationMap);
+  
   
   var popup1 = L.popup();
   var popup2 = L.popup();

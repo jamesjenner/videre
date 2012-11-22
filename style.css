@@ -166,6 +166,12 @@ div.noflex {
 	box-flex:0.0;
 }
 
+.vehicleIcon {
+	background-Image: url(assets/icons/airplane.png);
+	height: 42px;
+	width: 35px;
+}
+
 .leaflet-control-layers-toggle {
 	background-image: url(assets/img/layers.png);
 }
