@@ -75,6 +75,11 @@ div.applicationContents {
 	visibility: hidden;
 }
 
+/* remove if the slider is removed */
+div.sliderContent {
+	position: relative;
+}
+
 div.content {
 	background-color: #8D8D8D;
 	height: 100%;
