@@ -51,7 +51,9 @@ var verticalScrollRightSidebar;
 */
 // var horizontalScroll = new Array();
 function loaded() {
-  new iScroll(LEFT_SIDEBAR_ID);
+  new iScroll(LEFT_SIDEBAR_ID, {
+    zIndex: 0
+  });
   new iScroll('rightSidebar');
   /*
   verticalScrollLeftSidebar = new iScroll(LEFT_SIDEBAR_ID);
@@ -197,10 +199,16 @@ var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.pn
 
 var AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
-var WELCOME_CONTROL_ID = 'welcomeControl';
-var WELCOME_CONTENT_ID = 'welcome';
+var HOME_CONTROL_ID = 'homeControl';
+var HOME_CONTENT_ID = 'home';
 
 var LEFT_SIDEBAR_ID = 'leftSidebar';
+
+var PAYLOAD_CONTROL_ID = 'payloadControl';
+var PAYLOAD_CONTENT_ID = 'payloadContent';
+
+var NAVIGATION_CONTROL_ID = 'navigationControl';
+var NAVIGATION_CONTENT_ID = 'navigationContent';
 
 // the currently selected control on the left side pane
 var currentFocusControlId = '';
@@ -236,10 +244,22 @@ $(document).ready(function() {
 
 // setup the options in the left sidebar
 function configureApplication() {
-  // add welcome content
-  addContentUI(WELCOME_CONTENT_ID, 'Welcome', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
-  // add welcome listener
-  addListenerToSidebarControl(LEFT_SIDEBAR_ID, WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
+  // add home content
+  addContentUI(HOME_CONTENT_ID, 'Home', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
+  // add home listener
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, HOME_CONTROL_ID, HOME_CONTENT_ID);
+
+  // add payload control listener
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, PAYLOAD_CONTROL_ID, PAYLOAD_CONTENT_ID, function() {
+    // add the ui content for the payload
+    addPayloadContentUI(PAYLOAD_CONTENT_ID);
+  });
+  
+  // add navigation content listener
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, NAVIGATION_CONTROL_ID, NAVIGATION_CONTENT_ID, function() {
+    // add the ui content for the navigation
+    addNavigationContentUI(NAVIGATION_CONTENT_ID);
+  });
 
   // add the add vehicle
   appendControlToSidebar('vehicleGroup', ADD_VEHICLE_CONTROL_ID, ADD_ICON, 'Add Vehicle');
@@ -259,8 +279,8 @@ function configureApplication() {
   // add listeners to the control for the preferences
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'preferencesControl', 'preferences');
   
-  // set the initial focus to the welcome control
-  setFocus(WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
+  // set the initial focus to the home control
+  setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
 
   contentManager.loadData();
   
@@ -601,7 +621,7 @@ function loadServerUIs(server) {
   // add the control that lets the user select the server details UI before the add server control on the side bar
   addControlToSidebarBeforeId(ADD_SERVER_CONTROL_ID, serverControlId, SERVER_ICON, server.name);
   
-  // add the listener fro the ui to activate the side bar 
+  // add the listener for the ui to activate the side bar 
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, serverControlId, serverContentId, function() {
     // add the ui content for the server
     addServerContentUI(serverContentId, server);
@@ -886,8 +906,8 @@ function addServerContentUI(id, server) {
 function removeServer(server) {
   // TODO: prompt to confirm the action
   
-  // set the focus to the welcome screen
-  setFocus(WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
+  // set the focus to the home screen
+  setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
   
   // unload the ui for the server
   unloadServerUIs(server);
@@ -936,50 +956,12 @@ function addVehicleContentUI(id, vehicle) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
-    
-    '    <div class="sliderWrapper">' +
-    '      <div id="' + id + PAYLOAD_SUB_ID + '" class="content sliderContent" >' +
-    /*
-    '        <div class="message">' +
-    '          <div class="messageContents">' +
-    '            <span>NO PAYLOAD FOUND</span><br/>' +
-    '            <span>You can add payload monitors via settings</span>' +
-    '          </div>' +
-    '        </div>' +
-    */
-    '        <div id="payloadMap" class="map">' +
-    '        </div>' +
-    
-    '      </div>' +
     '      <div id="' + id + TELEMETRY_SUB_ID + '" class="content sliderContent">' +
     '        <div class="message">' +
     '          <div class="messageContents">' +
     '            <span>NO TELEMETRY FOUND</span><br/>' +
     '            <span>You can add telemetry gauges via settings</span>' +
     '          </div>' +
-    '        </div>' +
-    /*
-    '        <div id="toolbarControl" class="toolbarControl">' +
-    '            <div id="toolbar" class="toolbar">' +
-    '              <!-- controls are currently added here when the document is loaded, see loadToolbar() -->' +
-    '            </div>' +
-    '            <div id="toolbarAccess" class="toolbarAccess">' +
-    '                <div id="toolbarButtonImage" class="toolbarAccessBar toolbarAccessBarInactive">' +
-    '                </div>' +
-    '            </div>' +
-    '        </div>' +
-    */
-    '      </div>' +
-    '      <div id="' + id + FLIGHTPLAN_SUB_ID + '" class="content sliderContent">' +
-    /*
-    '        <div class="message">' +
-    '          <div class="messageContents">' +
-    '            <span>NO NAVIGATION FOUND</span><br/>' +
-    '            <span>You can configure navigation options via settings</span>' +
-    '          </div>' +
-    '        </div>' +
-    */
-    '        <div id="navigationMap" class="map">' +
     '        </div>' +
     '      </div>' +
     '      <div id="' + id + REMOTECONTROL_SUB_ID + '" class="content sliderContent">' +
@@ -994,6 +976,177 @@ function addVehicleContentUI(id, vehicle) {
     '  </div>' +
     '</div>');
   
+  // add the pane to the tab manager
+  contentManager.addPane(id);
+  
+  // setup the telemetry settings  
+  var telemetrySettings = new TabSettings();
+  var gaugeSetting;
+  
+  // TODO: should be populated 
+  telemetrySettings.add(new HeadingSetting('some stuff'));
+  telemetrySettings.add(new ToggleSetting(id  + TELEMETRY_SUB_ID + 'Graph', 'Graph'));
+  telemetrySettings.add(new TextSetting(id  + TELEMETRY_SUB_ID + 'Timeout', 'Timeout'));
+  telemetrySettings.add(new HeadingSetting('Gauges'));
+
+  // TODO: should this be here or outside this function scope?
+  function addGaugeToContentAreaSettings(contentAreaId, tabSettings, gaugeSetting) {
+    tabSettings.add(gaugeSetting);
+    
+    if(gaugeSetting.visible) {
+      showGauge(gaugeSetting, contentAreaId);
+    }
+  }
+  
+  // TODO: settings are to be persisted, change so that they're restored... 
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'SpeadGauge', speedGauge, {x: 0, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AttitudeGauge', attitudeGauge, {x: 150, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AltimeterGauge', altimeterGauge, {x: 300, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'ThermometerGauge', thermometerGauge, {x: 0, y: 150, width: 150, visible: false}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'HeadingGauge', headingGauge, {x: 150, y: 150, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'VSIGauge', vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
+
+  // setup the remote control settings
+  var remoteControlSettings = new TabSettings();
+  remoteControlSettings.add(new HeadingSetting('some stuff'));
+  
+  // add the action bar and the tabs within the action bar
+  actionBarId = id + 'ActionBar';
+  addActionBar(id, actionBarId, vehicle.name, true);
+  addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position);
+  contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
+  addDividerToActionBar(actionBarId);
+  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
+  contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
+  
+  // set the tab manager for this panel to the first tab (which is the selected tab)
+  // todo: should this be PAYLOAD_SUB_ID and not PAYLOAD_TAB_CONTROL?
+  contentManager.setFocusedTabNbr(id, 0);
+  contentManager.setFocusedTabId(id, id  + PAYLOAD_SUB_ID);
+  
+  /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
+   * the issues with side bar navigation are sorted out
+   */
+  // setup the swipe using Slider for the vehicle content
+  
+  vehicleContentSlider[vehicle.position] = new Swipe(document.getElementById(id + 'ContentSlider'), {
+//      callback: function(e, position) { contentTabChanged(e, position, id); },
+      slideCallback: function(position) { contentTabChanged('', position, id, vehicle.position); },
+      slideEffect: 'android'
+    });
+}
+
+function addPayloadContentUI(id) {
+  $('#mainApplication').append(
+    '<div id="' + id + '" class="applicationContents">' +
+    '  <div id="payloadMap" class="map">' +
+    '  </div>' +
+    '</div>');
+  
+  // setup the settings for the payload
+  var payloadSettings = new TabSettings();
+  payloadSettings.add(new HeadingSetting('some stuff'));
+  payloadSettings.add(new ToggleSetting(id  + PAYLOAD_SUB_ID + 'Graph', 'Graph'));
+  payloadSettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
+  
+  // add the action bar
+  var actionBarId = id + 'ActionBar';
+  addActionBar(id, actionBarId, "Payload", true);
+
+  // setup the map
+  
+  // TODO: tidy up the mapping logic
+  
+  var mapquestOsmTileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+      mapquestOsmAttribution = "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>, Tiles Courtesy of <a href='http://open.mapquest.com' target='_blank'>MapQuest</a>";
+
+  var opencyclemapLandscapeUrl = 'http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png',
+      opencyclemapLandscapeAttribution = '&copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
+      
+      
+  var esriWorldTopographicalUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+      esriWorldTopographicalAttribution = 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community';
+  
+  var esriWorldImageryUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      esriWorldImageryAttribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+
+  var cloudmadeTilesUrl = 'http://{s}.tile.cloudmade.com/21AE2933E8054FF8b90A537357289E78/{styleId}/256/{z}/{x}/{y}.png',
+      cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+
+  var esriWorldImageryTileLayer = new L.TileLayer(esriWorldImageryUrl, {maxZoom: 18, attribution: esriWorldImageryAttribution,subdomains: ['1', '2', '3', '4']});
+  var esriWorldTopographicalTileLayer = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
+  var esriWorldTopographicalTileLayer2 = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
+
+  var mapquestOsmTileLayer = new L.TileLayer(mapquestOsmTileUrl, {maxZoom: 18, attribution: mapquestOsmAttribution, subdomains: ['1', '2', '3', '4']});
+  
+  var minimal   = L.tileLayer(cloudmadeTilesUrl, {styleId: 22677, attribution: cloudmadeAttribution}),
+    fresh  = L.tileLayer(cloudmadeTilesUrl, {styleId: 997, attribution: cloudmadeAttribution}),
+    midnightCommander  = L.tileLayer(cloudmadeTilesUrl, {styleId: 999, attribution: cloudmadeAttribution}),
+    nightVision  = L.tileLayer(cloudmadeTilesUrl, {styleId: 78125, attribution: cloudmadeAttribution}),
+    minimalMarkers = L.tileLayer(cloudmadeTilesUrl, {styleId: 63044, attribution: cloudmadeAttribution});
+
+  // set the default image path for te icon
+  L.Icon.Default.imagePath = 'assets/img/';
+    
+  var payloadLayers = {
+    "Fresh": fresh,
+    "Minimal": minimal,
+    "Minimal 2": minimalMarkers,
+    "Night Vision": nightVision,
+    "Night View": midnightCommander,
+    "Map Quest Street": mapquestOsmTileLayer,
+    "ESRI World Imagery": esriWorldImageryTileLayer,
+    "ESRI World Topographical": esriWorldTopographicalTileLayer
+  };
+  
+  // setup the map
+  var payloadMap = new L.Map('payloadMap', {
+    center: [-27.632600, 153.146466],
+    zoom: 10,
+    layers: [esriWorldTopographicalTileLayer2],
+    zoomControl: false
+  });
+  
+  L.control.scale().addTo(payloadMap);
+  
+  // L.control.layers(payloadLayers).addTo(payloadMap);
+
+  // payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
+  
+  // setup the initial waypoints to the navigation
+  // TODO: this should be loaded, uncertain where from...
+  var navigationPoints = new Array(
+    [-27.62531, 153.14351],
+    [-27.61957, 153.15287],
+    [-27.62499, 153.16169],
+    [-27.63523, 153.16038],
+    [-27.63252, 153.14302]);
+  // iterate through the array and add a marker for each navigation waypoint
+  // TODO: special marker for special events, and/or for landing/takeoff
+  /*
+  for(var i=0, l=navigationPoints.length; i < l; i++) {
+    L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i));
+  }
+  */
+}
+
+function addNavigationContentUI(id) {
+  $('#mainApplication').append(
+    '<div id="' + id + '" class="applicationContents">' +
+    '  <div id="navigationMap" class="map">' +
+    '  </div>' +
+    '</div>');
+  
+  // setup the navigation settings  
+  var navigationSettings = new TabSettings();
+  navigationSettings.add(new HeadingSetting('some stuff'));
+  
+  // TODO: sort out management of the settings
+  
+  // add the action bar
+  var actionBarId = id + 'ActionBar';
+  addActionBar(id, actionBarId, "Navigation", true);
+
   // setup the map
   
   // TODO: tidy up the mapping logic
@@ -1030,18 +1183,7 @@ function addVehicleContentUI(id, vehicle) {
   // set the default image path for te icon
   L.Icon.Default.imagePath = 'assets/img/';
     
-  var payloadLayers = {
-    "Fresh": fresh,
-    "Minimal": minimal,
-    "Minimal 2": minimalMarkers,
-    "Night Vision": nightVision,
-    "Night View": midnightCommander,
-    "Map Quest Street": mapquestOsmTileLayer,
-    "ESRI World Imagery": esriWorldImageryTileLayer,
-    "ESRI World Topographical": esriWorldTopographicalTileLayer
-  };
-  
-  var flightPlanLayers = {
+  var navigationLayers = {
     "Cloudmade Fresh": fresh,
     "Cloudmade Minimal": minimal,
     "Cloudmade Minimal 2": minimalMarkers,
@@ -1059,21 +1201,11 @@ function addVehicleContentUI(id, vehicle) {
     zoomControl: false
   });
 
-  L.control.layers(flightPlanLayers).addTo(navigationMap);
+  L.control.layers(navigationLayers).addTo(navigationMap);
   
-  // setup the map
-  var payloadMap = new L.Map('payloadMap', {
-    center: [-27.632600, 153.146466],
-    zoom: 10,
-    layers: [esriWorldTopographicalTileLayer2],
-    zoomControl: false
-  });
+  L.control.scale().addTo(navigationMap);
   
-  L.control.scale().addTo(payloadMap);
-  
-  // L.control.layers(payloadLayers).addTo(payloadMap);
-
-  // payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
+  // navigationMap.panTo(new L.LatLng(-27.47718, 153.02712));
   
 /*
   var circle = L.circle([-27.62499, 153.16169], 50, {
@@ -1153,15 +1285,8 @@ function addVehicleContentUI(id, vehicle) {
   var flightPathPolyLine = L.polyline(flightPathPoints, {color: 'red'}).addTo(navigationMap);
   
   
-  var popup1 = L.popup();
   var popup2 = L.popup();
 
-  function onPayloadMapMapClick(e) {
-      popup1
-          .setLatLng(e.latlng)
-          .setContent("You clicked the map at " + e.latlng.toString())
-          .openOn(payloadMap);
-  }
   function onNavigationMapClick(e) {
       popup2
           .setLatLng(e.latlng)
@@ -1169,90 +1294,16 @@ function addVehicleContentUI(id, vehicle) {
           .openOn(navigationMap);
   }
   
-  payloadMap.on('click', onPayloadMapMapClick);
   navigationMap.on('click', onNavigationMapClick);
-  
-  // add the pane to the tab manager
-  contentManager.addPane(id);
-  
-  // setup the settings for the payload
-  var payloadSettings = new TabSettings();
-  payloadSettings.add(new HeadingSetting('some stuff'));
-  payloadSettings.add(new ToggleSetting(id  + PAYLOAD_SUB_ID + 'Graph', 'Graph'));
-  payloadSettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
-  
-  // setup the telemetry settings  
-  var telemetrySettings = new TabSettings();
-  var gaugeSetting;
-  
-  // TODO: should be populated 
-  telemetrySettings.add(new HeadingSetting('some stuff'));
-  telemetrySettings.add(new ToggleSetting(id  + TELEMETRY_SUB_ID + 'Graph', 'Graph'));
-  telemetrySettings.add(new TextSetting(id  + TELEMETRY_SUB_ID + 'Timeout', 'Timeout'));
-  telemetrySettings.add(new HeadingSetting('Gauges'));
-
-  // TODO: should this be here or outside this function scope?
-  function addGaugeToContentAreaSettings(contentAreaId, tabSettings, gaugeSetting) {
-    tabSettings.add(gaugeSetting);
-    
-    if(gaugeSetting.visible) {
-      showGauge(gaugeSetting, contentAreaId);
-    }
-  }
-  
-  // TODO: settings are to be persisted, change so that they're restored... 
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'SpeadGauge', speedGauge, {x: 0, y: 0, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AttitudeGauge', attitudeGauge, {x: 150, y: 0, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AltimeterGauge', altimeterGauge, {x: 300, y: 0, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'ThermometerGauge', thermometerGauge, {x: 0, y: 150, width: 150, visible: false}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'HeadingGauge', headingGauge, {x: 150, y: 150, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'VSIGauge', vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
-
-  // setup the navigation settings  
-  var navigationSettings = new TabSettings();
-  navigationSettings.add(new HeadingSetting('some stuff'));
-  
-  // setup the remote control settings
-  var remoteControlSettings = new TabSettings();
-  remoteControlSettings.add(new HeadingSetting('some stuff'));
-  
-  // add the action bar and the tabs within the action bar
-  actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, vehicle.name, true);
-  addTabToActionBar(actionBarId, id, id  + PAYLOAD_TAB_CONTROL, 'Payload', PAYLOAD_TAB, vehicle.position, true);
-  contentManager.addTab(id, id  + PAYLOAD_SUB_ID, payloadSettings);
-  addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position);
-  contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
-  addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + FLIGHTPLAN_TAB_CONTROL, 'Navigation', FLIGHT_PLAN_TAB, vehicle.position);
-  contentManager.addTab(id, id  + FLIGHTPLAN_SUB_ID, navigationSettings);
-  addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
-  contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
-  
-  // set the tab manager for this panel to the first tab (which is the selected tab)
-  // todo: should this be PAYLOAD_SUB_ID and not PAYLOAD_TAB_CONTROL?
-  contentManager.setFocusedTabNbr(id, 0);
-  contentManager.setFocusedTabId(id, id  + PAYLOAD_SUB_ID);
-  
-  /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
-   * the issues with side bar navigation are sorted out
-   */
-  // setup the swipe using Slider for the vehicle content
-  
-  vehicleContentSlider[vehicle.position] = new Swipe(document.getElementById(id + 'ContentSlider'), {
-//      callback: function(e, position) { contentTabChanged(e, position, id); },
-      slideCallback: function(position) { contentTabChanged('', position, id, vehicle.position); },
-      slideEffect: 'android'
-    });
 }
+
+
 
 function removeVehicle(vehicle) {
   // TODO: prompt to confirm the action
   
-  // set the focus to the welcome screen
-  setFocus(WELCOME_CONTROL_ID, WELCOME_CONTENT_ID);
+  // set the focus to the home screen
+  setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
   
   // unload the ui for the server
   unloadVehicleUIs(vehicle);
@@ -2143,12 +2194,17 @@ function sendMessage() {
   <body>
     <div id="leftSidebar" class="sideBar">
       <div id="leftScroller">
-        <div class="sidebarGroupHeading">
-  
+        <div id="homeControl" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_hanger.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Home</div>
         </div>
-        <div id="welcomeControl" class="sidebarControlBar">
-          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_stat_compass.png' class="sidebarControlIcon"/></div>
-          <div class="sidebarControlText centered">Welcome</div>
+        <div id="payloadControl" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_camera.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Payload</div>
+        </div>
+        <div id="navigationControl" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_map.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Navigation</div>
         </div>
         <div id="vehicleGroup" class="sidebarGroup">
           <div class="sidebarGroupHeading">

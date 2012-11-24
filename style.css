@@ -458,8 +458,11 @@ form li.alignbottom {
 	height: 400px;
 	width: 600px;
 	*/
-	
-	height: 100%;
+	position: absolute;
+	/* note that the top is set based on the height of a action bar */
+	top: 40px;
+	bottom: 0;
+	/* height: 100%; */
 	width: 100%;
 	color: black;
 }
