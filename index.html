@@ -163,14 +163,12 @@ function touchHandler(event) {
 var connected = false;
 var halEnabled = false;
 
-var PAYLOAD_TAB = 0;
-var TELEMETY_TAB = 1;
-var FLIGHT_PLAN_TAB = 2;
-var REMOTE_CONTROL_TAB = 3;
+var TELEMETY_TAB = 0;
+var REMOTE_CONTROL_TAB = 1;
 
-var PAYLOAD_TAB_CONTROL = 'PayloadTabControl';
+// var PAYLOAD_TAB_CONTROL = 'PayloadTabControl';
 var TELEMETRY_TAB_CONTROL = 'TelemetryTabControl';
-var FLIGHTPLAN_TAB_CONTROL = 'FlightPlanTabControl';
+// var FLIGHTPLAN_TAB_CONTROL = 'FlightPlanTabControl';
 var REMOTECONTROL_TAB_CONTROL = 'RemoteControlTabControl';
 
 var ADD_VEHICLE_CONTROL_ID = 'addVehicleControl';
@@ -956,6 +954,7 @@ function addVehicleContentUI(id, vehicle) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
+    '    <div>' +
     '      <div id="' + id + TELEMETRY_SUB_ID + '" class="content sliderContent">' +
     '        <div class="message">' +
     '          <div class="messageContents">' +
@@ -1013,7 +1012,7 @@ function addVehicleContentUI(id, vehicle) {
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
   addActionBar(id, actionBarId, vehicle.name, true);
-  addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position);
+  addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position, true);
   contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
@@ -1022,7 +1021,7 @@ function addVehicleContentUI(id, vehicle) {
   // set the tab manager for this panel to the first tab (which is the selected tab)
   // todo: should this be PAYLOAD_SUB_ID and not PAYLOAD_TAB_CONTROL?
   contentManager.setFocusedTabNbr(id, 0);
-  contentManager.setFocusedTabId(id, id  + PAYLOAD_SUB_ID);
+  contentManager.setFocusedTabId(id, id  + TELEMETRY_SUB_ID);
   
   /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
    * the issues with side bar navigation are sorted out
@@ -1369,14 +1368,8 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFu
 function contentTabChanged(e, position, id, contentNbr) {
   // turn off the currently selected tab
   switch(contentManager.getFocusedTabNbr(id)) {
-    case PAYLOAD_TAB:
-      $('#' + id + PAYLOAD_TAB_CONTROL).toggleClass('tabSelected');
-      break;
     case TELEMETY_TAB:
       $('#' + id + TELEMETRY_TAB_CONTROL).toggleClass('tabSelected');
-      break;
-    case FLIGHT_PLAN_TAB:
-      $('#' + id + FLIGHTPLAN_TAB_CONTROL).toggleClass('tabSelected');
       break;
     case REMOTE_CONTROL_TAB:
       $('#' + id + REMOTECONTROL_TAB_CONTROL).toggleClass('tabSelected');
@@ -1389,17 +1382,9 @@ function contentTabChanged(e, position, id, contentNbr) {
   
   // turn on the new tab
   switch (position) {
-    case PAYLOAD_TAB:
-      $('#' + id + PAYLOAD_TAB_CONTROL).toggleClass('tabSelected');
-      contentManager.setFocusedTabId(id, id + PAYLOAD_SUB_ID);
-      break;
     case TELEMETY_TAB:
       $('#' + id + TELEMETRY_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + TELEMETRY_SUB_ID);
-      break;
-    case FLIGHT_PLAN_TAB:
-      $('#' + id + FLIGHTPLAN_TAB_CONTROL).toggleClass('tabSelected');
-      contentManager.setFocusedTabId(id, id + FLIGHTPLAN_SUB_ID);
       break;
     case REMOTE_CONTROL_TAB:
       $('#' + id + REMOTECONTROL_TAB_CONTROL).toggleClass('tabSelected');
