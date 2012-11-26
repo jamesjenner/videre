@@ -39,7 +39,9 @@
 
 var ContentManager = function (options) {
     this.panes = new Object();
+    this.settings = new Object();
     this.focusedPaneId = '';
+    this.currentContentId = '';
     this.vehicles = new Array();
     this.servers = new Array();
     
@@ -118,8 +120,11 @@ ContentManager.prototype = {
     addPane: function(id) {
         this.panes[id] = new Pane();
     },
-    addTab: function(paneId, tabId, settings) {
-        this.panes[paneId].tabs[tabId] = new Tab(settings, tabId);
+    addTab: function(paneId, tabId) {
+        this.panes[paneId].tabs[tabId] = new Tab(tabId);
+    },
+    addSettings: function(contentId, settings) {
+        this.settings[contentId] = settings;
     },
     addGauge: function(pane, gaugeId, gauge) {
         this.panes[id].gauges[gaugeId] = gauge;
@@ -145,13 +150,17 @@ ContentManager.prototype = {
         
         return this.panes[paneId].tabs[this.getFocusedTabId(paneId)];
     },
-    getFocusedTabSettings: function(paneId) {
-        paneId = (typeof paneId === "undefined") ? this.focusedPaneId : paneId;
-        if(typeof this.panes[paneId].tabs[this.getFocusedTabId(paneId)] === "undefined" ||
-           typeof this.panes[paneId].tabs[this.getFocusedTabId(paneId)].settings === "undefined") {
+    setCurrentContent: function(contentId) {
+        this.currentContentId = contentId;
+    },
+    getContentSettings: function(contentId) {
+        contentId = (typeof contentId === "undefined") ? this.currentContentId : contentId;
+
+        if(typeof this.settings[contentId] === "undefined" ||
+           typeof this.settings[contentId].settings === "undefined") {
             return undefined;
         } else {
-            return this.panes[paneId].tabs[this.getFocusedTabId(paneId)].settings.settings;
+            return this.settings[contentId].settings;
         }
     },
 };
@@ -247,19 +256,15 @@ var Pane = function (options) {
     this.tabs = new Object();
 }
 
-var Tab = function (settings, contentAreaId) {
-    this.settings = settings;
+var Tab = function (contentAreaId) {
     this.contentAreaId = contentAreaId;
-    // todo: add contentAreaId to this
-    // this.x = this.options.x || 0;
-    // this.contentAreaId = 
 }
 
-var TabSettings = function() {
+var ContentSettings = function() {
     this.settings = new Array();
 }
 
-TabSettings.prototype = {
+ContentSettings.prototype = {
     add: function(setting) {
         this.settings[this.settings.length] = setting;
     },

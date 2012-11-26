@@ -315,6 +315,12 @@ function addActionBar(targetId, id, title, includeSettings, options) {
   var connectAction = options.connect || false;
   var connectFunction = options.connectFunction || '';
 
+  var rightSidebarFunction = options.rightSidebarFunction || function() {
+    loadSidebar(targetId, 'rightScroller');
+    showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+    
+    return false;
+  }
   
   $('#' + targetId).prepend(
     '  <div id="' + id + 'TaskBar" class="taskBar boxLayout">' +
@@ -408,20 +414,7 @@ function addActionBar(targetId, id, title, includeSettings, options) {
   }
   
   if(includeSettings) {
-    $('#rightSidebarControl' + id).on('click', function() {
-      loadSidebar(targetId, 'rightScroller');
-      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
-      
-      return false;
-    });
-    /*
-    $('#rightSidebarControl' + id).click(function() {
-      loadSidebar(targetId, 'rightScroller');
-      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
-      
-      return false;
-    });
-    */
+    $('#rightSidebarControl' + id).on('click', rightSidebarFunction);
   }
 }
 
@@ -505,29 +498,27 @@ function loadSidebar(targetId, containerId) {
   /** TODO: tidy up use of setFocusedTab, setFocusedTabNbr and setFocusedTabId */
   
   // iterate through the settings for the current pane/tab
-  var tabSettings = contentManager.getFocusedTabSettings();
-  if(tabSettings != undefined) {
+  var settings = contentManager.getContentSettings(targetId);
+  if(settings != undefined) {
     
-    var len = tabSettings.length;
+    var len = settings.length;
     for(var i=0; i < len; i++) {
-      if(i in tabSettings) {
-        if(tabSettings[i] instanceof HeadingSetting) {
+      if(i in settings) {
+        if(settings[i] instanceof HeadingSetting) {
           console.log("Settings: Adding heading");
-          addHeadingToSidebar(containerId, tabSettings[i]);
-        } else if(tabSettings[i] instanceof ToggleSetting) {
+          addHeadingToSidebar(containerId, settings[i]);
+        } else if(settings[i] instanceof ToggleSetting) {
           console.log("Settings: Adding toggle");
-        } else if(tabSettings[i] instanceof TextSetting) {
+        } else if(settings[i] instanceof TextSetting) {
           console.log("Settings: Adding text");
-        } else if(tabSettings[i] instanceof RangeSetting) {
+        } else if(settings[i] instanceof RangeSetting) {
           console.log("Settings: Adding range");
-        } else if(tabSettings[i] instanceof GaugeSetting) {
+        } else if(settings[i] instanceof GaugeSetting) {
           console.log("Settings: Adding gauge");
-          addGaugeControlToSideBar(containerId, contentManager, tabSettings[i]);
+          addGaugeControlToSideBar(containerId, contentManager, settings[i]);
         }
       }
     }
-    
-    
   }
   
   // setup the values of the properties for the sidebar
@@ -950,11 +941,10 @@ function connectServer() {
  */
 function addVehicleContentUI(id, vehicle) {
   vehicleContentNbr = vehicle.position;
-  // addVehicleContentUI(vehicleContentId, vehicle.name, vehicleNumber);
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
-    '    <div>' +
+    '    <div class="sliderWrapper">' +
     '      <div id="' + id + TELEMETRY_SUB_ID + '" class="content sliderContent">' +
     '        <div class="message">' +
     '          <div class="messageContents">' +
@@ -979,8 +969,7 @@ function addVehicleContentUI(id, vehicle) {
   contentManager.addPane(id);
   
   // setup the telemetry settings  
-  var telemetrySettings = new TabSettings();
-  var gaugeSetting;
+  var telemetrySettings = new ContentSettings();
   
   // TODO: should be populated 
   telemetrySettings.add(new HeadingSetting('some stuff'));
@@ -989,15 +978,15 @@ function addVehicleContentUI(id, vehicle) {
   telemetrySettings.add(new HeadingSetting('Gauges'));
 
   // TODO: should this be here or outside this function scope?
-  function addGaugeToContentAreaSettings(contentAreaId, tabSettings, gaugeSetting) {
-    tabSettings.add(gaugeSetting);
+  function addGaugeToContentAreaSettings(contentAreaId, tabSettings, options) {
+    tabSettings.add(options);
     
-    if(gaugeSetting.visible) {
-      showGauge(gaugeSetting, contentAreaId);
+    if(options.visible) {
+      showGauge(options, contentAreaId);
     }
   }
   
-  // TODO: settings are to be persisted, change so that they're restored... 
+  // TODO: gauges and their options are to be cached locally but obtained remotely (possibly configured locally)
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'SpeadGauge', speedGauge, {x: 0, y: 0, width: 150, visible: true}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AttitudeGauge', attitudeGauge, {x: 150, y: 0, width: 150, visible: true}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AltimeterGauge', altimeterGauge, {x: 300, y: 0, width: 150, visible: true}));
@@ -1006,22 +995,37 @@ function addVehicleContentUI(id, vehicle) {
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'VSIGauge', vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
 
   // setup the remote control settings
-  var remoteControlSettings = new TabSettings();
+  var remoteControlSettings = new ContentSettings();
   remoteControlSettings.add(new HeadingSetting('some stuff'));
+  
+  // TODO: kinda ugly having the rightSidebarFunction overridden, look at another approach that is easier to read.
   
   // add the action bar and the tabs within the action bar
   actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, vehicle.name, true);
+  addActionBar(id, actionBarId, vehicle.name, true, {
+    rightSidebarFunction: function() {
+      loadSidebar(contentManager.getFocusedTabId(), 'rightScroller');
+      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+    
+      return false;
+    }
+  });
+  
+  
   addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position, true);
   contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
   addDividerToActionBar(actionBarId);
   addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
   contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
   
+  contentManager.addSettings(id + TELEMETRY_SUB_ID, telemetrySettings);
+  contentManager.addSettings(id + REMOTECONTROL_SUB_ID, remoteControlSettings);
+
   // set the tab manager for this panel to the first tab (which is the selected tab)
   // todo: should this be PAYLOAD_SUB_ID and not PAYLOAD_TAB_CONTROL?
   contentManager.setFocusedTabNbr(id, 0);
   contentManager.setFocusedTabId(id, id  + TELEMETRY_SUB_ID);
+  contentManager.setCurrentContent(id  + TELEMETRY_SUB_ID);
   
   /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
    * the issues with side bar navigation are sorted out
@@ -1029,7 +1033,7 @@ function addVehicleContentUI(id, vehicle) {
   // setup the swipe using Slider for the vehicle content
   
   vehicleContentSlider[vehicle.position] = new Swipe(document.getElementById(id + 'ContentSlider'), {
-//      callback: function(e, position) { contentTabChanged(e, position, id); },
+// TODO: how do we get e? do not need it now but is annoying...
       slideCallback: function(position) { contentTabChanged('', position, id, vehicle.position); },
       slideEffect: 'android'
     });
@@ -1043,10 +1047,11 @@ function addPayloadContentUI(id) {
     '</div>');
   
   // setup the settings for the payload
-  var payloadSettings = new TabSettings();
+  var payloadSettings = new ContentSettings();
   payloadSettings.add(new HeadingSetting('some stuff'));
   payloadSettings.add(new ToggleSetting(id  + PAYLOAD_SUB_ID + 'Graph', 'Graph'));
   payloadSettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
+  contentManager.addSettings(id, payloadSettings);
   
   // add the action bar
   var actionBarId = id + 'ActionBar';
@@ -1137,8 +1142,9 @@ function addNavigationContentUI(id) {
     '</div>');
   
   // setup the navigation settings  
-  var navigationSettings = new TabSettings();
+  var navigationSettings = new ContentSettings();
   navigationSettings.add(new HeadingSetting('some stuff'));
+  contentManager.addSettings(id, navigationSettings);
   
   // TODO: sort out management of the settings
   
@@ -1385,10 +1391,12 @@ function contentTabChanged(e, position, id, contentNbr) {
     case TELEMETY_TAB:
       $('#' + id + TELEMETRY_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + TELEMETRY_SUB_ID);
+      contentManager.setCurrentContent(id + TELEMETRY_SUB_ID);
       break;
     case REMOTE_CONTROL_TAB:
       $('#' + id + REMOTECONTROL_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + REMOTECONTROL_SUB_ID);
+      contentManager.setCurrentContent(id + REMOTECONTROL_SUB_ID);
       break;
   }
 }
@@ -1410,6 +1418,8 @@ function setFocus(controlId, paneId) {
   // update the focus to the set focus
   currentFocusControlId = controlId;
   
+  contentManager.setCurrentContent(controlId);
+
   // display the selected content before hiding, so no flickering white stuff
   $('#' + paneId).css('visibility', 'visible');
 
