@@ -197,6 +197,10 @@ var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.pn
 
 var AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
+var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
+
+var MAP_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_map.png';
+
 var HOME_CONTROL_ID = 'homeControl';
 var HOME_CONTENT_ID = 'home';
 
@@ -418,13 +422,13 @@ function addActionBar(targetId, id, title, includeSettings, options) {
   }
 }
 
-function addHeadingToSidebar(containerId, headingSetting) {
+function addHeadingToSidebar(containerId, title) {
   $('#' + containerId).append(
         '<div class="sidebarGroupHeading">' +
         '</div>' +
         '<div id="testGroup" class="sidebarGroup">' +
         '  <div class="sidebarGroupHeading">' +
-        '    <div id="testGroupTitle" class="sidebarGroupTitle">' + headingSetting.title + '</div>' +
+        '    <div id="testGroupTitle" class="sidebarGroupTitle">' + title + '</div>' +
         '  </div>' +
         '</div>'
   );
@@ -438,7 +442,40 @@ function addTextToSidebar() {
   
 }
 
-function addGaugeControlToSideBar(containerId, contentManager, gaugeSetting) {
+function addSelectorToSidebar(sideBarContainerId, name, title, description, icon, enabled, clickFunction) {
+
+  $('#' + sideBarContainerId).append(
+    '<div id="' + 'selector' + name + '" class="controlBar">' +
+    '  <div id="' + 'selector' + name + 'ControlArea" class="controlIconArea">' +
+    '    <img class="controlIcon" src="' + icon + '" />' +
+    '  </div>' +
+    '  <div class="controlText">' +
+    '    <div class="controlName">' +
+           title + 
+    '    </div>' +
+    '    <div class="controlSubText">' +
+           description + 
+    '    </div>' +
+    '  </div>' +
+    '</div>');
+
+  // if the target of the selector is enabled then activate
+  
+  if(enabled) {
+    $('#selector' + name + 'ControlArea').toggleClass('controlIconAreaSelected');
+  }
+  
+  $('#selector' + name).click(function() {
+    // call the function for activation of the selector
+    clickFunction();
+    
+    // toggle the control
+    $('#selector' + name + 'ControlArea').toggleClass('controlIconAreaSelected');
+  });
+}
+          
+// TODO: change addGaugeControlToSidebar to utilise the addSelectorToSidebar logic, as it's a more generic approach, while gauge is tailored or gauges.
+function addGaugeControlToSidebar(containerId, contentManager, gaugeSetting) {
 
 /*    
     this.id = id;
@@ -506,7 +543,7 @@ function loadSidebar(targetId, containerId) {
       if(i in settings) {
         if(settings[i] instanceof HeadingSetting) {
           console.log("Settings: Adding heading");
-          addHeadingToSidebar(containerId, settings[i]);
+          addHeadingToSidebar(containerId, settings[i].title);
         } else if(settings[i] instanceof ToggleSetting) {
           console.log("Settings: Adding toggle");
         } else if(settings[i] instanceof TextSetting) {
@@ -515,7 +552,7 @@ function loadSidebar(targetId, containerId) {
           console.log("Settings: Adding range");
         } else if(settings[i] instanceof GaugeSetting) {
           console.log("Settings: Adding gauge");
-          addGaugeControlToSideBar(containerId, contentManager, settings[i]);
+          addGaugeControlToSidebar(containerId, contentManager, settings[i]);
         }
       }
     }
@@ -695,14 +732,14 @@ function unloadVehicleUIs(vehicle) {
   $('#' + vehicleControlId).remove();
 }
 
-/**
- * loadVehicleUI()
+/*
+ * getVehicleIcon get the icon for the specified vehicle type
  *
- * loads the ui elements to support the passed vehicle
- * 
+ * vehicle  the vehicle of which the icon is to be determined for
+ *
+ * returns the appropriate icon, defaulting to the airplane icon if the type cannot be determined
  */
-function loadVehicleUIs(vehicle) {
-  // determine the icon for the vehicle
+function getVehicleIcon(vehicle) {
   var icon = AIRPLANE_ICON;
   
   switch(vehicle.type) {
@@ -716,6 +753,19 @@ function loadVehicleUIs(vehicle) {
       icon = SUBMERSIBLE_ICON;
       break;
   }
+  
+  return icon;
+}
+
+/**
+ * loadVehicleUI()
+ *
+ * loads the ui elements to support the passed vehicle
+ * 
+ */
+function loadVehicleUIs(vehicle) {
+  // determine the icon for the vehicle
+  var icon = getVehicleIcon(vehicle);
   
   // adding the vehicle to the content manager sets it's position
   var vehicleNumber = vehicle.position;
@@ -1150,8 +1200,64 @@ function addNavigationContentUI(id) {
   
   // add the action bar
   var actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, "Navigation", true);
+  // addActionBar(id, actionBarId, "Navigation", true);
 
+  addActionBar(id, actionBarId, "Navigation", true, {
+    rightSidebarFunction: function() {
+      // loadSidebar(id, 'rightScroller');
+      
+      var targetId = id;
+      var containerId = 'rightScroller';
+      // function loadSidebar(targetId, containerId) {
+      // check if contents of side bar is same as previous
+      
+      // it's different so destroy the contents of side bar
+      $('#' + containerId).empty();
+
+      // add a vehicles heading
+      addHeadingToSidebar(containerId, "Vehicles");
+      
+      // iterate through the vehicles and add a layer control to turn on/off each vehicle's navigation info
+      for(var i in contentManager.vehicles) {
+          vehicle = contentManager.vehicles[i]
+          // determine the icon for the vehicle
+          var icon = getVehicleIcon(vehicle);
+          
+          addSelectorToSidebar(containerId, 'vehicle' + i, vehicle.name, '', icon, true,
+            function() {
+              // TODO: insert logic here for selecting visibility of the layer that shows the navigation vectors and icons for the vehicle
+              /*
+              if(gaugeSetting.visible) {
+                gaugeSetting.visible = !hideGauge(gaugeSetting.gaugeId);
+              } else {
+                gaugeSetting.visible = showGauge(gaugeSetting, contentManager.getFocusedTabId());
+              }
+              */
+            });
+      }
+      
+      // add a options heading
+      addHeadingToSidebar(containerId, "Map Style");
+      
+      // TODO: the current selection is to be persisted and restored...
+      // TODO: these are to be exclusive, eg. like radio buttons...
+      addSelectorToSidebar(containerId, 'mapStyle1', "Fresh", 'Simplified streets view', MAP_ICON, false, function() {});
+      addSelectorToSidebar(containerId, 'mapStyle2', "Minimal", 'Minimal streets view', MAP_ICON, false, function() {});
+      addSelectorToSidebar(containerId, 'mapStyle3', "Minimal 2", 'Minimal streets view 2', MAP_ICON, false, function() {});
+      addSelectorToSidebar(containerId, 'mapStyle4', "Night Vision", 'Red theme to reduce affect on vision at night', MAP_ICON, false, function() {});
+      addSelectorToSidebar(containerId, 'mapStyle5', "Night View", 'Night theme, black and greenish', MAP_ICON, false, function() {});
+      addSelectorToSidebar(containerId, 'mapStyle6', "Streets", 'Map Quest Street', MAP_ICON, false, function() {});
+      addSelectorToSidebar(containerId, 'mapStyle7', "Satelite", 'ESRI World Imagery', MAP_ICON, false, function() {});
+      addSelectorToSidebar(containerId, 'mapStyle8', "Topographical", 'ESRI World Topographical', MAP_ICON, true, function() {});
+      
+      // TODO: this is always the same, should make it more generic?
+      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+      
+      return false;
+    }
+  });
+ 
+  
   // setup the map
   
   // TODO: tidy up the mapping logic
