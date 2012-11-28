@@ -542,7 +542,7 @@ div.sideBar {
 	display: block;
 }
 
-div.rightSideBar {
+div.rightSidebar {
 	right: 0px;
 	left: auto;
 }
@@ -570,6 +570,8 @@ div.sidebarGroupHeading {
 	margin-right: 10px;
 	margin-top: 15px;
 	margin-bottom: 5px;
+	float: left;
+	width: 100%;
 }
 
 div.sidebarGroupTitle {
@@ -586,6 +588,10 @@ div.sidebarGroupTitle {
 	box-sizing:border-box;
 	-moz-box-sizing:border-box; /* Firefox */
 	-webkit-box-sizing:border-box; /* Safari */
+}
+
+div.leftSidebarGroupHeading {
+	float: none;
 }
 
 div.sidebarControl {

@@ -47,17 +47,34 @@
 /** iScroll logic  */
 /* don't need to access the scroll bar for side panes  
 var verticalScrollLeftSidebar;
-var verticalScrollRightSidebar;
 */
+var verticalScrollRightSidebar;
 // var horizontalScroll = new Array();
 function loaded() {
-  new iScroll(LEFT_SIDEBAR_ID, {
+  /*
+  verticalScrollRightSidebar = new iScroll(RIGHT_SIDEBAR_ID, {
+    hScroll: false,
+    vScroll: true,
+    momentum: false,
+    hScrollbar: false,
     zIndex: 0
   });
-  new iScroll('rightSidebar');
+  */
+  
+  new iScroll(LEFT_SIDEBAR_ID, {
+    hScroll: false,
+    vScroll: true,
+    momentum: false,
+    hScrollbar: false,
+    zIndex: 0
+  });
+
+  // new iScroll('addVehicle');
+
+  
   /*
   verticalScrollLeftSidebar = new iScroll(LEFT_SIDEBAR_ID);
-  verticalScrollRightSidebar = new iScroll('rightSidebar');
+  verticalScrollRightSidebar = new iScroll(RIGHT_SIDEBAR_ID);
   */
   /*
   horizontalScroll[0] = new iScroll('vehicle1ContentSlider', {
@@ -205,6 +222,7 @@ var HOME_CONTROL_ID = 'homeControl';
 var HOME_CONTENT_ID = 'home';
 
 var LEFT_SIDEBAR_ID = 'leftSidebar';
+var RIGHT_SIDEBAR_ID = 'rightSidebar';
 
 var PAYLOAD_CONTROL_ID = 'payloadControl';
 var PAYLOAD_CONTENT_ID = 'payloadContent';
@@ -247,6 +265,7 @@ $(document).ready(function() {
 // setup the options in the left sidebar
 function configureApplication() {
   // add home content
+  // TODO: create content for the home page
   addContentUI(HOME_CONTENT_ID, 'Home', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
   // add home listener
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, HOME_CONTROL_ID, HOME_CONTENT_ID);
@@ -254,29 +273,29 @@ function configureApplication() {
   // add payload control listener
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, PAYLOAD_CONTROL_ID, PAYLOAD_CONTENT_ID, function() {
     // add the ui content for the payload
+    // TODO: make this content that is only added as required
     addPayloadContentUI(PAYLOAD_CONTENT_ID);
   });
   
   // add navigation content listener
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, NAVIGATION_CONTROL_ID, NAVIGATION_CONTENT_ID, function() {
     // add the ui content for the navigation
+    // TODO: make this content that is only added as required
     addNavigationContentUI(NAVIGATION_CONTENT_ID);
   });
 
-  // add the add vehicle
-  appendControlToSidebar('vehicleGroup', ADD_VEHICLE_CONTROL_ID, ADD_ICON, 'Add Vehicle');
-  addVehicleCreateUI('addVehicle', 'Add Vehicle');
+  // add the add vehicle to the sidebar
+  appendControlToSidebar(VEHICLE_GROUP, ADD_VEHICLE_CONTROL_ID, ADD_ICON, 'Add Vehicle');
   // add listeners to the controls that adds a vehicle
-  addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'addVehicleControl', 'addVehicle');
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, ADD_VEHICLE_CONTROL_ID, 'addVehicle');
   
-  // add the add server
-  appendControlToSidebar('serverGroup', 'addServerControl', ADD_ICON, 'Add Server');
-  addServerCreateUI('addServer', 'Add Server');
-  // addContentUI('addServer', 'Add Host', "If you hack the Vatican server, have you tampered in God's domain? - Aaron Allston");
+  // add the add server to the sidebar
+  appendControlToSidebar(SERVER_GROUP, 'addServerControl', ADD_ICON, 'Add Server');
   // add listeners to the controls that adds a server
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'addServerControl', 'addServer');
   
   // add the preferences content
+  // TODO: make this content that is only added as required
   addContentUI('preferences', 'Preferences', "Here be dragons");
   // add listeners to the control for the preferences
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'preferencesControl', 'preferences');
@@ -284,17 +303,26 @@ function configureApplication() {
   // set the initial focus to the home control
   setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
 
+  // load previously persisted data
   contentManager.loadData();
   
-  // iterate through the vehicles and load them
+  // iterate through the vehicles and add them to the sidebar
   for(var vehicle in contentManager.vehicles) {
-    loadVehicleUIs(contentManager.vehicles[vehicle]);
+    addVehicleToSidebar(contentManager.vehicles[vehicle]);
   }
 
-  // iterate through the servers and load them
+  // iterate through the servers and add them to the sidebar
   for(var server in contentManager.servers) {
-    loadServerUIs(contentManager.servers[server]);
+    addServerToSidebar(contentManager.servers[server]);
   }
+
+  // add the form for creating vehicles
+  // TODO: make this content that is only added as required
+  addVehicleCreateFormUI('addVehicle', 'Add Vehicle');
+  
+  // add the form for creating servers
+  // TODO: make this content that is only added as required
+  addServerCreateFormUI('addServer', 'Add Server');
 }
 
 var LEFT_SIDEBAR_CONTROL_TEXT = 'leftSidebarControlText';
@@ -423,6 +451,14 @@ function addActionBar(targetId, id, title, includeSettings, options) {
 }
 
 function addHeadingToSidebar(containerId, title) {
+/*  
+        <div id="vehicleGroup" class="sidebarGroup">
+          <div class="sidebarGroupHeading">
+            <div id="vehicleGroupTitle" class="sidebarGroupTitle">Vehicles</div>
+          </div>
+        </div>
+*/  
+  
   $('#' + containerId).append(
         '<div class="sidebarGroupHeading">' +
         '</div>' +
@@ -611,7 +647,7 @@ function createServer() {
   // persist the information
   
   // load the ui for the server
-  loadServerUIs(server);
+  addServerToSidebar(server);
 
   // TODO: add a message to state that the action has been performed
   
@@ -624,7 +660,7 @@ function createServer() {
  *
  * unloads the ui elements that are used for a server
  */
-function unloadServerUIs(server) {
+function removeServerFromSidebar(server) {
   var serverControlId = SERVER_CONTROL + server.position;
   var serverContentId = SERVER_CONTENT + server.position;
 
@@ -638,7 +674,7 @@ function unloadServerUIs(server) {
  * loads the ui elements to support the passed server
  * 
  */
-function loadServerUIs(server) {
+function addServerToSidebar(server) {
   // adding the server to the content manager sets it's position
   var serverNumber = server.position;
   var serverControlId = SERVER_CONTROL + serverNumber;
@@ -654,7 +690,7 @@ function loadServerUIs(server) {
   });
 }
 
-function addServerCreateUI(id, title) {  
+function addServerCreateFormUI(id, title) {  
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'Form" class="formContainer">' +
@@ -708,7 +744,7 @@ function createVehicle() {
   // persist the information
   
   // load the ui for the vehicle
-  loadVehicleUIs(vehicle);
+  addVehicleToSidebar(vehicle);
 
   // TODO: add a message to state that the action has been performed
   
@@ -723,7 +759,7 @@ function createVehicle() {
  *
  * unloads the ui elements that are used for a vehicle
  */
-function unloadVehicleUIs(vehicle) {
+function removeVehicleFromSidebar(vehicle) {
   // adding the vehicle to the content manager sets it's position
   var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
   var vehicleContentId = VEHICLE_CONTENT + vehicleNumber;
@@ -763,7 +799,7 @@ function getVehicleIcon(vehicle) {
  * loads the ui elements to support the passed vehicle
  * 
  */
-function loadVehicleUIs(vehicle) {
+function addVehicleToSidebar(vehicle) {
   // determine the icon for the vehicle
   var icon = getVehicleIcon(vehicle);
   
@@ -785,7 +821,7 @@ function loadVehicleUIs(vehicle) {
   // add the ui to maintain the information for the vehicle
 }
 
-function addVehicleCreateUI(id, title) {
+function addVehicleCreateFormUI(id, title) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'Form" class="formContainer">' +
@@ -949,7 +985,7 @@ function removeServer(server) {
   setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
   
   // unload the ui for the server
-  unloadServerUIs(server);
+  removeServerFromSidebar(server);
   
   // remove the server via the content manager
   contentManager.removeServer(server);
@@ -1214,6 +1250,8 @@ function addNavigationContentUI(id) {
       // it's different so destroy the contents of side bar
       $('#' + containerId).empty();
 
+      // TODO: groups are handled differently for right and left, should be the same (see css leftSidebarGroupHeading)
+      
       // add a vehicles heading
       addHeadingToSidebar(containerId, "Vehicles");
       
@@ -1235,6 +1273,8 @@ function addNavigationContentUI(id) {
               */
             });
       }
+      addHeadingToSidebar(containerId, "Test 3");
+      addHeadingToSidebar(containerId, "Test 4");
       
       // add a options heading
       addHeadingToSidebar(containerId, "Map Style");
@@ -1252,6 +1292,19 @@ function addNavigationContentUI(id) {
       
       // TODO: this is always the same, should make it more generic?
       showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+      
+      // reset the scroller for the right sidebar as content has changed
+      // verticalScrollRightSidebar.refresh();
+      
+      verticalScrollRightSidebar = new iScroll(RIGHT_SIDEBAR_ID, {
+        hScroll: false,
+        vScroll: true,
+        momentum: false,
+        hScrollbar: false,
+        zIndex: 0
+      });
+      
+      
       
       return false;
     }
@@ -1417,7 +1470,7 @@ function removeVehicle(vehicle) {
   setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
   
   // unload the ui for the server
-  unloadVehicleUIs(vehicle);
+  removeVehicleFromSidebar(vehicle);
   
   // remove the vehicle via the content manager
   contentManager.removeVehicle(vehicle);
@@ -2294,7 +2347,7 @@ function sendMessage() {
   </head>
   <body>
     <div id="leftSidebar" class="sideBar">
-      <div id="leftScroller">
+      <div>
         <div id="homeControl" class="sidebarControlBar">
           <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_hanger.png' class="sidebarControlIcon"/></div>
           <div class="sidebarControlText centered">Home</div>
@@ -2308,16 +2361,16 @@ function sendMessage() {
           <div class="sidebarControlText centered">Navigation</div>
         </div>
         <div id="vehicleGroup" class="sidebarGroup">
-          <div class="sidebarGroupHeading">
+          <div class="sidebarGroupHeading leftSidebarGroupHeading">
             <div id="vehicleGroupTitle" class="sidebarGroupTitle">Vehicles</div>
           </div>
         </div>
         <div id="serverGroup" class="sidebarGroup">
-          <div class="sidebarGroupHeading">
+          <div class="sidebarGroupHeading leftSidebarGroupHeading">
             <div id="serversGroupTitle" class="sidebarGroupTitle">Servers</div>
           </div>
         </div>
-        <div class="sidebarGroupHeading">
+        <div class="sidebarGroupHeading leftSidebarGroupHeading">
           <div id="preferencsGroupTitle" class="sidebarGroupTitle"></div>
         </div>
         <div id="preferencesControl" class="sidebarControlBar">
@@ -2327,7 +2380,7 @@ function sendMessage() {
       </div>
     </div>
     
-    <div id="rightSidebar" class="sideBar rightSideBar">
+    <div id="rightSidebar" class="sideBar rightSidebar">
       <div id="rightScroller">
         <div class="sidebarGroupHeading">
   
