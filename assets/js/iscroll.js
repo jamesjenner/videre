@@ -1,5 +1,5 @@
 /*!
- * iScroll v4.2.4 ~ Copyright (c) 2012 Matteo Spinelli, http://cubiq.org
+ * iScroll v4.2.5 ~ Copyright (c) 2012 Matteo Spinelli, http://cubiq.org
  * Released under MIT license, http://cubiq.org/license
  */
 (function(window, doc){
@@ -104,7 +104,7 @@ var m = Math,
 			topOffset: 0,
 			checkDOMChanges: false,		// Experimental
 			handleClick: true,
-			zIndex: 100,
+			zIndex: 100,                    // jgj - option to allow specifying the z-index
 
 			// Scrollbar
 			hScrollbar: true,
@@ -146,8 +146,6 @@ var m = Math,
 		// Set starting position
 		that.x = that.options.x;
 		that.y = that.options.y;
-		
-		
 
 		// Normalize options
 		that.options.useTransform = hasTransform && that.options.useTransform;
@@ -379,8 +377,8 @@ iScroll.prototype = {
 			if (that.options.useTransform) {
 				// Very lame general purpose alternative to CSSMatrix
 				matrix = getComputedStyle(that.scroller, null)[transform].replace(/[^0-9\-.,]/g, '').split(',');
-				x = +matrix[4];
-				y = +matrix[5];
+				x = +(matrix[12] || matrix[4]);
+				y = +(matrix[13] || matrix[5]);
 			} else {
 				x = +getComputedStyle(that.scroller, null).left.replace(/[^0-9-]/g, '');
 				y = +getComputedStyle(that.scroller, null).top.replace(/[^0-9-]/g, '');
