@@ -205,7 +205,22 @@ var Vehicle = function (options) {
 
     this.payloadMap = this.options.payloadMap || new Map();
     this.navigationMap = this.options.navigationMap || new Map();
+    
+    this.navigationPath = this.options.navigationPath || new Path();
+    this.actualPath = this.options.actualPath || new Path();
+    
+    this.heading = this.options.heading || 0;
+    this.speed = this.options.speed || 0;
+    this.roll = this.options.roll || 0;         // x axis
+    this.pitch = this.options.pitch || 0;       // y axis
+    this.yaw = this.options.yaw || 0;           // z axis
+    this.maxSpeed = this.options.maxSpeed || 100;
+    this.speedUom = this.options.speedUom || UOM_KMH;
 }
+
+var UOM_KMH = 'kilometersPerHour';
+var UOM_MH = 'milesPerHour';
+var UOM_MS = 'metersPerSecond';
 
 var MAP_DEFAULT_LAYER = '';
 var MAP_DEFAULT_ZOOM = '';
@@ -221,6 +236,22 @@ var Map = function (options) {
     this.center = this.options.center || MAP_DEFAULT_CENTER;
     this.zoom = this.options.zoom || MAP_DEFAULT_ZOOM;
     this.layer = this.options.layer || MAP_DEFAULT_LAYER;
+}
+
+var POINT_START = 0;
+var POINT_FINISH = 1;
+var POINT_TRANSIENT = 2;
+var POINT_CURRENT = 0;
+
+var Point = function (lat, lng, ele, flag) {
+    this.latitude = lat || 0;
+    this.longitude = lng || 0;
+    this.elevation = ele || 0;
+    this.flag = flag || POINT_TRANSIENT;
+}
+
+var Path = function (path) {
+    this.path = path | new Array();
 }
 
 var SERVER_KEY = 'Server';

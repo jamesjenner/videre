@@ -48,10 +48,14 @@
 /* don't need to access the scroll bar for side panes  
 var verticalScrollLeftSidebar;
 */
+
+
+
+
 var verticalScrollRightSidebar;
+
 // var horizontalScroll = new Array();
 function loaded() {
-  /*
   verticalScrollRightSidebar = new iScroll(RIGHT_SIDEBAR_ID, {
     hScroll: false,
     vScroll: true,
@@ -59,8 +63,7 @@ function loaded() {
     hScrollbar: false,
     zIndex: 0
   });
-  */
-  
+
   new iScroll(LEFT_SIDEBAR_ID, {
     hScroll: false,
     vScroll: true,
@@ -69,6 +72,9 @@ function loaded() {
     zIndex: 0
   });
 
+
+  
+  
   // new iScroll('addVehicle');
 
   
@@ -223,6 +229,8 @@ var HOME_CONTENT_ID = 'home';
 
 var LEFT_SIDEBAR_ID = 'leftSidebar';
 var RIGHT_SIDEBAR_ID = 'rightSidebar';
+// var RIGHT_SIDEBAR_CONTAINER_ID = 'rightSidebarContainer';
+var RIGHT_SIDEBAR_CONTAINER_ID = 'rightScroller';
 
 var PAYLOAD_CONTROL_ID = 'payloadControl';
 var PAYLOAD_CONTENT_ID = 'payloadContent';
@@ -1243,10 +1251,9 @@ function addNavigationContentUI(id) {
       // loadSidebar(id, 'rightScroller');
       
       var targetId = id;
-      var containerId = 'rightScroller';
+      var containerId = RIGHT_SIDEBAR_CONTAINER_ID; //'rightScroller';
       // function loadSidebar(targetId, containerId) {
       // check if contents of side bar is same as previous
-      
       // it's different so destroy the contents of side bar
       $('#' + containerId).empty();
 
@@ -1264,15 +1271,16 @@ function addNavigationContentUI(id) {
           addSelectorToSidebar(containerId, 'vehicle' + i, vehicle.name, '', icon, true,
             function() {
               // TODO: insert logic here for selecting visibility of the layer that shows the navigation vectors and icons for the vehicle
-              /*
-              if(gaugeSetting.visible) {
-                gaugeSetting.visible = !hideGauge(gaugeSetting.gaugeId);
-              } else {
-                gaugeSetting.visible = showGauge(gaugeSetting, contentManager.getFocusedTabId());
-              }
-              */
+              
+              // if(gaugeSetting.visible) {
+              //   gaugeSetting.visible = !hideGauge(gaugeSetting.gaugeId);
+              // } else {
+              //   gaugeSetting.visible = showGauge(gaugeSetting, contentManager.getFocusedTabId());
+              // }
+              
             });
       }
+      
       addHeadingToSidebar(containerId, "Test 3");
       addHeadingToSidebar(containerId, "Test 4");
       
@@ -1290,22 +1298,12 @@ function addNavigationContentUI(id) {
       addSelectorToSidebar(containerId, 'mapStyle7', "Satelite", 'ESRI World Imagery', MAP_ICON, false, function() {});
       addSelectorToSidebar(containerId, 'mapStyle8', "Topographical", 'ESRI World Topographical', MAP_ICON, true, function() {});
       
+      
       // TODO: this is always the same, should make it more generic?
       showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
-      
       // reset the scroller for the right sidebar as content has changed
-      // verticalScrollRightSidebar.refresh();
-      
-      verticalScrollRightSidebar = new iScroll(RIGHT_SIDEBAR_ID, {
-        hScroll: false,
-        vScroll: true,
-        momentum: false,
-        hScrollbar: false,
-        zIndex: 0
-      });
-      
-      
-      
+      verticalScrollRightSidebar.refresh();
+
       return false;
     }
   });
@@ -2347,7 +2345,7 @@ function sendMessage() {
   </head>
   <body>
     <div id="leftSidebar" class="sideBar">
-      <div>
+      <div class="scroller">
         <div id="homeControl" class="sidebarControlBar">
           <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_hanger.png' class="sidebarControlIcon"/></div>
           <div class="sidebarControlText centered">Home</div>
@@ -2379,16 +2377,37 @@ function sendMessage() {
         </div>
       </div>
     </div>
-    
-    <div id="rightSidebar" class="sideBar rightSidebar">
-      <div id="rightScroller">
-        <div class="sidebarGroupHeading">
-  
+
+    <div id="rightSidebar" class="sideBar rightSidebar scroller">
+      <div id="rightScroller" class="scroller">
+        <div id="homeControl2" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_hanger.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Home</div>
         </div>
-        <div id="testGroup" class="sidebarGroup">
-          <div class="sidebarGroupHeading">
-            <div id="testGroupTitle" class="sidebarGroupTitle">Some stuff here...</div>
+        <div id="payloadControl2" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_camera.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Payload</div>
+        </div>
+        <div id="navigationControl2" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_map.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Navigation</div>
+        </div>
+        <div id="vehicleGroup2" class="sidebarGroup">
+          <div class="sidebarGroupHeading leftSidebarGroupHeading">
+            <div id="vehicleGroupTitle2" class="sidebarGroupTitle">Vehicles</div>
           </div>
+        </div>
+        <div id="serverGroup2" class="sidebarGroup">
+          <div class="sidebarGroupHeading leftSidebarGroupHeading">
+            <div id="serversGroupTitle2" class="sidebarGroupTitle">Servers</div>
+          </div>
+        </div>
+        <div class="sidebarGroupHeading leftSidebarGroupHeading">
+          <div id="preferencsGroupTitle2" class="sidebarGroupTitle"></div>
+        </div>
+        <div id="preferencesControl2" class="sidebarControlBar">
+          <div class="sidebarControlIcon"><img src='assets/icons/drawable-xhdpi-v11/ic_action_settings.png' class="sidebarControlIcon"/></div>
+          <div class="sidebarControlText centered">Preferences</div>
         </div>
       </div>
     </div>

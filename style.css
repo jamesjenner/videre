@@ -566,12 +566,17 @@ div.sidebarControlActive {
 
 div.sidebarGroupHeading {
 	height: 20px;
-	margin-left: 10px;
-	margin-right: 10px;
+	padding-left: 10px;
+	padding-right: 10px;
 	margin-top: 15px;
 	margin-bottom: 5px;
-	float: left;
+	float: none;
 	width: 100%;
+	
+	box-sizing: border-box;
+	ms-box-sizing: border-box;
+	webkit-box-sizing: border-box;
+	moz-box-sizing: border-box;
 }
 
 div.sidebarGroupTitle {
@@ -746,7 +751,8 @@ div.toolbarAccessBar
     box-sizing:border-box;
     -moz-box-sizing:border-box; /* Firefox */
     -webkit-box-sizing:border-box; /* Safari */
-    float: left;
+    position:relative;
+    /* float: left; */
     /* do we need to use rgba so we can set transparency as appropriate? Need to check that solid style doesn't override alpha on background color */
 }
 
@@ -769,6 +775,9 @@ div.toolbarAccessBar
     height: 100%;
     width: 48px;
     float: left;
+    position:absolute;
+    left:0;
+    top:0;
     
   box-sizing:border-box;
   -moz-box-sizing:border-box; /* Firefox */
@@ -788,6 +797,9 @@ div.toolbarAccessBar
     height: 100%;
     width: 48px;
     float: left;
+    position:absolute;
+    left:0;
+    top:0;
     
     box-sizing:border-box;
     -moz-box-sizing:border-box; /* Firefox */
@@ -803,6 +815,10 @@ div.toolbarAccessBar
     height: 100%;
     width: 75%;
     float: left;
+    position:absolute;
+    left:48px;
+    top:0;
+    
     padding-left: 10px;
     padding-top: 4px;
 }
