@@ -203,9 +203,6 @@ var Vehicle = function (options) {
     this.navigationEnabled = this.options.navigationEnabled || false;
     this.remoteControlEnabled = this.options.remoteControlEnabled || false;
 
-    this.payloadMap = this.options.payloadMap || new Map();
-    this.navigationMap = this.options.navigationMap || new Map();
-    
     this.navigationPath = this.options.navigationPath || new Path();
     this.actualPath = this.options.actualPath || new Path();
     

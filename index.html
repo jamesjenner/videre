@@ -14,6 +14,7 @@
     
     <link rel="stylesheet" type="text/css" href="assets/css/leaflet.css" />
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="assets/css/radialmenu.css" />
     <script type='text/javascript' src='assets/js/jquery-1.8.0.min.js'></script>
     <script type='text/javascript' src='assets/js/jquery-ui-1.8.23.custom.min.js'></script>
     <script src="assets/js/jquery.touchSwipe.min.js"  type="text/javascript"></script>
@@ -24,6 +25,7 @@
     <script src="assets/js/leaflet-src.js"  type="text/javascript"></script>
     <script src="assets/js/sylvester.js"  type="text/javascript"></script>
     <script src="assets/js/transform.js"  type="text/javascript"></script>
+    <script src="assets/js/radialmenu.js"  type="text/javascript"></script>
 
 <script type='text/javascript'>
 
@@ -50,9 +52,16 @@ var verticalScrollLeftSidebar;
 */
 
 
+var MENU_DELETE_NODE = "menuDeleteNode";
+var MENU_ADD_NODE = "menuAddNode";
+var MENU_SET_SPEED = "menuSetSpeed";
+var MENU_SET_ELEVATION = "menuSetElevation";
+var MENU_TOGGLE_PATROL = "menuTogglePatrol";
+var MENU_TOGGLE_DIRECTION = "menuToggleDirection";
 
 
 var verticalScrollRightSidebar;
+var navigationMapMenu;
 
 // var horizontalScroll = new Array();
 function loaded() {
@@ -72,44 +81,34 @@ function loaded() {
     zIndex: 0
   });
 
+  navigationMapMenu = new RadialMenu('navigationMapMenu', {selectionListener: navigationMapMenuClicked});
+}
 
+function navigationMapMenuClicked(e) {
+  navigationMapMenu.hideMenu();
   
+  switch(e.originalEvent.currentTarget.id) {
+    case(MENU_DELETE_NODE):
+      
+      break;
+    case(MENU_ADD_NODE):
+      console.log("add node");
+      break;
+    case(MENU_SET_SPEED):
+      console.log("set speed");
+      break;
+    case(MENU_SET_ELEVATION):
+      console.log("set elevation");
+      break;
+    case(MENU_TOGGLE_PATROL):
+      console.log("toggle patrol");
+      break;
+    case(MENU_TOGGLE_DIRECTION):
+      console.log("toggle direction");
+      break;
+  }
   
-  // new iScroll('addVehicle');
-
-  
-  /*
-  verticalScrollLeftSidebar = new iScroll(LEFT_SIDEBAR_ID);
-  verticalScrollRightSidebar = new iScroll(RIGHT_SIDEBAR_ID);
-  */
-  /*
-  horizontalScroll[0] = new iScroll('vehicle1ContentSlider', {
-    snap: true,
-    hScroll: true,
-    vScroll: false,
-    momentum: false,
-    hScrollbar: false,
-    onScrollEnd: function () {
-      // document.querySelector('#indicator > li.active').className = '';
-      // document.querySelector('#indicator > li:nth-child(' + (this.currPageX+1) + ')').className = 'active';
-      // update what is currently displayed
-    }
-  });
-  horizontalScroll[1] = new iScroll('vehicle2ContentSlider', {
-    snap: true,
-    hScroll: true,
-    vScroll: false,
-    momentum: false,
-    hScrollbar: false
-  });
-  horizontalScroll[2] = new iScroll('vehicle3ContentSlider', {
-    snap: true,
-    hScroll: true,
-    vScroll: false,
-    momentum: false,
-    hScrollbar: false
-  });
-  */
+  return false;
 }
 
 document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
@@ -1226,6 +1225,7 @@ function addPayloadContentUI(id) {
     L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i));
   }
   */
+  
 }
 
 function addNavigationContentUI(id) {
@@ -1403,7 +1403,7 @@ function addNavigationContentUI(id) {
   // iterate through the array and add a marker for each navigation waypoint
   // TODO: special marker for special events, and/or for landing/takeoff
   for(var i=0, l=navigationPoints.length; i < l; i++) {
-    L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i));
+    L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i)).on('click', onNavigationPointClick);
   }
   
   // add the vehicle icon to the map
@@ -1428,8 +1428,6 @@ function addNavigationContentUI(id) {
   vehicleIconElement.css({
      '-webkit-transform': _T.toString(n)
   });
-
-  
   
   // add the flight path points to the map
   var flightPathPoints = new Array(
@@ -1444,17 +1442,43 @@ function addNavigationContentUI(id) {
     [-27.61457, 153.15187],
     [-27.61557, 153.15287],
     [-27.61657, 153.15387]);
-  var flightPathPolyLine = L.polyline(flightPathPoints, {color: 'red'}).addTo(navigationMap);
+  var flightPathPolyLine = L.polyline(flightPathPoints, {color: 'red'}).addTo(navigationMap).on('click', onFlightPathClick);
   
   
   var popup2 = L.popup();
 
   function onNavigationMapClick(e) {
-      popup2
-          .setLatLng(e.latlng)
-          .setContent("You clicked the map at " + e.latlng.toString())
-          .openOn(navigationMap);
+    // note that the offset due to the action bar requires an adjustment to y by -40
+    navigationMapMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
+    
+    // TODO: add options specific to action, add point (if vehicle selected), 
+    
+    /*
+     *e.latlng.lat, e.latlng.lng
+    popup2
+        .setLatLng(e.latlng)
+        .setContent("You clicked the map at " + e.latlng.toString())
+        .openOn(navigationMap);
+        */
+          
   }
+  
+  function onVehicleMarkerClick(e) {
+    console.log("vehicle clicked");
+    // TODO: select the vehicle, allow options to go to: just show that vehicle, go to vehicle, centre on vehicle, zoom to vehicles flight path, etc
+  }
+  
+  function onNavigationPointClick(e) {
+    // TODO: add options to remove point, remove flight path, append point, prepend point, set altitude, set speed, toggle patrol, set patrol duration
+    console.log("navigation point clicked");
+  }
+  
+  // TODO: not working, but beleive that the dev branch of leaflet supports it
+  function onFlightPathClick(e) {
+    console.log("navigation path clicked");
+  }
+  
+  vehicleMarker.on('click', onVehicleMarkerClick);
   
   navigationMap.on('click', onNavigationMapClick);
 }
@@ -2415,6 +2439,34 @@ function sendMessage() {
     <div id="mainApplication" class="mainApplication content">
       <!-- app content goes here -->
     </div>
+
+    <!-- radial menu for navigation map -->
+    <ul class="radial" id="navigationMapMenu">
+      <li>
+        <a href="#" id="menuAddNode">Add point</a>
+        <span>+</span>
+      </li>
+      <li>
+        <a href="#" id="menuDeleteNode">Remove point</a>
+        <span>-</span>
+      </li>
+      <li>
+        <a href="#" id="menuSetSpeed">Set speed</a>
+        <span>&raquo</span>
+      </li>
+      <li>
+        <a href="#" id="menuSetElevation">Set elevation</a>
+        <span>&Xi</span>
+      </li>
+      <li>
+        <a href="#" id="menuTogglePatrol">Toggle patrol</a>
+        <span>&Theta</span>
+      </li>
+      <li>
+        <a href="#" id="menuToggleDirection">Toggle direction</a>
+        <span>&alpha&Omega</span>
+      </li>
+    </ul>
     
   </body>
 </html>
