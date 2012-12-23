@@ -64,7 +64,7 @@ ContentManager.prototype = {
                     case VEHICLE_KEY:
                         // we have a vehicle object
                         obj = ioRetreiveObject(prop);
-                        this.addVehicle(new Vehicle(obj.options), false);
+                        this.addVehicle(new Vehicle(obj), false);
                         break;
                     case SERVER_KEY:
                         // we have a server object
@@ -165,60 +165,6 @@ ContentManager.prototype = {
     },
 };
 
-var VEHICLE_KEY = 'Vehicle';
-var VEHICLE_AIR = 'air';
-var VEHICLE_SURFACE = 'surface';
-var VEHICLE_SUBMERSIBLE = 'submersible';
-var DEFAULT_NAME = 'Thunderbird #';
-
-var Vehicle = function (options) {
-    
-    this.validTypes = new Object();
-    this.validTypes[VEHICLE_AIR] = 'Air';
-    this.validTypes[VEHICLE_SURFACE] = 'Surface';
-    this.validTypes[VEHICLE_SUBMERSIBLE] = 'Submersible';
-    
-    // this.validTypes = {'air':'Air','surface':'Surface','submersible':'Submersible'};
-    
-    this.options = options || {};
-    
-    this.position = this.options.position || 0;
-    
-    this.name = this.options.name || DEFAULT_NAME;
-    this.type = this.options.type || VEHICLE_AIR;
-    
-    // check that the type if valid, if not then assign to the first entry
-    this.isTypeValid = false;
-    
-    for(var i in this.validTypes) {
-        if(this.type == i) {
-          this.isTypeValid = true;
-          break;
-        }
-    }
-    if(!this.isTypeValid) {
-        this.type = 'air';
-    }
-    
-    this.navigationEnabled = this.options.navigationEnabled || false;
-    this.remoteControlEnabled = this.options.remoteControlEnabled || false;
-
-    this.navigationPath = this.options.navigationPath || new Path();
-    this.actualPath = this.options.actualPath || new Path();
-    
-    this.heading = this.options.heading || 0;
-    this.speed = this.options.speed || 0;
-    this.roll = this.options.roll || 0;         // x axis
-    this.pitch = this.options.pitch || 0;       // y axis
-    this.yaw = this.options.yaw || 0;           // z axis
-    this.maxSpeed = this.options.maxSpeed || 100;
-    this.speedUom = this.options.speedUom || UOM_KMH;
-}
-
-var UOM_KMH = 'kilometersPerHour';
-var UOM_MH = 'milesPerHour';
-var UOM_MS = 'metersPerSecond';
-
 var MAP_DEFAULT_LAYER = '';
 var MAP_DEFAULT_ZOOM = '';
 var MAP_DEFAULT_CENTER = '';
@@ -250,34 +196,6 @@ var Point = function (lat, lng, ele, flag) {
 var Path = function (path) {
     this.path = path | new Array();
 }
-
-var SERVER_KEY = 'Server';
-var DEFAULT_IP_ADDRESS = '172.0.0.1';
-var DEFAULT_PORT = '8080';
-var DEFAULT_PROTOCOL = 'VIDERE';
-
-var Server = function (options) {
-    this.options = options || {};
-    
-    this.position = this.options.position || 0;
-    
-    this.name = this.options.name || "Server";
-    this.ipAddress = this.options.ipAddress || DEFAULT_IP_ADDRESS;
-    this.port = this.options.port || DEFAULT_PORT;
-    this.protocol = this.options.protocol || DEFAULT_PROTOCOL;
-    this.isConnected = false;
-    this.nbrVehicles = 0;
-}
-
-Server.prototype = {
-    load: function(obj) {
-        this.position = obj.position || 0;
-        this.name = obj.name || "Server";
-        this.ipAddress = obj.ipAddress || DEFAULT_IP_ADDRESS;
-        this.port = obj.port || DEFAULT_PORT;
-        this.protocol = obj.protocol || DEFAULT_PROTOCOL;
-    },
-};
 
 var Pane = function (options) {
     this.currentTab = 0;
