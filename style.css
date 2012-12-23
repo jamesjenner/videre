@@ -301,7 +301,7 @@ form input[type="checkbox"] {
 
 form span.checkboxLabel {
 	font-size: small;
-	margin-left: 20px;
+	margin-left: 3px;
 }
 
 form input[type="text"], input[type="number"] {
