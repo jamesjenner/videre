@@ -21,6 +21,9 @@
     <script src="assets/js/swipe.js"  type="text/javascript"></script>
     <script src="assets/js/iscroll.js"  type="text/javascript"></script>
     <script src="assets/js/gauge.js"  type="text/javascript"></script>
+    <script src="assets/js/server.js"  type="text/javascript"></script>
+    <script src="videre-common/js/vehicle.js"  type="text/javascript"></script>
+    <script src="videre-common/js/videre_comms.js"  type="text/javascript"></script>
     <script src="assets/js/contentmanager.js"  type="text/javascript"></script>
     <script src="assets/js/leaflet-src.js"  type="text/javascript"></script>
     <script src="assets/js/sylvester.js"  type="text/javascript"></script>
@@ -318,9 +321,16 @@ function configureApplication() {
     addVehicleToSidebar(contentManager.vehicles[vehicle]);
   }
 
-  // iterate through the servers and add them to the sidebar
+  // iterate through the servers and add them to the sidebar as well as add listeners for events
   for(var server in contentManager.servers) {
+    // add the server to the sidebar
     addServerToSidebar(contentManager.servers[server]);
+    
+    // setup connection/disconnection/message listeners
+    contentManager.servers[server].connectionListener = serverConnected;
+    contentManager.servers[server].disconnectionListener = serverDisconnected;
+    contentManager.servers[server].messageRcvdListener = serverMessageReceived;
+    contentManager.servers[server].errorListener = serverError;
   }
 
   // add the form for creating vehicles
@@ -646,7 +656,13 @@ function createServer() {
     'name':$('#serverCreateName').val(),
     'ipAddress':$('#serverCreateIPAddress').val(),
     'port':$('#serverCreatePort').val(),
-    'protocol':$('#serverCreateProtocol').val()});
+    'protocol':$('#serverCreateProtocol').val(),
+    'log':$('#serverCreateLoggingEnabled').is(':checked'),    
+    connectionListener: serverConnected,
+    disconnectionListener: serverDisconnected,
+    messageRcvdListener: serverMessageReceived,
+    errorListener: serverError
+  });
   
   // add the vehicle to the content manager
   contentManager.addServer(server, true);
@@ -719,9 +735,13 @@ function addServerCreateFormUI(id, title) {
     '             <label for="serverCreatePort">Port</label>' +
     '             <input type="number" min="1" max="99999" name="port" id="serverCreatePort" placeholder="Port"><br>' +
     '           </li>' + 
-    '           <li class="breakTop">' + 
+    '           <li>' + 
     '             <label for="serverCreateProtocol">Protocol</label>' +
     '             <input type="text" name="protocol" id="serverCreateProtocol" placeholder="Protocol"><br>' +
+    '           </li>' +
+    '           <li class="breakTop">' + 
+    '             <span class="checkboxLabel">Communication events are logged</span> ' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverCreateLoggingEnabled"></div>' +
     '           </li>' +
     '       </form>' +
     '      </div>' +
@@ -734,6 +754,9 @@ function addServerCreateFormUI(id, title) {
     save: true,
     saveFunction: createServer,
   });
+  
+  // add the toggle switch to switch classed checkboxes  
+  $(".switch").on("click", toggleSwitch);
 }
 
 function createVehicle() {
@@ -743,7 +766,7 @@ function createVehicle() {
     'type':$('#vehicleCreateVehicleType').val(),
     'payloadEnabled':$('#vehicleCreatePayload').is(':checked'),
     'navigationEnabled':$('#vehicleCreateNavigationEnabled').is(':checked'),
-    'remoteControlEnabled':$('#vehicleCreateRemoteControl').is(':checked')});
+    'remoteControlEnabled':$('#vehicleCreateRemoteControlEnabled').is(':checked')});
   
   // add the vehicle to the content manager
   contentManager.addVehicle(vehicle, true);
@@ -865,9 +888,9 @@ function addVehicleCreateFormUI(id, title) {
     '           </li>' + 
 
     '           <li>' +
-    // '             <input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControl" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
+    // '             <input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControlEnabled" /><span class="checkboxLabel">Vehicle can be controlled remotely<span><br>' + 
     '             <span class="checkboxLabel">Vehicle can be controlled remotely</span> ' +
-    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControl"></div>' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControlEnabled"></div>' +
     '           </li>' + 
     '         </ul>' + 
     '       </form>' +
@@ -924,7 +947,7 @@ function addServerContentUI(id, server) {
 
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
-    '  <div id="' + id + 'Form" class="formContents">' +
+    '  <div id="' + id + 'Form" class="formContainer">' +
     '    <div class="formContents">' +
     '      <div class="formContents">' +
     '       <form id="updateServerForm">' +
@@ -951,9 +974,13 @@ function addServerContentUI(id, server) {
     '             <label for="serverUpdatePort">Port</label>' +
     '             <input type="number" min="1" max="99999" name="port" id="serverUpdatePort" placeholder="Port"><br>' +
     '           </li>' + 
-    '           <li class="breakTop">' + 
+    '           <li>' + 
     '             <label for="serverUpdateProtocol">Protocol</label>' +
     '             <input type="text" name="protocol" id="serverUpdateProtocol" placeholder="Protocol"><br>' +
+    '           </li>' +
+    '           <li class="breakTop">' + 
+    '             <span class="checkboxLabel">Communication events are logged</span> ' +
+    '             <div id="serverUpdateLoggingEnabledSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverUpdateLoggingEnabled"></div>' +
     '           </li>' +
     '       </form>' +
     '      </div>' +
@@ -966,9 +993,14 @@ function addServerContentUI(id, server) {
   $('#serverUpdateIPAddress').val(server.ipAddress);
   $('#serverUpdatePort').val(server.port);
   $('#serverUpdateProtocol').val(server.protocol);
-    
+  $('#serverUpdateLoggingEnabled').prop('checked', server.log);
+  if(server.log) {
+    $('#serverUpdateLoggingEnabledSwitch').toggleClass('on');
+  }
   actionBarId = id + 'ActionBar';
 
+  // TODO: consider putting log toggle on the action bar
+  
   addActionBar(id, actionBarId, server.name, false, {
     remove: true,
     removeFunction: function() {
@@ -979,10 +1011,13 @@ function addServerContentUI(id, server) {
       updateServer(server);
     },
     disconnect: true,
-    disconnectFunction: disconnectServer,
+    disconnectFunction: function () { disconnectServer(server) },
     connect: true,
-    connectFunction: connectServer,
+    connectFunction:  function () { connectServer(server) },
   });
+  
+  // add the toggle switch to switch classed checkboxes  
+  $(".switch").on("click", toggleSwitch);
 }
 
 function removeServer(server) {
@@ -1001,12 +1036,19 @@ function removeServer(server) {
 function updateServer(server) {
   // retrieve the values from the form and set to the server instance\
   var newName = $('#serverUpdateName').val();
+  var newIpAddress = $('#serverUpdateIPAddress').val();
+  var newPort = $('#serverUpdatePort').val();
+  var newProtocol = $('#serverUpdateProtocol').val();
+
   var nameModified = server.name !== newName;
+  var hostDetailsModified = server.ipAddress !== newIpAddress || server.port !== newPort || server.protocolo !== newProtocol;
   
   server.name = newName;
-  server.ipAddress = $('#serverUpdateIPAddress').val();
-  server.port = $('#serverUpdatePort').val();
-  server.protocol = $('#serverUpdateProtocol').val();
+  server.ipAddress = newIpAddress;
+  server.port = newPort;
+  server.protocol = newProtocol;
+  
+  server.log = $('#serverUpdateLoggingEnabled').is(':checked');
 
   // persist the changes  
   contentManager.updateServer(server);
@@ -1021,12 +1063,20 @@ function updateServer(server) {
     // update the on screen label to the new name
     $('#' + LEFT_SIDEBAR_CONTROL_TEXT + SERVER_CONTENT + server.position + ACTION_BAR).text(server.name);
   }
+  
+  // disconnect and reconnect if connected and the host details have been modified
+  if(hostDetailsModified && server.connected) {
+    disconnectServer(server);
+    connectServer(server);
+  }
 }
 
-function disconnectServer() {
+function disconnectServer(server) {
+  server.disconnect();
 }
 
-function connectServer() {
+function connectServer(server) {
+  server.connect();
 }
 
 /*
@@ -2278,51 +2328,32 @@ window.cancelRequestAnimFrame = ( function() {
         clearTimeout
 } )();
 */
-  
-/* connection logic for websockets */
 
-var connection = {};
-
-function connect() {
-  if(window.WebSocket != undefined) {
-    if(connection.readyState === undefined || connection.readyState > 1) {
-      connection = new WebSocket('ws://localhost:9007', "myProtocol");
-      // connection = new WebSocket('ws://localhost:8095', 'http-only');
-
-      connection.binaryType = "arraybuffer";
-      connection.onopen = openEvent;
-      connection.onmessage = messageEvent;
-      connection.onclose = closeEvent;
-      connection.onerror = errorEvent;
-    }
-  }
-}
-
-function disconnect() {
-  connection.close();
-}
-
-function openEvent(event) {
-  console.log(event);
-  connected = true;
+function serverConnected(e) {
   // $(this).children('img').attr('src', 'assets/icons/icon_power_on.svg');
-  $('#toggleConnection').children('img').attr('src', 'assets/icons/icon_power_on.svg');
+  // $('#toggleConnection').children('img').attr('src', 'assets/icons/icon_power_on.svg');
+  
+  // JSON.stringify();
+  
+  // iterate through each vehicle and tell the server that there is a new vehicle
+  for(var vehicle in contentManager.vehicles) {
+    this.sendMessage(MSG_ADD_VEHICLE, JSON.stringify(contentManager.vehicles[vehicle]));
+  }
+          
+  
 }
 
-function closeEvent(event) {
-  console.log(event);
-  connected = false;
+function serverDisconnected(e) {
   // $(this).children('img').attr('src', 'assets/icons/icon_power_off.svg');
   $('#toggleConnection').children('img').attr('src', 'assets/icons/icon_power_off.svg');
 }
 
-function messageEvent(event) {
+function serverMessageReceived(e) {
   // var chatdiv = document.getElementById('chat');
   // chatdiv.innerHTML = chatdiv.innerHTML + event.data + "<br />";
-
-  if(event.data instanceof ArrayBuffer) {
-    console.log(event);
-/*
+  
+  if(e.data instanceof ArrayBuffer) {
+  /*
     var bytearray = new Uint8Array(event.data);
 
     var tempcanvas = document.createElement('canvas');
@@ -2347,23 +2378,17 @@ function messageEvent(event) {
 
     chatdiv.appendChild(img);
     chatdiv.innerHTML = chatdiv.innerHTML + '<br/>';
-*/
+  */
   } else {
-    console.log(event, event.data);
+    // console.log(e, e.data);
   }
 }
 
-function errorEvent(event) {
-  console.log(event);
+function serverError(e) {
   // document.getElementById('chat').innerHTML = "There was an error: " + event.data;
 }
+  
 
-function sendMessage() {
-  var messageText = "blah";
-  // var messageText = = document.getElementById('chatmessage').value;
-  // messageText = username + ": " + messageText;
-  connection.send(messageText);
-}
 
 </script>
   </head>
@@ -2452,19 +2477,19 @@ function sendMessage() {
       </li>
       <li>
         <a href="#" id="menuSetSpeed">Set speed</a>
-        <span>&raquo</span>
+        <span>&raquo;</span>
       </li>
       <li>
         <a href="#" id="menuSetElevation">Set elevation</a>
-        <span>&Xi</span>
+        <span>&Xi;</span>
       </li>
       <li>
         <a href="#" id="menuTogglePatrol">Toggle patrol</a>
-        <span>&Theta</span>
+        <span>&Theta;</span>
       </li>
       <li>
         <a href="#" id="menuToggleDirection">Toggle direction</a>
-        <span>&alpha&Omega</span>
+        <span>&alpha;&#32;&Omega;</span>
       </li>
     </ul>
     
