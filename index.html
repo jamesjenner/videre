@@ -773,6 +773,8 @@ function createVehicleFromServer(vehicle) {
   
   // load the ui for the vehicle
   addVehicleToSidebar(vehicle);
+  
+  // TODO: need a UUID or similar for the vehicle...
 
 }
 
@@ -790,14 +792,27 @@ function createVehicle() {
     'navigationEnabled':$('#vehicleCreateNavigationEnabled').is(':checked'),
     'remoteControlEnabled':$('#vehicleCreateRemoteControlEnabled').is(':checked')});
   
-  // add the vehicle to the content manager
-  contentManager.addVehicle(vehicle, true);
+  
+  // TODO: add logic to allow optional creation of vehicle on server
+  if(true) {
+    // it's a local vehicle
+    
+    // add the vehicle to the content manager
+    contentManager.addVehicle(vehicle, true);
+    
+    // load the ui for the vehicle
+    addVehicleToSidebar(vehicle);
+
+  } else {
+    // it's a server vehicle
+    
+    // send a messsage to add it
+    
+    // TODO: generate error if the selected server is not connected
+  }
   
   // persist the information
   
-  // load the ui for the vehicle
-  addVehicleToSidebar(vehicle);
-
   // TODO: add a message to state that the action has been performed
   
   // reset the form  
