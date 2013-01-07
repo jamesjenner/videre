@@ -33,10 +33,16 @@ var Server = function (options) {
     this.isConnected = false;
     this.nbrVehicles = 0;
     
+    this.rcvdUnsupportedMessage = options.rcvdUnsupportedMessage || function() {};
     this.connectionListener = options.connectionListener || function() {};
     this.disconnectionListener = options.disconnectionListener || function() {};
-    this.messageRcvdListener = options.messageRcvdListener || function() {};
     this.errorListener = options.errorListener || function() {};
+    
+    this.rcvdAddVehicle = options.rcvdAddVehicle || this.rcvdUnsupportedMessage;
+    this.rcvdDeleteVehicle = options.rcvdDeleteVehicle || this.rcvdUnsupportedMessage;
+    this.rcvdUpdateVehicle = options.rcvdUpdateVehicle || this.rcvdUnsupportedMessage;
+    this.rcvdTelemetry = options.rcvdTelemetry || this.rcvdUnsupportedMessage;
+    this.rcvdPayload = options.rcvdPayload || this.rcvdUnsupportedMessage;
     
     this.log = options.log || false;
     
@@ -53,8 +59,12 @@ Server.prototype = {
         this.log = obj.log || false;
     },
     connect: function() {
+        if(this.log) {
+            console.log(this.name + " webSocket connect " + this.ipAddress + ":" + this.port + " " + this.protocol);
+        }
         if(window.WebSocket != undefined) {
             if(this.connection.readyState === undefined || this.connection.readyState > 1) {
+                
                 // host, port, resource name, secure
                 // this.connection = new WebSocket('ws://' + this.ipAddress + ':' + this.port, this.protocol);
                 this.connection = new WebSocket('ws://' + this.ipAddress + ':' + this.port, this.protocol);
@@ -90,39 +100,38 @@ Server.prototype = {
         if(this.log) {
             console.log(this.name + " webSocket msg rcvd: " + event);
         }
+
+        if(event.data) {
+            var msg = Message.deconstructMessage(event.data);
         
-        // TODO: include processing logic here, sort out the data, and then send a custom event that had processed the data
-        this.messageRcvdListener(event);
-        
-        if(event.data instanceof ArrayBuffer) {
-        /*
-            var bytearray = new Uint8Array(event.data);
-        
-            var tempcanvas = document.createElement('canvas');
-                tempcanvas.height = imageheight;
-                tempcanvas.width = imagewidth;
-            var tempcontext = tempcanvas.getContext('2d');
-        
-            var imgdata = tempcontext.getImageData(0,0,imagewidth,imageheight);
-        
-            var imgdatalen = imgdata.data.length;
-        
-            for (var i=8; i < imgdatalen; i++) {
-              imgdata.data[i] = bytearray[i];
+            switch(msg.id) {
+                case MSG_VEHICLES:
+                    var data = JSON.parse(msg.body);
+                    for(i = 0, l = data.length; i < l; i++) {
+                        this.rcvdAddVehicle(new Vehicle(data[i]));
+                    }
+                    break;
+                
+                case MSG_ADD_VEHICLE:
+                    this.rcvdAddVehicle(new Vehicle(JSON.parse(msg.body)));
+                    break;
+          
+                case MSG_DELETE_VEHICLE:
+                    this.rcvdDeleteVehicle(new Vehicle(JSON.parse(msg.body)));
+                    break;
+          
+                case MSG_UPDATE_VEHICLE:
+                    this.rcvdUpdateVehicle(new Vehicle(JSON.parse(msg.body)));
+                    break;
+                
+                case MSG_VEHICLE_TELEMETRY:
+                    this.rcvdTelemetry(JSON.parse(msg.body));
+                    break;
+                
+                case MSG_VEHICLE_PAYLOAD:
+                    this.rcvdPayload(JSON.parse(msg.body));
+                    break;
             }
-        
-            tempcontext.putImageData(imgdata,0,0);
-        
-            var img = document.createElement('img');
-                img.height = imageheight;
-                img.width = imagewidth;
-                img.src = tempcanvas.toDataURL();
-        
-            chatdiv.appendChild(img);
-            chatdiv.innerHTML = chatdiv.innerHTML + '<br/>';
-        */
-        } else {
-            // console.log(event, event.data);
         }
     },
     errorEvent: function (event) {
