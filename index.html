@@ -24,7 +24,6 @@
     <script src="assets/js/server.js"  type="text/javascript"></script>
     <script src="videre-common/js/vehicle.js"  type="text/javascript"></script>
     <script src="videre-common/js/videre_comms.js"  type="text/javascript"></script>
-    <script src="videre-common/js/message.js"  type="text/javascript"></script>
     <script src="assets/js/contentmanager.js"  type="text/javascript"></script>
     <script src="assets/js/leaflet-src.js"  type="text/javascript"></script>
     <script src="assets/js/sylvester.js"  type="text/javascript"></script>
@@ -662,7 +661,12 @@ function createServer() {
     'name':$('#serverCreateName').val(),
     'ipAddress':$('#serverCreateIPAddress').val(),
     'port':$('#serverCreatePort').val(),
+    'securePort':$('#serverCreateSecurePort').val(),
     'protocol':$('#serverCreateProtocol').val(),
+    'userId':$('#serverCreateUserId').val(),
+    'password':$('#serverCreatePassword').val(),
+    'rememberPassword':$('#serverCreateRememberPassword').is(':checked'),    
+    'secureOnly':$('#serverCreateSecureOnly').is(':checked'),    
     'log':$('#serverCreateLoggingEnabled').is(':checked'),    
     connectionListener: serverConnected,
     disconnectionListener: serverDisconnected,
@@ -746,9 +750,29 @@ function addServerCreateFormUI(id, title) {
     '             <input type="number" min="1" max="99999" name="port" id="serverCreatePort" placeholder="Port"><br>' +
     '           </li>' + 
     '           <li>' + 
+    '             <label for="serverCreateSecurePort">Secure Port</label>' +
+    '             <input type="number" min="1" max="99999" name="securePort" id="serverCreateSecurePort" placeholder="Secure Port"><br>' +
+    '           </li>' + 
+    '           <li>' + 
     '             <label for="serverCreateProtocol">Protocol</label>' +
     '             <input type="text" name="protocol" id="serverCreateProtocol" placeholder="Protocol"><br>' +
     '           </li>' +
+    '           <li class="breakTop">' + 
+    '             <label for="serverCreateUserId">User Id</label>' +
+    '             <input type="text" name="userId" id="serverCreateUserId" placeholder="User Id" required><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="serverCreatePassword">Password</label>' +
+    '             <input type="text" name="password" id="serverCreatePassword" placeholder="Password" required><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <span class="checkboxLabel">Remember password</span> ' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="RememberPassword" id="serverCreateRememberPassword"></div>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <span class="checkboxLabel">Secure communications only</span> ' +
+    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="SecureOnly" id="serverCreateSecureOnly"></div>' +
+    '           </li>' + 
     '           <li class="breakTop">' + 
     '             <span class="checkboxLabel">Communication events are logged</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverCreateLoggingEnabled"></div>' +
@@ -1012,9 +1036,30 @@ function addServerContentUI(id, server) {
     '             <input type="number" min="1" max="99999" name="port" id="serverUpdatePort" placeholder="Port"><br>' +
     '           </li>' + 
     '           <li>' + 
+    '             <label for="serverUpdateSecurePort">Secure Port</label>' +
+    '             <input type="number" min="1" max="99999" name="securePort" id="serverUpdateSecurePort" placeholder="SecurePort"><br>' +
+    '           </li>' + 
+    '           <li>' + 
     '             <label for="serverUpdateProtocol">Protocol</label>' +
     '             <input type="text" name="protocol" id="serverUpdateProtocol" placeholder="Protocol"><br>' +
     '           </li>' +
+    '           <li class="breakTop">' + 
+    '             <label for="serverUpdateUserId">User Id</label>' +
+    '             <input type="text" name="userId" id="serverUpdateUserId" placeholder="User Id" required><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="serverUpdatePassword">Password</label>' +
+    '             <input type="text" name="password" id="serverUpdatePassword" placeholder="Password" required><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <span class="checkboxLabel">Remember password</span> ' +
+    '             <div id="serverUpdateRememberPasswordSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="RememberPassword" id="serverUpdateRememberPassword"></div>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <span class="checkboxLabel">Secure communications only</span> ' +
+    '             <div id="serverUpdateSecureOnlySwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="SecureOnly" id="serverUpdateSecureOnly"></div>' +
+    '           </li>' +
+    
     '           <li class="breakTop">' + 
     '             <span class="checkboxLabel">Communication events are logged</span> ' +
     '             <div id="serverUpdateLoggingEnabledSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverUpdateLoggingEnabled"></div>' +
@@ -1029,7 +1074,22 @@ function addServerContentUI(id, server) {
   $('#serverUpdateName').val(server.name);
   $('#serverUpdateIPAddress').val(server.ipAddress);
   $('#serverUpdatePort').val(server.port);
+  $('#serverUpdateSecurePort').val(server.securePort);
   $('#serverUpdateProtocol').val(server.protocol);
+
+  $('#serverUpdateUserId').val(server.userId),
+  $('#serverUpdatePassword').val(server.password),
+  
+  $('#serverUpdateRememberPassword').prop('checked', server.rememberPassword);
+  if(server.rememberPassword) {
+    $('#serverUpdateRememberPasswordSwitch').toggleClass('on');
+  }
+  
+  $('#serverUpdateSecureOnly').prop('checked', server.secureOnly);
+  if(server.secureOnly) {
+    $('#serverUpdateSecureOnlySwitch').toggleClass('on');
+  }
+  
   $('#serverUpdateLoggingEnabled').prop('checked', server.log);
   if(server.log) {
     $('#serverUpdateLoggingEnabledSwitch').toggleClass('on');
@@ -1075,16 +1135,24 @@ function updateServer(server) {
   var newName = $('#serverUpdateName').val();
   var newIpAddress = $('#serverUpdateIPAddress').val();
   var newPort = $('#serverUpdatePort').val();
+  var newSecurePort = $('#serverUpdateSecurePort').val();
   var newProtocol = $('#serverUpdateProtocol').val();
+  
+  var newUserId = $('#serverUpdateUserId').val();
+  var newPassword = $('#serverUpdatePassword').val();
 
   var nameModified = server.name !== newName;
-  var hostDetailsModified = server.ipAddress !== newIpAddress || server.port !== newPort || server.protocolo !== newProtocol;
+  var hostDetailsModified = server.ipAddress !== newIpAddress || server.port !== newPort || server.securePort !== newSecurePort || server.protocol !== newProtocol || server.userId !== newUserId || server.password !== newPassword;
   
   server.name = newName;
   server.ipAddress = newIpAddress;
   server.port = newPort;
+  server.securePort = newSecurePort;
   server.protocol = newProtocol;
-  
+  server.userId = newUserId;
+  server.password = newPassword;
+  server.rememberPassword = $('#serverUpdateRememberPassword').is(':checked');
+  server.secureOnly = $('#serverUpdateSecureOnly').is(':checked');
   server.log = $('#serverUpdateLoggingEnabled').is(':checked');
 
   // persist the changes  
