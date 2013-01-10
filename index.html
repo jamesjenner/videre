@@ -2446,13 +2446,15 @@ function serverConnected(e) {
     this.sendMessage(MSG_ADD_VEHICLE, JSON.stringify(contentManager.vehicles[vehicle]));
   }
   */
+  // TODO: sort out how to indicate the state of a connection
           
   
 }
 
 function serverDisconnected(e) {
   // $(this).children('img').attr('src', 'assets/icons/icon_power_off.svg');
-  $('#toggleConnection').children('img').attr('src', 'assets/icons/icon_power_off.svg');
+  // $('#toggleConnection').children('img').attr('src', 'assets/icons/icon_power_off.svg');
+  // TODO: sort out how to indicate the state of a connection
 }
 
 function serverMessageReceived(e) {
