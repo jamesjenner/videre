@@ -53,7 +53,8 @@ var Server = function (options) {
     
     this.log = options.log || false;
     
-    this.connection = {};
+    this.unsecureConnection = {};
+    this.secureConnection = {};
 }
 
 Server.prototype = {
@@ -69,27 +70,25 @@ Server.prototype = {
         this.rememberPassword = obj.rememberPassword || false;
         this.secureOnly = obj.secureOnly || false;
         this.log = obj.log || false;
-        this.secureConnection || false;
     },
     connect: function() {
         if(this.log) {
             console.log(this.name + " webSocket secure connect " + this.ipAddress + ":" + this.securePort + " " + this.protocol);
         }
         if(window.WebSocket != undefined) {
-            if(this.connection.readyState === undefined || this.connection.readyState > 1) {
+            if(this.secureConnection.readyState === undefined || this.secureConnection.readyState > 1) {
                 
                 // if(this.secureOnly) {
                 
-                this.connection = new WebSocket('wss://' + this.ipAddress + ':' + this.securePort, this.protocol);
-                // this.connection = new WebSocket('ws://' + this.ipAddress + ':' + this.port, this.protocol);
+                this.secureConnection = new WebSocket('wss://' + this.ipAddress + ':' + this.securePort, this.protocol);
                 
                 var self = this;
                 
-                this.connection.binaryType = "arraybuffer";
-                this.connection.onopen = function (e) { self.openEvent(e); };
-                this.connection.onmessage = function (e) { self.messageEvent(e) };
-                this.connection.onclose = function (e) { self.closeEvent(e) };
-                this.connection.onerror = function (e) { self.errorEvent(e) };
+                this.secureConnection.binaryType = "arraybuffer";
+                this.secureConnection.onopen = function (e) { self.openSecureEvent(e); };
+                this.secureConnection.onmessage = function (e) { self.messageEvent(e) };
+                this.secureConnection.onclose = function (e) { self.closeSecureEvent(e) };
+                this.secureConnection.onerror = function (e) { self.errorEvent(e) };
             }
         }
     },
@@ -98,52 +97,66 @@ Server.prototype = {
             console.log(this.name + " webSocket unsecure connect " + this.ipAddress + ":" + this.port + " " + this.protocol);
         }
         if(window.WebSocket != undefined) {
-            if(this.connection.readyState === undefined || this.connection.readyState > 1) {
+            if(this.unsecureConnection.readyState === undefined || this.unsecureConnection.readyState > 1) {
                 
                 // if(this.secureOnly) {
                 
-                this.connection = new WebSocket('ws://' + this.ipAddress + ':' + this.port, this.protocol);
+                this.unsecureConnection = new WebSocket('ws://' + this.ipAddress + ':' + this.port, this.protocol);
                 
                 var self = this;
                 
-                this.connection.binaryType = "arraybuffer";
-                this.connection.onopen = function (e) { self.openUnsecureEvent(e); };
-                this.connection.onmessage = function (e) { self.messageEvent(e) };
-                this.connection.onclose = function (e) { self.closeUnsecureEvent(e) };
-                this.connection.onerror = function (e) { self.errorEvent(e) };
+                this.unsecureConnection.binaryType = "arraybuffer";
+                this.unsecureConnection.onopen = function (e) { self.openUnsecureEvent(e); };
+                this.unsecureConnection.onmessage = function (e) { self.messageEvent(e) };
+                this.unsecureConnection.onclose = function (e) { self.closeUnsecureEvent(e) };
+                this.unsecureConnection.onerror = function (e) { self.errorEvent(e) };
             }
         }
     },
     disconnect: function() {
-        this.connection.close();
+        if(this.unsecureConnected) {
+            this.unsecureConnection.close();
+        }
+        if(this.secureConnected) {
+            this.secureConnection.close();
+        }
     },
-    openEvent: function (event) {
+    openSecureEvent: function (event) {
+        // note that we cannot fire the connectionListener event yet, as we don't know if the connection has been accepted based on the messaging protocol
         if(this.log) {
             console.log(this.name + " webSocket secure open " + this.ipAddress + ":" + this.securePort + " " + this.protocol);
         }
-        this.connected = true;
+        this.secureConnected = true;
         this.authenticated = false;
-        this.connectionListener(event);
         var authDetails = new Object();
         authDetails.userId = this.userId;
         authDetails.password = this.password;
-        this.sendMessage(MSG_AUTHENTICATE, JSON.stringify(authDetails));
+        this.sendMessage(MSG_AUTHENTICATE, authDetails);
     },
     openUnsecureEvent: function (event) {
+        // note that we cannot fire the connectionListener event yet, as we don't know if the connection has been accepted based on the messaging protocol
         if(this.log) {
             console.log(this.name + " webSocket unsecure open " + this.ipAddress + ":" + this.port + " " + this.protocol);
         }
         this.unsecureConnected = true;
-        this.connectionListener(event);
         var sessionDetails = new Object();
         sessionDetails.sessionId = this.sessionId;
-        this.sendMessage(MSG_SESSION, JSON.stringify(sessionDetails));
+        this.sendUnsecureMessage(MSG_SESSION, sessionDetails);
     },
-    closeEvent: function (event) {
+    closeSecureEvent: function (event) {
         if(this.log) {
-            console.log(this.name + " webSocket close");
+            console.log(this.name + " webSocket secure close");
         }
-        this.connected = false;
+        this.secureConnected = false;
+        
+        // close the unsecure connection if it exists
+        if(this.unsecureConnected) {
+            // TODO: should this be after a delay?
+            this.unsecureConnection.close();
+        }
+
+        // at this point the disconnection listener will only fire here
+        // TODO: if a pure unsecure connection is allowed in the future, then this event will need to be fired from the close unsecure event 
         this.disconnectionListener(event);
     },
     closeUnsecureEvent: function (event) {
@@ -151,25 +164,34 @@ Server.prototype = {
             console.log(this.name + " webSocket unsecure close");
         }
         this.unsecureConnected = false;
-        this.disconnectionListener(event);
+        
+        // if there is a secure connection then close it
+        if(this.secureConnected) {
+            // TODO: should this be after a delay?
+            this.secureConnection.close();
+        }
+        // TODO: if a pure unsecure connection is allowed in the future, then this event will need to be fired
+        // this.disconnectionListener(event);
     },
     messageEvent: function (event) {
-        if(this.log) {
-            console.log(this.name + " webSocket msg rcvd: " + event);
-        }
-
         if(event.data) {
             var msg = Message.deconstructMessage(event.data);
         
+            if(this.log) {
+                console.log(this.name + " webSocket msg rcvd: " + msg.id + " : " + msg.body);
+            }
+            
             if(!this.authenticated) {
                 switch(msg.id) {
                     case MSG_AUTHENTICATION_ACCEPTED:
                         console.log(this.name + " Authentication successful");
                         this.authenticated = true;
-                        this.sessionId = msg.msg.sessionId;
-                        if(!this.secureOnly) {
+                        this.sessionId = msg.body;
+                        if(this.secureOnly) {
+                            // can fire the connection sucessful event
+                        } else {
                             // get the session id and connect in clear
-                            connectUnsecure();
+                            this.connectUnsecure();
                         }
                         break;
                     
@@ -180,31 +202,36 @@ Server.prototype = {
             }
         
             switch(msg.id) {
+                case MSG_SESSION_CONFIRMED:
+                    // can fire the connection sucessful event
+                    this.connectionListener(event);
+                    break;
+
                 case MSG_VEHICLES:
-                    var data = JSON.parse(msg.body);
-                    for(i = 0, l = data.length; i < l; i++) {
-                        this.rcvdAddVehicle(new Vehicle(data[i]));
+                    var data = msg.body;
+                    for(i = 0, l = msg.body.length; i < l; i++) {
+                        this.rcvdAddVehicle(new Vehicle(msg.body[i]));
                     }
                     break;
                 
                 case MSG_ADD_VEHICLE:
-                    this.rcvdAddVehicle(new Vehicle(JSON.parse(msg.body)));
+                    this.rcvdAddVehicle(new Vehicle(msg.body));
                     break;
           
                 case MSG_DELETE_VEHICLE:
-                    this.rcvdDeleteVehicle(new Vehicle(JSON.parse(msg.body)));
+                    this.rcvdDeleteVehicle(new Vehicle(msg.body));
                     break;
           
                 case MSG_UPDATE_VEHICLE:
-                    this.rcvdUpdateVehicle(new Vehicle(JSON.parse(msg.body)));
+                    this.rcvdUpdateVehicle(new Vehicle(msg.body));
                     break;
                 
-                case MSG_VEHICLE_TELEMETRY:
-                    this.rcvdTelemetry(JSON.parse(msg.body));
+                case MSG_VEHICLE_TELEMETERY:
+                    this.rcvdTelemetry(msg.body);
                     break;
                 
                 case MSG_VEHICLE_PAYLOAD:
-                    this.rcvdPayload(JSON.parse(msg.body));
+                    this.rcvdPayload(msg.body);
                     break;
             }
         }
@@ -216,11 +243,36 @@ Server.prototype = {
         this.errorListener(event);
     },
     sendMessage: function (id, body) {
-        if(this.log) {
-            console.log(this.name + " sending message, id: " + id + " body: " + body);
+        if(this.secureOnly) {
+            if(this.secureConnected) {
+                if(this.log) {
+                    console.log(this.name + " sending secure message, id: " + id + " body: " + body);
+                }
+                // only send secured due to configuration
+                this.secureConnection.send(Message.constructMessage(id, body));
+            }
+        } else {
+            if(this.secureConnected) {
+                if(this.log) {
+                    console.log(this.name + " sending secure message, id: " + id + " body: " + body);
+                }
+                // only send secure if we have a secure connection
+                this.secureConnection.send(Message.constructMessage(id, body));
+            } else if(this.unsecureConnected) {
+                if(this.log) {
+                    console.log(this.name + " sending unsecure message, id: " + id + " body: " + body);
+                }
+                // fallback is to send unsecure only when no secure connection and not secure only
+                this.unsecureConnection.send(Message.constructMessage(id, body));
+            }
         }
-        if(this.connected) {
-            this.connection.send(JSON.stringify({id: id, msg: body}));
+    },
+    sendUnsecureMessage: function (id, body) {
+        if(this.log) {
+            console.log(this.name + " sending unsecure message, id: " + id + " body: " + body);
+        }
+        if(this.unsecureConnected) {
+            this.unsecureConnection.send(Message.constructMessage(id, body));
         }
     }
 };
