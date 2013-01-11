@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="assets/css/leaflet.css" />
     <link rel="stylesheet" type="text/css" href="style.css" />
     <link rel="stylesheet" type="text/css" href="assets/css/radialmenu.css" />
+    <link rel="stylesheet" type="text/css" href="assets/css/dropdown.css" />
     <script type='text/javascript' src='assets/js/jquery-1.8.0.min.js'></script>
     <script type='text/javascript' src='assets/js/jquery-ui-1.8.23.custom.min.js'></script>
     <script src="assets/js/jquery.touchSwipe.min.js"  type="text/javascript"></script>
@@ -29,6 +30,7 @@
     <script src="assets/js/sylvester.js"  type="text/javascript"></script>
     <script src="assets/js/transform.js"  type="text/javascript"></script>
     <script src="assets/js/radialmenu.js"  type="text/javascript"></script>
+    <script src="assets/js/dropdown.js"  type="text/javascript"></script>
 
 <script type='text/javascript'>
 
@@ -269,6 +271,13 @@ $(document).ready(function() {
     fingers:'all'
   });
   */
+
+  // TODO: not really happy about this, need to find a better approach, possibly add when on form and remove when leaving form
+  // add a listener to clicks on the document, if it happens then close all drop downs
+  $(document).on('click', function() {
+    // all dropdowns
+    $('.dropdownwrapper').removeClass('active');
+  });
 
 });
 
@@ -644,6 +653,8 @@ function addDividerToActionBar(id) {
 function resetForm(formId) {
   // todo: needs to support the custom css for toggles
   
+  // todo: needs to support the drop downs, somehow need to describe a default on the form and have this reset to the defaults
+  
   var form = $(formId);
   
   form.find('input:text, input:password, input:file, select, textarea').val('');
@@ -665,6 +676,7 @@ function createServer() {
     'protocol':$('#serverCreateProtocol').val(),
     'userId':$('#serverCreateUserId').val(),
     'password':$('#serverCreatePassword').val(),
+    'commsSecurity':$('#serverCreateCommsSecurity').val(),
     'rememberPassword':$('#serverCreateRememberPassword').is(':checked'),    
     'secureOnly':$('#serverCreateSecureOnly').is(':checked'),    
     'log':$('#serverCreateLoggingEnabled').is(':checked'),    
@@ -769,9 +781,22 @@ function addServerCreateFormUI(id, title) {
     '             <span class="checkboxLabel">Remember password</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="RememberPassword" id="serverCreateRememberPassword"></div>' +
     '           </li>' + 
-    '           <li>' + 
+    '           <li>' +
+    /*
     '             <span class="checkboxLabel">Secure communications only</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="SecureOnly" id="serverCreateSecureOnly"></div>' +
+    */
+    '            <label for="serverCreateCommsSecurity">Communications security</label>' +
+    '            <div id="serverCreateCommsSecurityWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="commsSecurity" id="serverCreateCommsSecurity" placeholder="CommsSecurity" readonly="true">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    '              <li><a href="#"></i>Secure and Unsecure</a></li>' +
+    '              <li><a href="#"></i>Secure Only</a></li>' +
+    '              <li><a href="#"></i>Unsecure Only</a></li>' +
+    '             </ul>' +
+    '            </div>' +
+    
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <span class="checkboxLabel">Communication events are logged</span> ' +
@@ -791,6 +816,9 @@ function addServerCreateFormUI(id, title) {
   
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
+
+  // add the drop down logic for the drop downs  
+  new DropDown( $('#serverCreateCommsSecurityWrapper') );
 }
 
 function createVehicleFromServer(vehicle) {
@@ -1056,8 +1084,21 @@ function addServerContentUI(id, server) {
     '             <div id="serverUpdateRememberPasswordSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="RememberPassword" id="serverUpdateRememberPassword"></div>' +
     '           </li>' + 
     '           <li>' + 
+/*
     '             <span class="checkboxLabel">Secure communications only</span> ' +
     '             <div id="serverUpdateSecureOnlySwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="SecureOnly" id="serverUpdateSecureOnly"></div>' +
+*/
+    '            <label for="serverUpdateCommsSecurity">Communications security</label>' +
+    '            <div id="serverUpdateCommsSecurityWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="commsSecurity" id="serverUpdateCommsSecurity" placeholder="CommsSecurity" readonly="true">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    '              <li><a href="#"></i>Secure and Unsecure</a></li>' +
+    '              <li><a href="#"></i>Secure Only</a></li>' +
+    '              <li><a href="#"></i>Unsecure Only</a></li>' +
+    '             </ul>' +
+    '            </div>' +
+
     '           </li>' +
     
     '           <li class="breakTop">' + 
@@ -1084,11 +1125,13 @@ function addServerContentUI(id, server) {
   if(server.rememberPassword) {
     $('#serverUpdateRememberPasswordSwitch').toggleClass('on');
   }
-  
+  /*
   $('#serverUpdateSecureOnly').prop('checked', server.secureOnly);
   if(server.secureOnly) {
     $('#serverUpdateSecureOnlySwitch').toggleClass('on');
   }
+  */
+  $('#serverUpdateCommsSecurity').val(server.commsSecurity);
   
   $('#serverUpdateLoggingEnabled').prop('checked', server.log);
   if(server.log) {
@@ -1115,6 +1158,9 @@ function addServerContentUI(id, server) {
   
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
+  
+  // add the drop down logic for the drop downs  
+  new DropDown( $('#serverUpdateCommsSecurityWrapper') );
 }
 
 function removeServer(server) {
@@ -1140,9 +1186,17 @@ function updateServer(server) {
   
   var newUserId = $('#serverUpdateUserId').val();
   var newPassword = $('#serverUpdatePassword').val();
+  var newCommsSecurity = $('#serverUpdateCommsSecurity').val();
 
   var nameModified = server.name !== newName;
-  var hostDetailsModified = server.ipAddress !== newIpAddress || server.port !== newPort || server.securePort !== newSecurePort || server.protocol !== newProtocol || server.userId !== newUserId || server.password !== newPassword;
+  var hostDetailsModified =
+        server.ipAddress !== newIpAddress ||
+        server.port !== newPort ||
+        server.securePort !== newSecurePort ||
+        server.protocol !== newProtocol ||
+        server.userId !== newUserId ||
+        server.password !== newPassword ||
+        server.commsSecurity !== newCommsSecurity;
   
   server.name = newName;
   server.ipAddress = newIpAddress;
@@ -1152,7 +1206,8 @@ function updateServer(server) {
   server.userId = newUserId;
   server.password = newPassword;
   server.rememberPassword = $('#serverUpdateRememberPassword').is(':checked');
-  server.secureOnly = $('#serverUpdateSecureOnly').is(':checked');
+  server.commsSecurity = newCommsSecurity;
+  // server.secureOnly = $('#serverUpdateSecureOnly').is(':checked');
   server.log = $('#serverUpdateLoggingEnabled').is(':checked');
 
   // persist the changes  
