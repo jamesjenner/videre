@@ -16,12 +16,18 @@
  * along with this program. If not, see http://www.gnu.org/licenses/
  */
 
+var COMMS_SECURITY_SECURE_AND_UNSECURE = 'Secure and Unsecure';
+var COMMS_SECURITY_SECURE_ONLY = 'Secure Only';
+var COMMS_SECURITY_UNSECURE_ONLY = 'Unsecure Only';
+
 var SERVER_KEY = 'Server';
 var DEFAULT_IP_ADDRESS = '172.0.0.1';
 var DEFAULT_PORT = '9007';
 var DEFAULT_SECURE_PORT = '9008';
 var DEFAULT_PROTOCOL = 'VIDERE_1.1';
 var DEFAULT_USER_ID = 'user';
+var DEFAULT_COMMS_SECURITY = COMMS_SECURITY_SECURE_AND_UNSECURE;
+
 
 var Server = function (options) {
     options = options || {};
@@ -36,7 +42,8 @@ var Server = function (options) {
     this.userId = options.userId || DEFAULT_USER_ID;
     this.password = options.password || '';
     this.rememberPassword = options.rememberPassword || false;
-    this.secureOnly = options.secureOnly || false;
+    // this.secureOnly = options.secureOnly || false;
+    this.commsSecurity = options.commsSecurity || DEFAULT_COMMS_SECURITY;
     this.isConnected = false;
     this.nbrVehicles = 0;
     
@@ -68,7 +75,8 @@ Server.prototype = {
         this.userId = obj.userId || DEFAULT_USER_ID;
         this.password = obj.password || '';
         this.rememberPassword = obj.rememberPassword || false;
-        this.secureOnly = obj.secureOnly || false;
+        // this.secureOnly = obj.secureOnly || false;
+        this.commsSecurity = obj.commsSecurity || DEFAULT_COMMS_SECURITY;
         this.log = obj.log || false;
     },
     connect: function() {
@@ -98,8 +106,6 @@ Server.prototype = {
         }
         if(window.WebSocket != undefined) {
             if(this.unsecureConnection.readyState === undefined || this.unsecureConnection.readyState > 1) {
-                
-                // if(this.secureOnly) {
                 
                 this.unsecureConnection = new WebSocket('ws://' + this.ipAddress + ':' + this.port, this.protocol);
                 
@@ -189,6 +195,7 @@ Server.prototype = {
                         this.sessionId = msg.body;
                         if(this.secureOnly) {
                             // can fire the connection sucessful event
+                            this.connectionListener(event);
                         } else {
                             // get the session id and connect in clear
                             this.connectUnsecure();
