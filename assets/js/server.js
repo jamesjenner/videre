@@ -28,7 +28,6 @@ var DEFAULT_PROTOCOL = 'VIDERE_1.1';
 var DEFAULT_USER_ID = 'user';
 var DEFAULT_COMMS_SECURITY = COMMS_SECURITY_SECURE_AND_UNSECURE;
 
-
 var Server = function (options) {
     options = options || {};
     
@@ -83,6 +82,22 @@ Server.prototype = {
         if(this.log) {
             console.log(this.name + " webSocket secure connect " + this.ipAddress + ":" + this.securePort + " " + this.protocol);
         }
+
+        this.secureOnly = this.commsSecurity === COMMS_SECURITY_SECURE_ONLY;
+        this.unsecureOnly = this.commsSecurity === COMMS_SECURITY_UNSECURE_ONLY;
+        this.secureAndUnsecure = this.commsSecurity === COMMS_SECURITY_SECURE_AND_UNSECURE;
+
+        if (this.secureOnly || this.secureAndUnsecure) {
+            this.connectSecure();
+        } else {
+            this.connectUnsecure();
+        }
+    },
+    connectSecure: function() {
+        if(this.log) {
+            console.log(this.name + " webSocket secure connect " + this.ipAddress + ":" + this.securePort + " " + this.protocol);
+        }
+
         if(window.WebSocket != undefined) {
             if(this.secureConnection.readyState === undefined || this.secureConnection.readyState > 1) {
                 
@@ -134,10 +149,14 @@ Server.prototype = {
         }
         this.secureConnected = true;
         this.authenticated = false;
-        var authDetails = new Object();
-        authDetails.userId = this.userId;
-        authDetails.password = this.password;
-        this.sendMessage(MSG_AUTHENTICATE, authDetails);
+        
+        
+        // setup the authenticate object
+        if(this.secureOnly) {
+            this.sendAuthentication(COMMS_TYPE_SECURE_ONLY);
+        } else {
+            this.sendAuthentication(COMMS_TYPE_MIXED);
+        }
     },
     openUnsecureEvent: function (event) {
         // note that we cannot fire the connectionListener event yet, as we don't know if the connection has been accepted based on the messaging protocol
@@ -145,9 +164,24 @@ Server.prototype = {
             console.log(this.name + " webSocket unsecure open " + this.ipAddress + ":" + this.port + " " + this.protocol);
         }
         this.unsecureConnected = true;
-        var sessionDetails = new Object();
-        sessionDetails.sessionId = this.sessionId;
-        this.sendUnsecureMessage(MSG_SESSION, sessionDetails);
+        
+        if(this.secureAndUnsecure) {
+            var sessionDetails = new Object();
+            sessionDetails.sessionId = this.sessionId;
+            this.sendUnsecureMessage(MSG_SESSION, sessionDetails);
+        } else {
+            // must be unsecure only, send authentication
+            this.sendAuthentication(COMMS_TYPE_UNSECURE_ONLY);
+        }
+    },
+    sendAuthentication: function(connectionType) {
+        var authDetails = new Object();
+        
+        authDetails.userId = this.userId;
+        authDetails.password = this.password;
+        authDetails.connectionType = connectionType;
+        
+        this.sendMessage(MSG_AUTHENTICATE, authDetails);
     },
     closeSecureEvent: function (event) {
         if(this.log) {
@@ -192,25 +226,35 @@ Server.prototype = {
                     case MSG_AUTHENTICATION_ACCEPTED:
                         console.log(this.name + " Authentication successful");
                         this.authenticated = true;
-                        this.sessionId = msg.body;
-                        if(this.secureOnly) {
-                            // can fire the connection sucessful event
+                        this.sessionId = msg.body.sessionId;
+                        
+                        var connectionTypeAllowed = msg.body.connectionType;
+                        
+                        /*
+                         * the host can pass back that only secure is allowed if connectiong secure and unsecure
+                         * in such a case dont allow the session negotiation by connecting unsecure
+                         */
+                        
+                        if(this.secureOnly || this.unsecureOnly || connectionTypeAllowed === COMMS_TYPE_SECURE_ONLY) {
+                            // can fire the connection sucessful event as secure only and unsecure only do not need session negotiation
                             this.connectionListener(event);
                         } else {
                             // get the session id and connect in clear
                             this.connectUnsecure();
                         }
+                        
                         break;
                     
                     case MSG_AUTHENTICATION_REJECTED:
                         console.log(this.name + " Authentication failed");
+                        this.disconnect();
                         break;
                 }
             }
         
             switch(msg.id) {
                 case MSG_SESSION_CONFIRMED:
-                    // can fire the connection sucessful event
+                    // can fire the connection sucessful event, this only occurs for secureAndUnsecure
                     this.connectionListener(event);
                     break;
 
