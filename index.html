@@ -31,6 +31,7 @@
     <script src="assets/js/transform.js"  type="text/javascript"></script>
     <script src="assets/js/radialmenu.js"  type="text/javascript"></script>
     <script src="assets/js/dropdown.js"  type="text/javascript"></script>
+    <script src="assets/js/actionBar.js"  type="text/javascript"></script>
 
 <script type='text/javascript'>
 
@@ -67,6 +68,8 @@ var MENU_TOGGLE_DIRECTION = "menuToggleDirection";
 
 var verticalScrollRightSidebar;
 var navigationMapMenu;
+
+var currentActionBar = null;
 
 // var horizontalScroll = new Array();
 function loaded() {
@@ -358,129 +361,6 @@ function configureApplication() {
 
 var LEFT_SIDEBAR_CONTROL_TEXT = 'leftSidebarControlText';
 
-/*
- * addActionBar('mainApplication', 'vehicle1', 'Thunderbird 3');
- */
-function addActionBar(targetId, id, title, includeSettings, options) {
-
-  options = options || {};
-
-  var createServerAction = options.createServer || false;
-  var createServerFunction = options.createServerFunction || '';
-  var createVehicleAction = options.createVehicle || false;
-  var createVehicleFunction = options.createVehicleFunction || '';
-  var saveAction = options.save || false;
-  var saveFunction = options.saveFunction || '';
-  var removeAction = options.remove || false;
-  var removeFunction = options.removeFunction || '';
-  var disconnectAction = options.disconnect || false;
-  var disconnectFunction = options.disconnectFunction || '';
-  var connectAction = options.connect || false;
-  var connectFunction = options.connectFunction || '';
-
-  var rightSidebarFunction = options.rightSidebarFunction || function() {
-    loadSidebar(targetId, 'rightScroller');
-    showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
-    
-    return false;
-  }
-  
-  $('#' + targetId).prepend(
-    '  <div id="' + id + 'TaskBar" class="taskBar boxLayout">' +
-    '    <div id="leftSidebarControl' + id + '" class="sidebarPanel noflex centered">' +
-    '      <img src="icons/android/icon_xhdpi.png" class="centered" height="34px" width="34px" alt="icon">' +
-    '    </div>' +
-    '    <div id="' + LEFT_SIDEBAR_CONTROL_TEXT + id + '" class="title">' + title + '</div>' +
-    '    <div id="' + id + 'TabBar" class="tabBar flex boxLayout">' +
-    '    </div>' +
-    
-    // check the actions that are to be available... settings (if enabled) always goes last
-    (createServerAction ? 
-    '    <div id="createServerActionControl' + id + '" class="actionBarAction noflex centered">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
-    '      <span class="actionBarText">Add server</span>' +
-    '    </div>'
-    : '') +
-    (createVehicleAction ? 
-    '    <div id="createVehicleActionControl' + id + '" class="actionBarAction noflex centered">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_create.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
-    '      <span class="actionBarText">Add vehicle</span>' +
-    '    </div>'
-    : '') +
-    (saveAction ? 
-    '    <div id="saveActionControl' + id + '" class="actionBarAction noflex centered">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_save.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
-    '      <span class="actionBarText">Save</span>' +
-    '    </div>'
-    : '') +
-    (disconnectAction ?
-    '    <div id="disconnectActionControl' + id + '" class="actionBarAction noflex centered">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_disable.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
-    '      <span class="actionBarText">Disconnect</span>' +
-    '    </div>'
-    : '') +
-    (connectAction ? 
-    '    <div id="connectActionControl' + id + '" class="actionBarAction noflex centered">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_enable.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
-    '      <span class="actionBarText">Connect</span>' +
-    '    </div>'
-    : '') +
-  
-    (removeAction ? 
-    '    <div id="removeActionControl' + id + '" class="actionBarAction noflex centered">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_delete.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
-    '      <span class="actionBarText">Delete</span>' +
-    '    </div>'
-    : '') +
-    
-    (includeSettings ? 
-    '    <div id="rightSidebarControl' + id + '" class="actionBarAction noflex centered">' +
-    '      <img src="assets/icons/drawable-hdpi-v11/ic_action_settings.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
-    '    </div>' : '') +
-    
-    '  </div>');
-  
-  // add listener to the control that activates the left sidebar
-  $('#leftSidebarControl' + id).click(function() {
-    showSidebar(LEFT_SIDEBAR_ID, 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
-    
-    return false;
-  });
-  $('#' + LEFT_SIDEBAR_CONTROL_TEXT + id).click(function() {
-    showSidebar(LEFT_SIDEBAR_ID, 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
-    
-    return false;
-  });
-
-  // check the actions that are to be available... settings (if enabled) always goes last
-  
-  // add the click events for the actions that are to be available
-  if(createServerAction) {
-    $('#createServerActionControl' + id).on('click', createServerFunction);
-  }
-  if(createVehicleAction) {
-    $('#createVehicleActionControl' + id).click(function() {
-      return false;
-    });
-  }
-  if(saveAction) {
-    $('#saveActionControl' + id).on('click', saveFunction);
-  }
-  if(removeAction) {
-    $('#removeActionControl' + id).on('click', removeFunction);
-  }
-  if(disconnectAction) {
-    $('#disconnectActionControl' + id).on('click', disconnectFunction);
-  }
-  if(connectAction) {
-    $('#connectActionControl' + id).on('click', connectFunction);
-  }
-  
-  if(includeSettings) {
-    $('#rightSidebarControl' + id).on('click', rightSidebarFunction);
-  }
-}
-
 function addHeadingToSidebar(containerId, title) {
 /*  
         <div id="vehicleGroup" class="sidebarGroup">
@@ -590,7 +470,6 @@ function addGaugeControlToSidebar(containerId, contentManager, gaugeSetting) {
   });
 }
  
-
 function loadSidebar(targetId, containerId) {
   // check if contents of side bar is same as previous
   
@@ -628,26 +507,6 @@ function loadSidebar(targetId, containerId) {
   // setup the values of the properties for the sidebar
   
   // refresh the scroller (so it knows about the new content and will behave appropriately)
-}
-
-function addTabToActionBar(id, partialTabId, tabId, tabName, tabNumber, vehicleContentNbr, selected) {
-  selected = (typeof selected === "undefined") ? false : selected;
-  
-  $('#' + id + 'TabBar').append(
-    '      <div id="' + tabId + '" class="tabControl centered' +  (selected ? ' tabSelected' : '') + '">' + tabName + '</div>'
-    );
-  
-  // add a listener to each tab for navigating to the correct div
-  $('#' + tabId).click(function() {
-    vehicleContentSlider[vehicleContentNbr].slide(tabNumber, 0);
-  });
-  
-}
-
-function addDividerToActionBar(id) {
-  $('#' + id + 'TabBar').append(
-    '      <div class="tabDivider centered"></div>'
-    );
 }
 
 function resetForm(formId) {
@@ -808,12 +667,16 @@ function addServerCreateFormUI(id, title) {
     '  </div>' +
     '</div>');
 
-  actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, title, false, {
+  // setup and initialise the action bar
+  new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: title,
+    settingsAction: false,
     save: true,
-    saveFunction: createServer,
-  });
-  
+    saveFunction: createServer
+  }).initialise();
+    
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
 
@@ -988,12 +851,16 @@ function addVehicleCreateFormUI(id, title) {
     '  </div>' +
     '</div>');
 
-  actionBarId = id + ACTION_BAR;
-  addActionBar(id, actionBarId, title, false, {
+  // setup and initialise the action bar
+  new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: title,
+    settingsAction: false,
     save: true,
     saveFunction: createVehicle
-  });
-
+  }).initialise();
+    
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
 }
@@ -1028,8 +895,12 @@ function addContentUI(id, title, subTitle) {
     '  </div>' +
     '</div>');
 
-  actionBarId = id + ACTION_BAR;
-  addActionBar(id, actionBarId, title, false);
+  // setup the action bar  
+  new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: title,
+  }).initialise();
 }
 
 function addServerContentUI(id, server) {
@@ -1084,10 +955,6 @@ function addServerContentUI(id, server) {
     '             <div id="serverUpdateRememberPasswordSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="RememberPassword" id="serverUpdateRememberPassword"></div>' +
     '           </li>' + 
     '           <li>' + 
-/*
-    '             <span class="checkboxLabel">Secure communications only</span> ' +
-    '             <div id="serverUpdateSecureOnlySwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="SecureOnly" id="serverUpdateSecureOnly"></div>' +
-*/
     '            <label for="serverUpdateCommsSecurity">Communications security</label>' +
     '            <div id="serverUpdateCommsSecurityWrapper" class="dropdownwrapper">' +
     '             <input type="popup" name="commsSecurity" id="serverUpdateCommsSecurity" placeholder="CommsSecurity" readonly="true">' +
@@ -1125,23 +992,19 @@ function addServerContentUI(id, server) {
   if(server.rememberPassword) {
     $('#serverUpdateRememberPasswordSwitch').toggleClass('on');
   }
-  /*
-  $('#serverUpdateSecureOnly').prop('checked', server.secureOnly);
-  if(server.secureOnly) {
-    $('#serverUpdateSecureOnlySwitch').toggleClass('on');
-  }
-  */
   $('#serverUpdateCommsSecurity').val(server.commsSecurity);
   
   $('#serverUpdateLoggingEnabled').prop('checked', server.log);
   if(server.log) {
     $('#serverUpdateLoggingEnabledSwitch').toggleClass('on');
   }
-  actionBarId = id + 'ActionBar';
 
-  // TODO: consider putting log toggle on the action bar
-  
-  addActionBar(id, actionBarId, server.name, false, {
+  // setup and initialise the action bar
+  var serverActionBar = new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: server.name,
+    settingsAction: false,
     remove: true,
     removeFunction: function() {
         removeServer(server);
@@ -1154,7 +1017,19 @@ function addServerContentUI(id, server) {
     disconnectFunction: function () { disconnectServer(server) },
     connect: true,
     connectFunction:  function () { connectServer(server) },
-  });
+  }).initialise().disableAction(ActionBar.DISCONNECT);
+  
+  // setup listener for the server that is being updated
+
+  server.connectionListener = function(e) { 
+    serverConnected(e, serverActionBar);
+  };
+  
+  server.disconnectionListener = function(e) {
+    serverDisconnected(e, serverActionBar);
+  };
+  
+  // contentManager.servers[server].errorListener = serverError;
   
   // add the toggle switch to switch classed checkboxes  
   $(".switch").on("click", toggleSwitch);
@@ -1301,24 +1176,25 @@ function addVehicleContentUI(id, vehicle) {
   var remoteControlSettings = new ContentSettings();
   remoteControlSettings.add(new HeadingSetting('some stuff'));
   
-  // TODO: kinda ugly having the rightSidebarFunction overridden, look at another approach that is easier to read.
-  
-  // add the action bar and the tabs within the action bar
-  actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, vehicle.name, true, {
-    rightSidebarFunction: function() {
+  // setup the action bar  
+  new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: vehicle.name,
+    settings: true,
+    settingsFunction: function() {
       loadSidebar(contentManager.getFocusedTabId(), 'rightScroller');
       showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
     
       return false;
     }
-  });
+  })
+  .initialise()
+  .addTab(id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position, true)
+  .addDivider()
+  .addTab(id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
   
-  
-  addTabToActionBar(actionBarId, id, id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position, true);
   contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
-  addDividerToActionBar(actionBarId);
-  addTabToActionBar(actionBarId, id, id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
   contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
   
   contentManager.addSettings(id + TELEMETRY_SUB_ID, telemetrySettings);
@@ -1356,9 +1232,13 @@ function addPayloadContentUI(id) {
   payloadSettings.add(new TextSetting(id  + PAYLOAD_SUB_ID + 'Timeout', 'Timeout'));
   contentManager.addSettings(id, payloadSettings);
   
-  // add the action bar
-  var actionBarId = id + 'ActionBar';
-  addActionBar(id, actionBarId, "Payload", true);
+  // setup the action bar  
+  new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: "Payload",
+    settings: true
+  }).initialise();
 
   // setup the map
   
@@ -1452,12 +1332,13 @@ function addNavigationContentUI(id) {
   
   // TODO: sort out management of the settings
   
-  // add the action bar
-  var actionBarId = id + 'ActionBar';
-  // addActionBar(id, actionBarId, "Navigation", true);
-
-  addActionBar(id, actionBarId, "Navigation", true, {
-    rightSidebarFunction: function() {
+  // setup the action bar  
+  new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: "Navigation",
+    settings: true,
+    settingsFunction: function() {
       // loadSidebar(id, 'rightScroller');
       
       var targetId = id;
@@ -1516,7 +1397,7 @@ function addNavigationContentUI(id) {
 
       return false;
     }
-  });
+  }).initialise();
  
   
   // setup the map
@@ -2235,51 +2116,7 @@ function addControlToToolbar(parentId, id, icon, name, subText) {
     */
     '</div>');
 }
-/* jgj TODO: is this still required?
-var toolbarHidden = true;
 
-function toolbarDisplay(direction, phase, distance) {
-  // it is apparent that the start phase often doesn't have direction
-  
-  switch(phase) {
-    case "start":   // swipe has started
-      if(toolbarHidden) {
-        // make bar active
-        $('#toolbarAccessBar').toggleClass('toolbarAccessBarActive');
-
-	// TODO: change the +/- to use the size from css
-	
-        // animate bar
-        $('#toolbarControl').animate({
-          'right': '+=250px'
-        }, 300, function() {
-          $('#toolbarAccessBar').toggleClass('toolbarAccessBarActive');
-          toolbarHidden = false;
-        });
-      } else {
-        $('#toolbarAccessBar').toggleClass('toolbarAccessBarActive');
-        
-        $('#toolbarControl').animate({
-          'right': '-=250px'
-        }, 300, function() {
-          $('#toolbarAccessBar').toggleClass('toolbarAccessBarActive');
-          toolbarHidden = true;
-        });
-      }
-      break;
-      
-    case "cancel":  // swipe has been cancelled (didn't travel far enough)
-      break;
-    
-    case "end":     // swipe is successful
-      break;
-      
-    case "move":    // swipe is moving
-      break;
-    
-  }
-}
-*/
 /*
  * showGauge() displays a panel, creating it if it doesn't exist
  * 
@@ -2489,27 +2326,20 @@ window.cancelRequestAnimFrame = ( function() {
 } )();
 */
 
-function serverConnected(e) {
-  // $(this).children('img').attr('src', 'assets/icons/icon_power_on.svg');
-  // $('#toggleConnection').children('img').attr('src', 'assets/icons/icon_power_on.svg');
-  
-  // JSON.stringify();
-  
-  // iterate through each vehicle and tell the server that there is a new vehicle
-  /*
-  for(var vehicle in contentManager.vehicles) {
-    this.sendMessage(MSG_ADD_VEHICLE, JSON.stringify(contentManager.vehicles[vehicle]));
+function serverConnected(e, actionBar) {
+  // update action bar on connection
+  if(actionBar) {
+    actionBar.disableAction(ActionBar.CONNECT);
+    actionBar.enableAction(ActionBar.DISCONNECT);
   }
-  */
-  // TODO: sort out how to indicate the state of a connection
-          
-  
 }
 
-function serverDisconnected(e) {
-  // $(this).children('img').attr('src', 'assets/icons/icon_power_off.svg');
-  // $('#toggleConnection').children('img').attr('src', 'assets/icons/icon_power_off.svg');
-  // TODO: sort out how to indicate the state of a connection
+function serverDisconnected(e, actionBar) {
+  // update action bar on connection
+  if(actionBar) {
+    actionBar.enableAction(ActionBar.CONNECT);
+    actionBar.disableAction(ActionBar.DISCONNECT);
+  }
 }
 
 function serverMessageReceived(e) {
