@@ -12,11 +12,24 @@ An implementation using phone gap can be built that allows the software to run a
 Due to the focus on HTML5, the focus for compatibility is only the latest versions of firefox, chrome and safari. The goal is to eventually be compliant with HTML5 and remove all browser specific tags.
 
 
-The submodule videre-common is located within this project. When cloning this project the directory for videre-common will exist but it will not have any files. To get the files for the submodule perform the following:
+Submodules
+----------
+The submodule videre-common is located within this project. When cloning this project the directory for videre-common will exist but it will not have any files. To retreive the files for the submodule for the first time perform the following:
 
 ```
 git submodule init
 git submodule update
 ```
+
+To update the submodules perform the following:
+
+```
+git submodule init
+git submodule update
+cd videre-common
+git checkout master
+git pull
+```
+The above presumes that the desired branch is master.
 
 Refer to http://git-scm.com/book/en/Git-Tools-Submodules#Starting-with-Submodules for further information.
