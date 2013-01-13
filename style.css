@@ -197,6 +197,9 @@ div.taskBar {
 div.actionBarAction {
 	height: 100%;
 }
+div.actionBarActionDisabled {
+	opacity: .5;
+}
 
 img.actionBarImage {
 	vertical-align: middle;
