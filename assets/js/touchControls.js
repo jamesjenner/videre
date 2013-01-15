@@ -13,35 +13,33 @@
 TouchControls = function(options) {
     options = options || {};
     
-    this.leftEnabled = options.leftEnabled || true;
-    this.rightEnabled = options.rightEnabled || true;
-    
-    this.leftUpDownEnabled = options.leftUpDownEnabled || true;
-    this.leftLeftRightEnabled = options.leftLeftRightEnabled || true;
-    
-    this.rightUpDownEnabled = options.rightUpDownEnabled || true;
-    this.rightLeftRightEnabled = options.rightLeftRightEnabled || true;
-    
-    this.diagonalEnabled = options.diagonalEnabled || true;
-    
-    this.leftSticky = options.leftSticky || false;
-    this.rightSticky = options.rightSticky || false;
+    this.leftEnabled = ((options.leftEnabled != null) ? options.leftEnabled : true);
+    this.rightEnabled = ((options.rightEnabled != null) ? options.rightEnabled : true);
 
-    this.leftDoubleTapRelease = options.leftDoubleTapRelease || false;
-    this.rightDoubleTapRelease = options.rightDoubleTapRelease || false;    
+    this.leftYEnabled = ((options.leftYEnabled != null) ? options.leftYEnabled : true);
+    this.leftXEnabled = ((options.leftXEnabled != null) ? options.leftXEnabled : true);
     
-    this.followsFinger = options.followsFinger || true;
+    this.rightYEnabled = ((options.rightYEnabled != null) ? options.rightYEnabled : true);
+    this.rightXEnabled = ((options.rightXEnabled != null) ? options.rightXEnabled : true);
     
-    this.varianceAllowed = options.varianceAllowed || 20;
+    // TODO: implement sticky, double tap to release sticky and follows finger for sticky
+    this.leftSticky = ((options.leftSticky != null) ? options.leftSticky : true);
+    this.rightSticky = ((options.rightSticky != null) ? options.rightSticky : true);
+
+    this.leftDoubleTapRelease = ((options.leftDoubleTapRelease != null) ? options.leftDoubleTapRelease : true);
+    this.rightDoubleTapRelease = ((options.rightDoubleTapRelease != null) ? options.rightDoubleTapRelease : true);
     
+    this.followsFinger = ((options.followsFinger != null) ? options.followsFinger : true);
+
+    // TODO: implement drag distance before control is engaged
     this.leftEngageDistance = options.leftEngageDistance || 5;
     this.rightEngageDistance = options.rightEngageDistance || 5;
 
     this.leftThrowDistance = options.leftThrowDistance || 75;
     this.rightThrowDistance = options.rightThrowDistance || 75;
     
-    this.leftLimitedThrow  = options.leftLimitedThrow || true;
-    this.rightLimitedThrow = options.rightLimitedThrow || true;
+    this.leftLimitedThrow = ((options.leftLimitedThrow != null) ? options.leftLimitedThrow : true);
+    this.rightLimitedThrow = ((options.rightLimitedThrow != null) ? options.rightLimitedThrow : true);
     
     this.leftUpListener = options.leftUpListener || function() {};
     this.leftDownListener = options.leftDownListener || function() {};
@@ -85,6 +83,7 @@ TouchControls = function(options) {
 TouchControls.prototype.initialise = function() {
     this.setupCanvas();
     
+    // TODO: stop using setInterval
     setInterval(this.drawCanvas.bind(this), 1000/this.frameRate);
     
     if(this.touchable) {
@@ -96,6 +95,7 @@ TouchControls.prototype.initialise = function() {
         window.onresize = this.resetCanvas;  
     } else {
         this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+	this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
     }
 }
 
@@ -164,20 +164,28 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
     this.c.strokeStyle = "cyan"; 
     this.c.lineWidth = 6; 
     this.c.arc(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true); 
-    this.c.stroke();
+    // this.c.stroke();
+    
+    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true, 8, 'white', 255, 255, 255, 0.05);
     
     // outside thin circle for start touch positiohn
     this.c.beginPath(); 
     this.c.strokeStyle = "cyan"; 
     this.c.lineWidth = 2; 
     this.c.arc(touchStartPosition.x, touchStartPosition.y, 60, 0, Math.PI * 2, true); 
-    this.c.stroke();
+    // this.c.stroke();
+    
+    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 60, 0, Math.PI * 2, true, 4, 'white', 255, 255, 255, 0.05);
+
     
     // touch position circle for the current location of the touch
     this.c.beginPath(); 
-    this.c.strokeStyle = "cyan"; 
+    this.c.lineWidth = 2; 
+    this.c.strokeStyle = "blue"; 
     this.c.arc(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true); 
-    this.c.stroke();
+    // this.c.stroke();
+    this.drawGlowCircle(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true, 7, 'blue', 0, 0, 255, 0.05);
+    
     
     this.c.beginPath(); 
     this.c.fillStyle = "red";
@@ -190,8 +198,31 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
         " tx:" + touch.clientX +
         " ty:" + touch.clientY
 	,
-        // touch.clientX + 30, touch.clientY - 30);
 	touchPosition.x + 30, touchPosition.y - 30);
+}
+
+TouchControls.prototype.drawGlowCircle = function(x, y, radius, startAngle, endAngle, antiClockwise, lineWidth, foregroundColor, r, g, b, a) {
+    
+    this.c.beginPath(); 
+    
+    var w = lineWidth * 2;
+    
+    for(i = 0; i < w; i++) {
+	this.c.lineWidth = w - i;
+	
+	this.c.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+	
+	console.log('w: ' + (w - i) + ' rgba(' + r + ',' + g + ',' + b + ',' + a + ')');
+	
+	this.c.arc(x, y, radius, startAngle, endAngle, true); 
+	this.c.stroke();
+    }
+    
+    this.c.strokeStyle = '#fff';
+    alpha = 1;
+    this.c.lineWidth = 1;
+    this.c.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',.1)';
+    this.c.stroke();
 }
 
 /*	
@@ -249,8 +280,9 @@ TouchControls.prototype.onTouchMove = function(e) {
 	
 	if(this.rightTouchID == touch.identifier) {
 	    this.rightVector.reset(touch.clientX, touch.clientY);
+
 	    if(this.rightLimitedThrow) {
-		this.rightVector.minusEqLimit(this.rightTouchStartPos, this.rightThrowDistance, this.rightThrowDistance);
+		this.rightVector.minusEqLimit(this.rightTouchStartPos, this.rightThrowDistance, this.rightXEnabled, this.rightYEnabled);
 		this.rightTouchPos.copyFrom(this.rightTouchStartPos);
 		this.rightTouchPos.plusEq(this.rightVector);
 	    } else {
@@ -262,7 +294,7 @@ TouchControls.prototype.onTouchMove = function(e) {
 	if(this.leftTouchID == touch.identifier) {
 	    this.leftVector.reset(touch.clientX, touch.clientY);
 	    if(this.leftLimitedThrow) {
-		this.leftVector.minusEqLimit(this.leftTouchStartPos, this.leftThrowDistance, this.leftThrowDistance);
+		this.leftVector.minusEqLimit(this.leftTouchStartPos, this.leftThrowDistance, this.leftXEnabled, this.leftYEnabled);
 		this.leftTouchPos.copyFrom(this.leftTouchStartPos);
 		this.leftTouchPos.plusEq(this.leftVector);
 	    } else {
@@ -294,6 +326,11 @@ TouchControls.prototype.onTouchEnd = function(e) {
 TouchControls.prototype.onMouseMove = function(event) {
     this.mouseX = event.offsetX;
     this.mouseY = event.offsetY;
+}
+
+TouchControls.prototype.onMouseDown = function(event) {
+    this.c.clearRect(0, 0, this.canvas.width, this.canvas.height); 
+    this.drawGlowCircle(event.offsetX, event.offsetY, 40, 0, Math.PI * 2, true, 10, 'white', 300, 0, 0, 0.07);
 }
 
 TouchControls.prototype.setupCanvas = function() {
