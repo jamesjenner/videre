@@ -90,22 +90,33 @@ Vector2.prototype = {
 		return this; 
 	},
 
-	minusEqLimit : function (v, limit) {
-		this.x-=v.x;
-		this.y-=v.y;
+	minusEqLimit : function (v, limit, xEnabled, yEnabled) {
+		xEnabled = ((xEnabled != null) ? xEnabled : true);
+		yEnabled = ((yEnabled != null) ? yEnabled : true);
 		
-		if(this.x > 0 && this.x > limit) {
-		    this.x = limit;
-		} else if(this.x < 0 && this.x < -1 * limit) {
-		    this.x = -1 * limit;
+		if(xEnabled) {
+			this.x-=v.x;
+			
+			if(this.x > 0 && this.x > limit) {
+			    this.x = limit;
+			} else if(this.x < 0 && this.x < -1 * limit) {
+			    this.x = -1 * limit;
+			}
+		} else {
+			this.x = 0;
 		}
 		
-		if(this.y > 0 && this.y > limit) {
-		    this.y = limit;
-		} else if(this.y < 0 && this.y < -1 * limit) {
-		    this.y = -1 * limit;
-		}
+		if(yEnabled) {
+			this.y-=v.y;
 		
+			if(this.y > 0 && this.y > limit) {
+			    this.y = limit;
+			} else if(this.y < 0 && this.y < -1 * limit) {
+			    this.y = -1 * limit;
+			}
+		} else {
+			this.y = 0;
+		}
 		
 		return this; 
 	},
