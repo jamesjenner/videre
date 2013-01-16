@@ -166,7 +166,7 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
     this.c.arc(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true); 
     // this.c.stroke();
     
-    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true, 8, 'white', 255, 255, 255, 0.05);
+    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true, 20, 50, 50, 255, 0.05);
     
     // outside thin circle for start touch positiohn
     this.c.beginPath(); 
@@ -175,7 +175,7 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
     this.c.arc(touchStartPosition.x, touchStartPosition.y, 60, 0, Math.PI * 2, true); 
     // this.c.stroke();
     
-    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 60, 0, Math.PI * 2, true, 4, 'white', 255, 255, 255, 0.05);
+    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 65, 0, Math.PI * 2, true, 10, 50, 50, 255, 0.05);
 
     
     // touch position circle for the current location of the touch
@@ -184,7 +184,7 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
     this.c.strokeStyle = "blue"; 
     this.c.arc(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true); 
     // this.c.stroke();
-    this.drawGlowCircle(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true, 7, 'blue', 0, 0, 255, 0.05);
+    this.drawGlowCircle(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true, 12, 255, 75, 75, 0.05);
     
     
     this.c.beginPath(); 
@@ -201,28 +201,32 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
 	touchPosition.x + 30, touchPosition.y - 30);
 }
 
-TouchControls.prototype.drawGlowCircle = function(x, y, radius, startAngle, endAngle, antiClockwise, lineWidth, foregroundColor, r, g, b, a) {
+TouchControls.prototype.drawGlowCircle = function(x, y, radius, startAngle, endAngle, antiClockwise, lineWidth, r, g, b, a) {
+    // adjust the radius by half the line width as the method to draw the glow circle draws on the inside of the radius
+    var adj = Math.abs(lineWidth / 2);
     
-    this.c.beginPath(); 
+    rad = radius + adj;
+
+    var stop1 = (rad - lineWidth) / rad;
+    var stop2 = 0;
+    var stop3 = stop1 + (1 - stop1) / 2;
+    var stop4 = 0;
+    var stop5 = 1;
     
-    var w = lineWidth * 2;
+    stop2 = stop3 - (stop3 - stop1) / 2;
+    stop4 = stop3 + (stop5 - stop3) / 2;
     
-    for(i = 0; i < w; i++) {
-	this.c.lineWidth = w - i;
-	
-	this.c.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
-	
-	console.log('w: ' + (w - i) + ' rgba(' + r + ',' + g + ',' + b + ',' + a + ')');
-	
-	this.c.arc(x, y, radius, startAngle, endAngle, true); 
-	this.c.stroke();
-    }
+    var radgrad = this.c.createRadialGradient(x, y, 0, x, y, rad);
     
-    this.c.strokeStyle = '#fff';
-    alpha = 1;
-    this.c.lineWidth = 1;
-    this.c.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',.1)';
-    this.c.stroke();
+    radgrad.addColorStop(stop1, 'rgba(' + r + ',' + g + ',' + b + ', 0)');
+    radgrad.addColorStop(stop2, 'rgba(' + r + ',' + g + ',' + b + ', .4)');
+    radgrad.addColorStop(stop3, 'rgba(' + r + ',' + g + ',' + b + ', 1)');
+    radgrad.addColorStop(stop4, 'rgba(' + r + ',' + g + ',' + b + ', .4)');
+    radgrad.addColorStop(stop5, 'rgba(' + r + ',' + g + ',' + b + ', 0)');
+    
+    this.c.fillStyle = radgrad;
+    this.c.arc(x, y, rad, 0, 2 * Math.PI, true);
+    this.c.fill();
 }
 
 /*	
@@ -330,7 +334,7 @@ TouchControls.prototype.onMouseMove = function(event) {
 
 TouchControls.prototype.onMouseDown = function(event) {
     this.c.clearRect(0, 0, this.canvas.width, this.canvas.height); 
-    this.drawGlowCircle(event.offsetX, event.offsetY, 40, 0, Math.PI * 2, true, 10, 'white', 300, 0, 0, 0.07);
+    this.drawGlowCircle(event.offsetX, event.offsetY, 50, 0, Math.PI * 2, true, 20, 300, 0, 0, 0.9);
 }
 
 TouchControls.prototype.setupCanvas = function() {
