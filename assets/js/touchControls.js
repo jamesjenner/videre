@@ -9,9 +9,18 @@
  *
  */
 
+// TODO: add support for buttons, maybe regions for each...
 
 TouchControls = function(options) {
     options = options || {};
+
+    if(options.canvas == null) {
+	return;
+    }
+    
+    this.canvas = options.canvas;
+    
+    this.debug = ((options.debug != null) ? options.debug : false);
     
     this.leftEnabled = ((options.leftEnabled != null) ? options.leftEnabled : true);
     this.rightEnabled = ((options.rightEnabled != null) ? options.rightEnabled : true);
@@ -41,16 +50,17 @@ TouchControls = function(options) {
     this.leftLimitedThrow = ((options.leftLimitedThrow != null) ? options.leftLimitedThrow : true);
     this.rightLimitedThrow = ((options.rightLimitedThrow != null) ? options.rightLimitedThrow : true);
     
-    this.leftUpListener = options.leftUpListener || function() {};
-    this.leftDownListener = options.leftDownListener || function() {};
-    this.leftLeftListener = options.leftLeftListener || function() {};
-    this.leftRightListener = options.leftRightListener || function() {};
+    // would rather use html4 events but apparently there is no support in safari and ie, so lets just use the following for now
+    // the events will fire with two attributes on an object, the control type (left or right), and the strength. Strengh will be
+    // from 0 to 100 based on the throw, if limited throw, otherwise the distance in pixels from the origin of the control.
     
-    this.rightUpListener = options.rightUpListener || function() {};
-    this.rightDownListener = options.rightDownListener || function() {};
-    this.rightLeftListener = options.rightLeftListener || function() {};
-    this.rightRightListener = options.rightRightListener || function() {};
+    // as per mouse and touch events, control events will only fire when the control is modified, so if held in a specific position,
+    // then there will only be the initial event for that position
     
+    // note that events fire independant of the canvas being updated
+    
+    this.leftDirectionListener = options.leftDirectionListener || function() {};
+    this.rightDirectionListener = options.rightDirectionListener || function() {};
     this.leftReleaseListener = options.leftReleaseListener || function() {};
     this.rightReleaseListener = options.rightReleaseListener || function() {};
     
@@ -80,11 +90,23 @@ TouchControls = function(options) {
     this.rightVector = new Vector2(0,0);
 }
 
+
+TouchControls.LEFT_CONTROL = 'left';
+TouchControls.RIGHT_CONTROL = 'right';
+
+TouchControls.UP = 'up';
+TouchControls.DOWN = 'down';
+TouchControls.LEFT = 'left';
+TouchControls.RIGHT = 'right';
+
+TouchControls.UP_LEFT = 'up_left';
+TouchControls.UP_RIGHT = 'up_right';
+TouchControls.DOWN_LEFT = 'down_left';
+TouchControls.DOWN_RIGHT = 'down_right';
+
+
 TouchControls.prototype.initialise = function() {
     this.setupCanvas();
-    
-    // TODO: stop using setInterval
-    setInterval(this.drawCanvas.bind(this), 1000/this.frameRate);
     
     if(this.touchable) {
         this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this), false);
@@ -100,26 +122,14 @@ TouchControls.prototype.initialise = function() {
 }
 
 TouchControls.prototype.resetCanvas = function(e) {  
-    // resize the canvas - but remember - this clears the canvas too.
-    
-    // set the style width and height to 100% so it fills the parent
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
-    
-    // this.canvas.width = window.innerWidth; 
-    // this.canvas.height = window.innerHeight;
-    
     // set the canvas width/height to the offset width/height, which will be the parent dims
+    // TODO: should we change references to offsetWidth/offsetHeight instead of changing the canvas? why is offsetWidth correct, but width not?
     this.canvas.width = this.canvas.offsetWidth; 
     this.canvas.height = this.canvas.offsetHeight;
     
     // setup half and half so we can use for touch detection of buttons
     this.halfWidth = this.canvas.width / 2; 
     this.halfHeight = this.canvas.height / 2;
-    
-    // not required.. remove?
-    // make sure we scroll to the top left. 
-    // window.scrollTo(0,0); 
 }
 
 TouchControls.prototype.drawCanvas = function(self) {
@@ -160,45 +170,29 @@ TouchControls.prototype.drawCanvas = function(self) {
 }
 
 TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPosition, vector) {
-    this.c.beginPath(); 
-    this.c.strokeStyle = "cyan"; 
-    this.c.lineWidth = 6; 
-    this.c.arc(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true); 
-    // this.c.stroke();
-    
+    // inside thicker circle for start touch position
     this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true, 20, 50, 50, 255, 0.05);
     
-    // outside thin circle for start touch positiohn
-    this.c.beginPath(); 
-    this.c.strokeStyle = "cyan"; 
-    this.c.lineWidth = 2; 
-    this.c.arc(touchStartPosition.x, touchStartPosition.y, 60, 0, Math.PI * 2, true); 
-    // this.c.stroke();
-    
+    // outside thin circle for start touch position
     this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 65, 0, Math.PI * 2, true, 10, 50, 50, 255, 0.05);
-
     
     // touch position circle for the current location of the touch
-    this.c.beginPath(); 
-    this.c.lineWidth = 2; 
-    this.c.strokeStyle = "blue"; 
-    this.c.arc(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true); 
-    // this.c.stroke();
     this.drawGlowCircle(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true, 12, 255, 75, 75, 0.05);
     
-    
-    this.c.beginPath(); 
-    this.c.fillStyle = "red";
-    this.c.fillText("touch id : " +
-        touch.identifier +
-        " x:" + touchPosition.x +
-        " y:" + touchPosition.y +
-        " distance x: " + vector.x +
-        " y: " + vector.y +
-        " tx:" + touch.clientX +
-        " ty:" + touch.clientY
-	,
-	touchPosition.x + 30, touchPosition.y - 30);
+    if(this.debugging) {
+	this.c.beginPath(); 
+	this.c.fillStyle = "red";
+	this.c.fillText("touch id : " +
+	    touch.identifier +
+	    " x:" + touchPosition.x +
+	    " y:" + touchPosition.y +
+	    " distance x: " + vector.x +
+	    " y: " + vector.y +
+	    " tx:" + touch.clientX +
+	    " ty:" + touch.clientY
+	    ,
+	    touchPosition.x + 30, touchPosition.y - 30);
+    }
 }
 
 TouchControls.prototype.drawGlowCircle = function(x, y, radius, startAngle, endAngle, antiClockwise, lineWidth, r, g, b, a) {
@@ -276,8 +270,42 @@ TouchControls.prototype.onTouchStart = function(e) {
 }
  
 TouchControls.prototype.onTouchMove = function(e) {
+    var getStrength = function(distance, throwDistance) {
+	// strength is a factor of 100, with 100 being full and 0 being none
+	return Math.abs(Math.round((distance / throwDistance) * 100));
+    }
+    
+    var getDirection = function(vector) {
+	var direction = '';
+	if(vector.y < 0) {
+	    if(vector.x == 0) {
+		direction = TouchControls.UP;
+	    } else if(vector.x > 0) {
+		direction = TouchControls.UP_RIGHT;
+	    } else {
+		direction = TouchControls.UP_LEFT;
+	    }
+	} else if(vector.y > 0) {
+	    if(vector.x == 0) {
+		direction = TouchControls.DOWN;
+	    } else if(vector.x > 0) {
+		direction = TouchControls.DOWN_RIGHT;
+	    } else {
+		direction = TouchControls.DOWN_LEFT;
+	    }
+	} else {
+	    if(vector.x > 0) {
+		direction = TouchControls.RIGHT;
+	    } else {
+		direction = TouchControls.LEFT;
+	    }
+	}
+	
+	return direction;
+    }
     // Prevent the browser from doing its default behaviour (scroll, zoom)
     e.preventDefault();
+    var strength = 0;
     
     for(var i = 0; i < e.changedTouches.length; i++){
 	var touch = e.changedTouches[i];
@@ -289,6 +317,20 @@ TouchControls.prototype.onTouchMove = function(e) {
 		this.rightVector.minusEqLimit(this.rightTouchStartPos, this.rightThrowDistance, this.rightXEnabled, this.rightYEnabled);
 		this.rightTouchPos.copyFrom(this.rightTouchStartPos);
 		this.rightTouchPos.plusEq(this.rightVector);
+	
+		strengthX = getStrength(this.rightVector.x, this.rightThrowDistance);
+		strengthY = getStrength(this.rightVector.y, this.rightThrowDistance);
+		
+		if(strengthX != this.rightStrengthX || strengthY != this.rightStrengthY) {
+		    this.rightDirectionListener({
+			controlId: TouchControls.RIGHT_CONTROL,
+			direction: getDirection(this.rightVector),
+			strengthX:getStrength(this.rightVector.x, this.rightThrowDistance),
+			strengthY:getStrength(this.rightVector.y, this.rightThrowDistance)});
+		    
+		    this.rightStrengthX = strengthX;
+		    this.rightStrengthY = strengthY;
+		}
 	    } else {
 		this.rightTouchPos.copyFrom(this.rightVector);
 		this.rightVector.minusEq(this.rightTouchStartPos);
@@ -301,6 +343,20 @@ TouchControls.prototype.onTouchMove = function(e) {
 		this.leftVector.minusEqLimit(this.leftTouchStartPos, this.leftThrowDistance, this.leftXEnabled, this.leftYEnabled);
 		this.leftTouchPos.copyFrom(this.leftTouchStartPos);
 		this.leftTouchPos.plusEq(this.leftVector);
+		
+		strengthX = getStrength(this.leftVector.x, this.leftThrowDistance);
+		strengthY = getStrength(this.leftVector.y, this.leftThrowDistance);
+		
+		if(strengthX != this.leftStrengthX || strengthY != this.leftStrengthY) {
+		    this.leftDirectionListener({
+			controlId: TouchControls.LEFT_CONTROL,
+			direction: getDirection(this.leftVector),
+			strengthX:strengthX,
+			strengthY:strengthY});
+		    
+		    this.leftStrengthX = strengthX;
+		    this.leftStrengthY = strengthY;
+		}
 	    } else {
 		this.leftTouchPos.copyFrom(this.leftVector);
 		this.leftVector.minusEq(this.leftTouchStartPos);
@@ -319,10 +375,18 @@ TouchControls.prototype.onTouchEnd = function(e) {
 	
 	if(this.leftTouchID == touch.identifier) {
 	    this.leftTouchID = -1; 
-	    this.leftVector.reset(0,0); 
+	    this.leftVector.reset(0,0);
+	    this.leftStrengthX = 0;
+	    this.leftStrengthY = 0;
+	    
+	    this.leftReleaseListener({controlId: TouchControls.LEFT_CONTROL, strength:0});
 	} else if(this.rightTouchID == touch.identifier) {
 	    this.rightTouchID = -1; 
-	    this.rightVector.reset(0,0); 
+	    this.rightVector.reset(0,0);
+	    this.rightStrengthX = 0;
+	    this.rightStrengthY = 0;
+	    
+	    this.rightReleaseListener({controlId: TouchControls.RIGHT_CONTROL, strength:0});
 	}
     }
 }
@@ -338,17 +402,7 @@ TouchControls.prototype.onMouseDown = function(event) {
 }
 
 TouchControls.prototype.setupCanvas = function() {
-    this.canvas = document.createElement('canvas');
     this.c = this.canvas.getContext('2d');
     
-    this.container = document.createElement('div');
-    this.container.className = "container";
-    
-    document.body.appendChild(this.container);
-    this.container.appendChild(this.canvas);	
-    
     this.resetCanvas(); 
-    
-    this.c.strokeStyle = "#ffffff";
-    this.c.lineWidth = 2;	
 }
