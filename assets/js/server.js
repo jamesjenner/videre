@@ -198,7 +198,7 @@ Server.prototype = {
         // at this point the disconnection listener will only fire here
         // TODO: if a pure unsecure connection is allowed in the future, then this event will need to be fired from the close unsecure event 
         this.isConnected = false;
-        this.disconnectionListener(event);
+        this.disconnectionListener(event, this);
     },
     closeUnsecureEvent: function (event) {
         if(this.log) {
@@ -214,7 +214,7 @@ Server.prototype = {
         // if unsecure only then fire disconnection event 
         if(this.unsecureOnly) {
             this.isConnected = true;
-            this.disconnectionListener(event);
+            this.disconnectionListener(event, this);
         }
     },
     messageEvent: function (event) {
