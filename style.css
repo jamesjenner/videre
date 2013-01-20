@@ -202,6 +202,7 @@ div.taskBar {
 
 div.actionBarAction {
 	height: 100%;
+	padding-left: 30px;
 }
 div.actionBarActionDisabled {
 	opacity: .5;
