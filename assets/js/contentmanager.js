@@ -158,7 +158,18 @@ ContentManager.prototype = {
         if(this.remoteVehicles[server.name]) {
             delete this.remoteVehicles[server.name];
         }
-        
+    },
+    getVehiclesForServer: function(serverName) {
+        if(this.remoteVehicles[serverName]) {
+            return this.remoteVehicles[serverName];
+        } else {
+            return new Array();
+        }
+    },
+    removeVehiclesFromServer: function(serverName) {
+        if(this.remoteVehicles[serverName]) {
+            this.remoteVehicles[serverName] = new Array();
+        }
     },
     updateServer: function(server) {
         ioStoreObject(SERVER_KEY + '_' + server.position, server);
