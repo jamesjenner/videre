@@ -1,10 +1,10 @@
 /*
- * Swipe 1.0
+ * Derived from Swipe 1.0
  *
  * Brad Birdsall, Prime
  * Copyright 2011, Licensed GPL & MIT
  *
-*/
+ */
 
 window.Swipe = function(element, options) {
 
@@ -39,9 +39,9 @@ window.Swipe = function(element, options) {
 
   // add event listeners
   if (this.element.addEventListener) {
-    this.element.addEventListener('touchstart', this, false);
-    this.element.addEventListener('touchmove', this, false);
-    this.element.addEventListener('touchend', this, false);
+    // this.element.addEventListener('touchstart', this, false);
+    // this.element.addEventListener('touchmove', this, false);
+    // this.element.addEventListener('touchend', this, false);
     this.element.addEventListener('webkitTransitionEnd', this, false);
     this.element.addEventListener('msTransitionEnd', this, false);
     this.element.addEventListener('oTransitionEnd', this, false);
@@ -51,7 +51,7 @@ window.Swipe = function(element, options) {
 
 };
 
-Swipe.prototype = {
+Swipe.prototype = { 
 
   setup: function() {
 
@@ -183,9 +183,9 @@ Swipe.prototype = {
 
   handleEvent: function(e) {
     switch (e.type) {
-      case 'touchstart': this.onTouchStart(e); break;
-      case 'touchmove': this.onTouchMove(e); break;
-      case 'touchend': this.onTouchEnd(e); break;
+      // case 'touchstart': this.onTouchStart(e); break;
+      // case 'touchmove': this.onTouchMove(e); break;
+      // case 'touchend': this.onTouchEnd(e); break;
       case 'webkitTransitionEnd':
       case 'msTransitionEnd':
       case 'oTransitionEnd':
@@ -213,7 +213,7 @@ Swipe.prototype = {
     this.callback(e, this.index, this.slides[this.index]);
 
   },
-
+/*
   onTouchStart: function(e) {
     
     this.start = {
@@ -321,5 +321,6 @@ Swipe.prototype = {
     
     e.stopPropagation();
   }
+  */
 
 };
