@@ -80,6 +80,12 @@ div.sliderContent {
 	position: relative;
 }
 
+canvas.controlCanvas {
+	height: 100%;
+	width: 100%;
+	background: #000;
+}
+
 div.content {
 	background-color: #8D8D8D;
 	height: 100%;
@@ -657,6 +663,8 @@ div.sidebarControlText {
 	-webkit-box-sizing:border-box; /* Safari */
 	float: left;
 }
+
+
 
 /* the toolbar */
 div.toolbarControl {
