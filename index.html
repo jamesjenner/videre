@@ -780,10 +780,14 @@ function createVehicle() {
  * unloads the ui elements that are used for a vehicle
  */
 function removeVehicleFromSidebar(vehicle) {
-  // adding the vehicle to the content manager sets it's position
-  var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
-  var vehicleContentId = VEHICLE_CONTENT + vehicleNumber;
+  var vehicleControlId = VEHICLE_CONTROL + vehicle.position;
+  var vehicleContentId = VEHICLE_CONTENT + vehicle.position;
 
+  if(contentManager.focusedPaneId === vehicleContentId) {
+    // currently focused on content so change focus, this indirectly removes the content as well
+    setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
+  }
+  
   // remove the control for accessing the vehicle
   $('#' + vehicleControlId).remove();
 }
@@ -1092,8 +1096,8 @@ function addServerContentUI(id, server) {
     serverConnected(e, serverActionBar);
   };
   
-  server.disconnectionListener = function(e) {
-    serverDisconnected(e, serverActionBar);
+  server.disconnectionListener = function(e, s) {
+    serverDisconnected(e, s, serverActionBar);
   };
   
   // contentManager.servers[server].errorListener = serverError;
@@ -2485,12 +2489,23 @@ function serverConnected(e, actionBar) {
   }
 }
 
-function serverDisconnected(e, actionBar) {
+function serverDisconnected(e, server, actionBar) {
   // update action bar on connection
   if(actionBar) {
     actionBar.enableAction(ActionBar.CONNECT);
     actionBar.disableAction(ActionBar.DISCONNECT);
   }
+  
+  // remove vehicles for that server
+  var vehicles = contentManager.getVehiclesForServer(server.name);
+  
+  for(var i = 0, l = vehicles.length; i < l; i++) {
+    // unload the ui for the server
+    removeVehicleFromSidebar(vehicles[i]);
+  }
+  
+  // remove the vehicles from the content manager
+  contentManager.removeVehiclesFromServer(server.name);
 }
 
 function serverMessageReceived(e) {
