@@ -36,7 +36,7 @@ DropDown.prototype = {
  
         obj.opts.on('click',function(){
             var opt = $(this);
-            obj.val = opt.text();
+            obj.val = opt.find('span').text();
             obj.index = opt.index();
             obj.placeholder.val(obj.val);
         });
