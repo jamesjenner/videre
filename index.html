@@ -687,7 +687,7 @@ function createVehicleFromServer(server, vehicle) {
   // add the vehicle to the content manager
   if(contentManager.addRemoteVehicle(server, vehicle, true)) {
     // load the ui for the vehicle
-    addVehicleToSidebar(vehicle);
+    addVehicleToSidebar(vehicle, server);
   }
 }
 
@@ -823,7 +823,7 @@ function getVehicleIcon(vehicle) {
  * loads the ui elements to support the passed vehicle
  * 
  */
-function addVehicleToSidebar(vehicle) {
+function addVehicleToSidebar(vehicle, server) {
   // determine the icon for the vehicle
   var icon = getVehicleIcon(vehicle);
   
@@ -838,7 +838,7 @@ function addVehicleToSidebar(vehicle) {
   // add the listener for the ui to activate the side bar 
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, vehicleControlId, vehicleContentId, function() {
     // add the ui content for the vehicle
-    addVehicleContentUI(vehicleContentId, vehicle);
+    addVehicleContentUI(vehicleContentId, vehicle, server);
   });
   
   // TODO: we have no UI to maintain the settings for the vehicle, need to add an option to provide this
@@ -1188,7 +1188,7 @@ function connectServer(server) {
 /*
  * addVehicleContentUI('vehicle1', 'Thunderbird 1');
  */
-function addVehicleContentUI(id, vehicle) {
+function addVehicleContentUI(id, vehicle, server) {
   vehicleContentNbr = vehicle.position;
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
@@ -1248,6 +1248,24 @@ function addVehicleContentUI(id, vehicle) {
     targetId: id,
     id: id + ACTION_BAR,
     title: vehicle.name,
+    takeoff: true,
+    takeoffFunction: function() {
+      if(server) {
+        server.sendMessage(MSG_TAKEOFF, {id: vehicle.id, name: vehicle.name});
+      }
+    },
+    land: true,
+    landFunction: function() {
+      if(server) {
+        server.sendMessage(MSG_LAND, {id: vehicle.id, name: vehicle.name});
+      }
+    },
+    abort: true,
+    abortFunction: function() {
+      if(server) {
+        server.sendMessage(MSG_CMD_EMERGENCY_STOP, {id: vehicle.id, name: vehicle.name});
+      }
+    },
     settings: true,
     settingsFunction: function() {
       loadSidebar(contentManager.getFocusedTabId(), 'rightScroller');
@@ -1260,6 +1278,27 @@ function addVehicleContentUI(id, vehicle) {
   .addTab(id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position, true)
   .addDivider()
   .addTab(id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
+
+/*
+  if(server) {
+    if(server.isConnected) {
+      serverActionBar.toggleAction(ActionBar.CONNECTION, true);
+    } else {
+      serverActionBar.toggleAction(ActionBar.CONNECTION, false);
+    }
+    
+    // setup listener for the server that is being updated
+  
+    server.connectionListener = function(e) { 
+      serverConnected(e, serverActionBar);
+    };
+    
+    server.disconnectionListener = function(e, s) {
+      serverDisconnected(e, s, serverActionBar);
+    };
+  }
+  */
+  
   
   contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
   contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
@@ -1296,11 +1335,13 @@ function addVehicleContentUI(id, vehicle) {
      *   left/right - vehicle moves left and right
      *
      */
+    /*
     console.log('id: ' + 
 		    e.controlId + ' dir: ' +
 		    e.direction + ' X Str: ' +
 		    e.strengthX + ' Y Str: ' +
 		    e.strengthY);
+		    */
     
     if(e.controlId == TouchControls.LEFT) {
       switch(e.controlId) {
