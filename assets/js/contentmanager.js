@@ -42,7 +42,10 @@ var ContentManager = function (options) {
     this.settings = new Object();
     this.focusedPaneId = '';
     this.currentContentId = '';
+    this.currentVehicle = '';
+    this.currentServer = '';
     this.vehicles = new Array();
+    this.remoteVehicles = new Object();
     this.servers = new Array();
     
 }
@@ -94,6 +97,38 @@ ContentManager.prototype = {
         // remove from the array
         this.vehicles.splice(vehicle.position, 1);
     },
+    addRemoteVehicle: function(server, vehicle) {
+        var exists = false;
+        
+        if(!this.remoteVehicles[server.name]) {
+            this.remoteVehicles[server.name] = new Array();
+        } else {
+            // check that the vehicle doesn't exist
+            for(i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
+                if(this.remoteVehicles[server.name][i].name === vehicle.name) {
+                    exists = true;
+                }
+            }
+        }
+
+        if(exists) {
+            // it exists so we're not adding it, return false
+            return false;
+        } else {
+            this.remoteVehicles[server.name].push(vehicle);
+            
+            // it didn't exist and we added it, so return true
+            return true;
+        }
+    },
+    removeRemoteVehicle: function(server, vehicle) {
+        for(i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
+            if(this.remoteVehicles[server.name][i].name === vehicle.name) {
+                this.remoteVehicles[server.name].splice(i, 1);
+                break;
+            }
+        }
+    },
     updateVehicle: function(vehicle) {
         ioStoreObject(VEHICLE_KEY + '_' + vehicle.position, vehicle);
     },
@@ -106,6 +141,11 @@ ContentManager.prototype = {
         if(persist) {
             ioStoreObject(SERVER_KEY + '_' + this.servers[i].position, server);
         }
+
+        // create the array for vehicles managed by this server        
+        if(!this.remoteVehicles[server.name]) {
+            this.remoteVehicles[server.name] = new Array();
+        }
     },
     removeServer: function(server) {
         // remove the persisted server
@@ -113,6 +153,12 @@ ContentManager.prototype = {
         
         // remove from the array
         this.servers.splice(server.position, 1);
+        
+        // remove the array of vehicles as well
+        if(this.remoteVehicles[server.name]) {
+            delete this.remoteVehicles[server.name];
+        }
+        
     },
     updateServer: function(server) {
         ioStoreObject(SERVER_KEY + '_' + server.position, server);
