@@ -327,8 +327,8 @@ TouchControls.prototype.onTouchMove = function(e) {
 		    this.rightDirectionListener({
 			controlId: TouchControls.RIGHT_CONTROL,
 			direction: getDirection(this.rightVector),
-			strengthX:getStrength(this.rightVector.x, this.rightThrowDistance),
-			strengthY:getStrength(this.rightVector.y, this.rightThrowDistance)});
+			strengthX: strengthX,
+			strengthY: strengthY});
 		    
 		    this.rightStrengthX = strengthX;
 		    this.rightStrengthY = strengthY;
@@ -353,8 +353,8 @@ TouchControls.prototype.onTouchMove = function(e) {
 		    this.leftDirectionListener({
 			controlId: TouchControls.LEFT_CONTROL,
 			direction: getDirection(this.leftVector),
-			strengthX:strengthX,
-			strengthY:strengthY});
+			strengthX: strengthX,
+			strengthY: strengthY});
 		    
 		    this.leftStrengthX = strengthX;
 		    this.leftStrengthY = strengthY;
