@@ -197,6 +197,7 @@ Server.prototype = {
 
         // at this point the disconnection listener will only fire here
         // TODO: if a pure unsecure connection is allowed in the future, then this event will need to be fired from the close unsecure event 
+        this.isConnected = false;
         this.disconnectionListener(event);
     },
     closeUnsecureEvent: function (event) {
@@ -210,8 +211,11 @@ Server.prototype = {
             // TODO: should this be after a delay?
             this.secureConnection.close();
         }
-        // TODO: if a pure unsecure connection is allowed in the future, then this event will need to be fired
-        // this.disconnectionListener(event);
+        // if unsecure only then fire disconnection event 
+        if(this.unsecureOnly) {
+            this.isConnected = true;
+            this.disconnectionListener(event);
+        }
     },
     messageEvent: function (event) {
         if(event.data) {
@@ -237,6 +241,7 @@ Server.prototype = {
                         
                         if(this.secureOnly || this.unsecureOnly || connectionTypeAllowed === COMMS_TYPE_SECURE_ONLY) {
                             // can fire the connection sucessful event as secure only and unsecure only do not need session negotiation
+                            this.isConnected = true;
                             this.connectionListener(event);
                         } else {
                             // get the session id and connect in clear
@@ -255,18 +260,19 @@ Server.prototype = {
             switch(msg.id) {
                 case MSG_SESSION_CONFIRMED:
                     // can fire the connection sucessful event, this only occurs for secureAndUnsecure
+                    this.isConnected = true;
                     this.connectionListener(event);
                     break;
 
                 case MSG_VEHICLES:
                     var data = msg.body;
-                    for(i = 0, l = msg.body.length; i < l; i++) {
-                        this.rcvdAddVehicle(new Vehicle(msg.body[i]));
+                    for(var i = 0, l = msg.body.length; i < l; i++) {
+                        this.rcvdAddVehicle(this, new Vehicle(msg.body[i]));
                     }
                     break;
                 
                 case MSG_ADD_VEHICLE:
-                    this.rcvdAddVehicle(new Vehicle(msg.body));
+                    this.rcvdAddVehicle(this, new Vehicle(msg.body));
                     break;
           
                 case MSG_DELETE_VEHICLE:
