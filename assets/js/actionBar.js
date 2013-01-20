@@ -36,7 +36,11 @@ function ActionBar(options) {
   this.connectFunction = options.connectFunction || {};
   
   this.settingsAction = options.settings || false;
-
+  
+  this.takeoffAction = options.takeoff || false;
+  this.landAction = options.land || false;
+  this.abortAction = options.abort || false;
+  
   this.settingsFunction = options.settingsFunction || function() {
     loadSidebar(this.targetId, 'rightScroller');
     showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
@@ -50,7 +54,23 @@ function ActionBar(options) {
   this.isEnabled[ActionBar.DISCONNECT] = this.disconnectAction;
   this.isEnabled[ActionBar.CONNECT] = this.connectAction;
   this.isEnabled[ActionBar.SETTINGS] = this.settingsAction;
+  
+  this.isEnabled[ActionBar.TAKEOFF] = this.takeoffAction;
+  this.isEnabled[ActionBar.LAND] = this.landAction;
+  this.isEnabled[ActionBar.ABORT] = this.abortAction;
 }
+
+ActionBar.SAVE = 0;
+ActionBar.REMOVE = 1;
+ActionBar.DISCONNECT = 2;
+ActionBar.CONNECT = 3;
+
+ActionBar.TAKEOFF = 21;
+ActionBar.LAND = 22;
+
+ActionBar.ABORT = 29;
+
+ActionBar.SETTINGS = 99;
 
 ActionBar.prototype.initialise = function() {
     $('#' + this.targetId).prepend(
@@ -63,6 +83,25 @@ ActionBar.prototype.initialise = function() {
       '    </div>' +
       
       // check the actions that are to be available... settings (if enabled) always goes last
+      (this.takeoffAction ? 
+      '    <div id="saveActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '      <img src="assets/icons/drawable-hdpi-v11/ic_action_takeoff.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+      '      <span class="actionBarText">Takeoff</span>' +
+      '    </div>'
+      : '') +
+      (this.landAction ? 
+      '    <div id="saveActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '      <img src="assets/icons/drawable-hdpi-v11/ic_action_land.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+      '      <span class="actionBarText">Land</span>' +
+      '    </div>'
+      : '') +
+      (this.abortAction ? 
+      '    <div id="saveActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '      <img src="assets/icons/drawable-hdpi-v11/ic_action_abort.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+      '      <span class="actionBarText">Abort</span>' +
+      '    </div>'
+      : '') +
+      
       (this.saveAction ? 
       '    <div id="saveActionControl' + this.id + '" class="actionBarAction noflex centered">' +
       '      <img src="assets/icons/drawable-hdpi-v11/ic_action_save.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
@@ -110,7 +149,30 @@ ActionBar.prototype.initialise = function() {
   
     // check the actions that are to be available... settings (if enabled) always goes last
     var self = this;
+    
     // add the click events for the actions that are to be available
+    if(this.takeoffAction) {
+      $('#takeoffActionControl' + this.id).on('click', function() {
+        if(self.isEnabled[ActionBar.TAKEOFF]) {
+          self.takeoffFunction();
+        }
+      });
+    }
+    if(this.landAction) {
+      $('#landActionControl' + this.id).on('click', function() {
+        if(self.isEnabled[ActionBar.LAND]) {
+          self.landFunction();
+        }
+      });
+    }
+    if(this.abortAction) {
+      $('#abortActionControl' + this.id).on('click', function() {
+        if(self.isEnabled[ActionBar.ABORT]) {
+          self.abortFunction();
+        }
+      });
+    }
+
     if(this.saveAction) {
       $('#saveActionControl' + this.id).on('click', function() {
         if(self.isEnabled[ActionBar.SAVE]) {
@@ -173,14 +235,6 @@ ActionBar.prototype.addDivider = function () {
   
     return this;
 }
-
-
-
-ActionBar.SAVE = 0;
-ActionBar.REMOVE = 1;
-ActionBar.DISCONNECT = 2;
-ActionBar.CONNECT = 3;
-ActionBar.SETTINGS = 4;
 
 ActionBar.prototype.getPreId = function(action) {
   var preId = '';
