@@ -112,7 +112,9 @@ TouchControls.prototype.initialise = function() {
         this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this), false);
         this.canvas.addEventListener('touchmove', this.onTouchMove.bind(this), false);
         this.canvas.addEventListener('touchend', this.onTouchEnd.bind(this), false);
-        
+
+        this.offsets = recursiveOffsetLeftAndTop(this.canvas);
+	
         window.onorientationchange = this.resetCanvas;  
         window.onresize = this.resetCanvas;  
     } else {
@@ -188,8 +190,8 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
 	    " y:" + touchPosition.y +
 	    " distance x: " + vector.x +
 	    " y: " + vector.y +
-	    " tx:" + touch.clientX +
-	    " ty:" + touch.clientY
+	    " tx:" + (touch.clientX - this.offsets.offsetLeft) +
+	    " ty:" + (touch.clientY - this.offsets.offsetTop)
 	    ,
 	    touchPosition.x + 30, touchPosition.y - 30);
     }
@@ -250,16 +252,16 @@ TouchControls.prototype.onTouchStart = function(e) {
         var touch = e.changedTouches[i]; 
         
         // if we have no touch id for the left and the touch is on the left hand side then we have our first touch for left
-        if((this.leftTouchID < 0) && (touch.clientX < this.halfWidth)) {
+        if((this.leftTouchID < 0) && (touch.clientX - this.offsets.offsetLeft < this.halfWidth)) {
             this.leftTouchID = touch.identifier; 
-            this.leftTouchStartPos.reset(touch.clientX, touch.clientY); 	
+            this.leftTouchStartPos.reset(touch.clientX - this.offsets.offsetLeft, touch.clientY - this.offsets.offsetTop);
             this.leftTouchPos.copyFrom(this.leftTouchStartPos); 
             this.leftVector.reset(0,0);
             // continue;
         }
-        if((this.rightTouchID < 0) && (touch.clientX >= this.halfWidth)) {
+        if((this.rightTouchID < 0) && (touch.clientX - this.offsets.offsetLeft >= this.halfWidth)) {
             this.rightTouchID = touch.identifier; 
-            this.rightTouchStartPos.reset(touch.clientX, touch.clientY); 	
+            this.rightTouchStartPos.reset(touch.clientX - this.offsets.offsetLeft, touch.clientY - this.offsets.offsetTop);
             this.rightTouchPos.copyFrom(this.rightTouchStartPos); 
             this.rightVector.reset(0,0); 
         } else {
@@ -311,7 +313,7 @@ TouchControls.prototype.onTouchMove = function(e) {
 	var touch = e.changedTouches[i];
 	
 	if(this.rightTouchID == touch.identifier) {
-	    this.rightVector.reset(touch.clientX, touch.clientY);
+	    this.rightVector.reset(touch.clientX - this.offsets.offsetLeft, touch.clientY - this.offsets.offsetTop);
 
 	    if(this.rightLimitedThrow) {
 		this.rightVector.minusEqLimit(this.rightTouchStartPos, this.rightThrowDistance, this.rightXEnabled, this.rightYEnabled);
@@ -338,7 +340,7 @@ TouchControls.prototype.onTouchMove = function(e) {
 	}
 	
 	if(this.leftTouchID == touch.identifier) {
-	    this.leftVector.reset(touch.clientX, touch.clientY);
+	    this.leftVector.reset(touch.clientX - this.offsets.offsetLeft, touch.clientY - this.offsets.offsetTop);
 	    if(this.leftLimitedThrow) {
 		this.leftVector.minusEqLimit(this.leftTouchStartPos, this.leftThrowDistance, this.leftXEnabled, this.leftYEnabled);
 		this.leftTouchPos.copyFrom(this.leftTouchStartPos);
@@ -406,3 +408,22 @@ TouchControls.prototype.setupCanvas = function() {
     
     this.resetCanvas(); 
 }
+
+var recursiveOffsetLeftAndTop = function(element) {
+    var offsetLeft = 0;
+    var offsetTop = 0;
+    
+    // TODO: doesn't take into account when elements are off the screen, eg. slides from right/left, etc.
+    
+    while (element) {
+        // offsetLeft += element.offsetLeft;
+        offsetTop += element.offsetTop;
+
+        element = element.offsetParent;
+    }
+    
+    return {
+        offsetLeft: offsetLeft,
+        offsetTop: offsetTop
+    };
+};
