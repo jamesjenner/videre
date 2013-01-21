@@ -234,6 +234,9 @@ var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.pn
 
 var MAP_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_map.png';
 
+var SECURE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_secure.png';
+var UNSECURE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_unsecure.png';
+
 var HOME_CONTROL_ID = 'homeControl';
 var HOME_CONTENT_ID = 'home';
 
@@ -524,7 +527,8 @@ function resetForm(formId) {
   form.find('input:radio, input:checkbox')
     .removeAttr('checked').removeAttr('selected');
 
-  form.find(".switch.on").toggleClass('on');
+  // TODO: do we need this?
+  // form.find(".switch.on").toggleClass('on');
 }
 
 function createServer() {
@@ -649,9 +653,9 @@ function addServerCreateFormUI(id, title) {
     '             <input type="popup" name="commsSecurity" id="serverCreateCommsSecurity" placeholder="CommsSecurity" readonly="true">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
-    '              <li><a href="#"></i>Secure and Unsecure</a></li>' +
-    '              <li><a href="#"></i>Secure Only</a></li>' +
-    '              <li><a href="#"></i>Unsecure Only</a></li>' +
+    '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Secure and Unsecure</span></a></li>' +
+    '              <li><a href="#"><img class="dropdownIcon" src="' + SECURE_ICON + '" /><span class="dropdownText">Secure Only</span></a></li>' +
+    '              <li><a href="#"><img class="dropdownIcon" src="' + UNSECURE_ICON + '" /><span class="dropdownText">Unsecure Only</span></a></li>' +
     '             </ul>' +
     '            </div>' +
     
@@ -677,7 +681,7 @@ function addServerCreateFormUI(id, title) {
   }).initialise();
     
   // add the toggle switch to switch classed checkboxes  
-  $(".switch").on("click", toggleSwitch);
+  $('#createServerForm .switch').on("click", toggleSwitch);
 
   // add the drop down logic for the drop downs  
   new DropDown( $('#serverCreateCommsSecurityWrapper') );
@@ -923,7 +927,7 @@ function addVehicleCreateFormUI(id, title) {
   }).initialise();
     
   // add the toggle switch to switch classed checkboxes  
-  $(".switch").on("click", toggleSwitch);
+  $('#createVehicleForm .switch').on("click", toggleSwitch);
   
   // add the drop down logic for the drop downs  
   new DropDown( $('#vehicleCreateRemoteServerWrapper') );
@@ -1025,9 +1029,9 @@ function addServerContentUI(id, server) {
     '             <input type="popup" name="commsSecurity" id="serverUpdateCommsSecurity" placeholder="CommsSecurity" readonly="true">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
-    '              <li><a href="#"></i>Secure and Unsecure</a></li>' +
-    '              <li><a href="#"></i>Secure Only</a></li>' +
-    '              <li><a href="#"></i>Unsecure Only</a></li>' +
+    '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Secure and Unsecure</span></a></li>' +
+    '              <li><a href="#"><img class="dropdownIcon" src="' + SECURE_ICON + '" /><span class="dropdownText">Secure Only</span></a></li>' +
+    '              <li><a href="#"><img class="dropdownIcon" src="' + UNSECURE_ICON + '" /><span class="dropdownText">Unsecure Only</span></a></li>' +
     '             </ul>' +
     '            </div>' +
 
@@ -1103,7 +1107,7 @@ function addServerContentUI(id, server) {
   // contentManager.servers[server].errorListener = serverError;
   
   // add the toggle switch to switch classed checkboxes  
-  $(".switch").on("click", toggleSwitch);
+  $('#updateServerForm .switch').on("click", toggleSwitch);
   
   // add the drop down logic for the drop downs  
   new DropDown( $('#serverUpdateCommsSecurityWrapper') );
