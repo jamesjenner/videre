@@ -23,23 +23,26 @@ function ActionBar(options) {
   this.id = options.id || 'Unknown';
   this.targetId = options.targetId || 'Unknown';
   
-  this.saveAction = options.save || false;
-  this.saveFunction = options.saveFunction || {};
+  this.saveAction = ((options.save != null) ? options.save : false);
+  this.saveFunction = options.saveFunction || function() {};
   
-  this.removeAction = options.remove || false;
-  this.removeFunction = options.removeFunction || {};
+  this.removeAction = ((options.remove != null) ? options.remove : false);
+  this.removeFunction = options.removeFunction || function() {};
   
-  this.disconnectAction = options.disconnect || false;
-  this.disconnectFunction = options.disconnectFunction || {};
+  this.disconnectAction = ((options.disconnect != null) ? options.disconnect : false);
+  this.disconnectFunction = options.disconnectFunction || function() {};
   
-  this.connectAction = options.connect || false;
-  this.connectFunction = options.connectFunction || {};
+  this.connectAction = ((options.connect != null) ? options.connect : false);
+  this.connectFunction = options.connectFunction || function() {};
   
-  this.settingsAction = options.settings || false;
+  this.settingsAction = ((options.settings != null) ? options.settings : false);
   
-  this.takeoffAction = options.takeoff || false;
-  this.landAction = options.land || false;
-  this.abortAction = options.abort || false;
+  this.takeoffAction = ((options.takeoff != null) ? options.takeoff : false);
+  this.takeoffFunction = options.takeoffFunction || function() {};
+  this.landAction = ((options.land != null) ? options.land : false);
+  this.landFunction = options.landFunction || function() {};
+  this.abortAction = ((options.abort != null) ? options.abort : false);
+  this.abortFunction = options.abortFunction || function() {};
   
   this.settingsFunction = options.settingsFunction || function() {
     loadSidebar(this.targetId, 'rightScroller');
@@ -84,19 +87,19 @@ ActionBar.prototype.initialise = function() {
       
       // check the actions that are to be available... settings (if enabled) always goes last
       (this.takeoffAction ? 
-      '    <div id="saveActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '    <div id="takeoffActionControl' + this.id + '" class="actionBarAction noflex centered">' +
       '      <img src="assets/icons/drawable-hdpi-v11/ic_action_takeoff.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
       '      <span class="actionBarText">Takeoff</span>' +
       '    </div>'
       : '') +
       (this.landAction ? 
-      '    <div id="saveActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '    <div id="landActionControl' + this.id + '" class="actionBarAction noflex centered">' +
       '      <img src="assets/icons/drawable-hdpi-v11/ic_action_land.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
       '      <span class="actionBarText">Land</span>' +
       '    </div>'
       : '') +
       (this.abortAction ? 
-      '    <div id="saveActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '    <div id="abortActionControl' + this.id + '" class="actionBarAction noflex centered">' +
       '      <img src="assets/icons/drawable-hdpi-v11/ic_action_abort.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
       '      <span class="actionBarText">Abort</span>' +
       '    </div>'
