@@ -1255,13 +1255,13 @@ function addVehicleContentUI(id, vehicle, server) {
     takeoff: true,
     takeoffFunction: function() {
       if(server) {
-        server.sendMessage(MSG_TAKEOFF, {id: vehicle.id, name: vehicle.name});
+        server.sendMessage(MSG_CMD_TAKEOFF, {id: vehicle.id, name: vehicle.name});
       }
     },
     land: true,
     landFunction: function() {
       if(server) {
-        server.sendMessage(MSG_LAND, {id: vehicle.id, name: vehicle.name});
+        server.sendMessage(MSG_CMD_LAND, {id: vehicle.id, name: vehicle.name});
       }
     },
     abort: true,
