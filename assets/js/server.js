@@ -283,8 +283,8 @@ Server.prototype = {
                     this.rcvdUpdateVehicle(new Vehicle(msg.body));
                     break;
                 
-                case MSG_VEHICLE_TELEMETERY:
-                    this.rcvdTelemetry(msg.body);
+                case MSG_VEHICLE_TELEMETRY:
+                    this.rcvdTelemetry(this, msg.body);
                     break;
                 
                 case MSG_VEHICLE_PAYLOAD:
