@@ -352,7 +352,7 @@ function configureApplication() {
     contentManager.servers[server].rcvdAddVehicle = createVehicleFromServer;
     contentManager.servers[server].rcvdDeleteVehicle = removeVehicleFromSidebar;
     // contentManager.servers[server].rcvdUpdateVehicle = 
-    // contentManager.servers[server].rcvdTelemetry = 
+    contentManager.servers[server].rcvdTelemetry = receivedTelemetry;
     // contentManager.servers[server].rcvdPayload = 
   }
 
@@ -551,7 +551,7 @@ function createServer() {
     rcvdAddVehicle: createVehicleFromServer,
     rcvdDeleteVehicle: removeVehicleFromSidebar,
     // rcvdUpdateVehicle: ,
-    // rcvdTelemetry: ,
+    rcvdTelemetry: receivedTelemetry,
     // rcvdPayload: ,
     errorListener: serverError
   });
@@ -2551,6 +2551,11 @@ function serverDisconnected(e, server, actionBar) {
   
   // remove the vehicles from the content manager
   contentManager.removeVehiclesFromServer(server.name);
+}
+
+function receivedTelemetry(server, e) {
+  console.log("received telemetry from server " + server.name + " for vehicle " + e);
+
 }
 
 function serverMessageReceived(e) {
