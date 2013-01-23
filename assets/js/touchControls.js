@@ -126,12 +126,14 @@ TouchControls.prototype.initialise = function() {
 TouchControls.prototype.resetCanvas = function(e) {  
     // set the canvas width/height to the offset width/height, which will be the parent dims
     // TODO: should we change references to offsetWidth/offsetHeight instead of changing the canvas? why is offsetWidth correct, but width not?
-    this.canvas.width = this.canvas.offsetWidth; 
-    this.canvas.height = this.canvas.offsetHeight;
-    
-    // setup half and half so we can use for touch detection of buttons
-    this.halfWidth = this.canvas.width / 2; 
-    this.halfHeight = this.canvas.height / 2;
+    if(this.canvas) {
+	this.canvas.width = this.canvas.offsetWidth; 
+	this.canvas.height = this.canvas.offsetHeight;
+	
+	// setup half and half so we can use for touch detection of buttons
+	this.halfWidth = this.canvas.width / 2; 
+	this.halfHeight = this.canvas.height / 2;
+    }
 }
 
 TouchControls.prototype.drawCanvas = function(self) {
