@@ -264,10 +264,6 @@ var contentManager = new ContentManager();
 
 $(document).ready(function() {
 
-  // load the toolbar
-  // TODO: remove the loadToolbar logic, only retained now to show how connectivity was performed
-  // loadToolbar();
-
   configureApplication();
   // jgj todo: is this still required?
   /*
@@ -2122,201 +2118,6 @@ function setGauge(gaugeId, gauge, indicatorName, degree, value, time) {
   }
 }
 
-function enableHal() {
-  halEnabled = true;
-
-  //TODO: need the id to set the gauge
-  // lets play with the direction
-  setGaugeAngle('gaugeId', headingGauge, 'needle1', 176, '2s');
-  setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 90, '750ms');
-  setGaugeAngle('gaugeId', vsiGauge, 'needle1', 98, '1s');
-  setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 45, '1s');
-  setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 36, '1s');
-  setGaugeAngle('gaugeId', speedGauge, 'needle1', 45, '500ms');
-
-  setGaugeAngle('gaugeId', attitudeGauge, 'needle2', 45, '750ms');
-  setGauge('gaugeId', attitudeGauge, 'needle1', 45, '25px', '750ms');
-  
-  performVideoCountdown(videoGauge);
-}
-
-function disableHal() {
-  halEnabled = false;
-
-  setGaugeAngle('gaugeId', headingGauge, 'needle1', 0, '500ms');
-  setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 0, '300ms');
-  setGaugeAngle('gaugeId', vsiGauge, 'needle1', 0, '300ms');
-  setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 0, '300ms');
-  setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 0, '300ms');
-  setGaugeAngle('gaugeId', speedGauge, 'needle1', 0, '300ms');
-
-  setGaugeAngle('gaugeId', attitudeGauge, 'needle2', -45, '750ms');
-  setGauge('gaugeId', attitudeGauge, 'needle1', -45, '-25px', '750ms');
-  
-}
-
-function initialiseVideoCountdown(gauge) {
-}
-
-function performVideoCountdown(gauge) {
-  canvas = document.getElementById(gauge.canvasId);
-  ctx = canvas.getContext('2d');
-  canvas_size = [canvas.width, canvas.height];
-  radius = Math.min(canvas_size[0], canvas_size[1]) / 2;
-  center = [canvas_size[0]/2, canvas_size[1]/2];
-  start = 1;
-  fps = 40;
-  seconds = 2;
-  
-  var total = fps*seconds;
-  
-  for(var i=total;i>=0;i--) {
-    var delayed = (function(){
-      var step = 1-i/total;
-      var left = Math.ceil(i/fps);
-      
-      return function() {
-	// num.innerHTML=left;
-	draw_next(step);
-      };
-    })();
-    
-    setTimeout(delayed, -1000 / fps * (i-total));
-  }
-}
-
-function draw_next(step) { // step between 0 and 1
-  ctx.clearRect(0,0,canvas_size[0], canvas_size[1]);
-  
-  if(step < 1) {
-    ctx.beginPath();
-    ctx.moveTo(center[0], center[1]); // ponto central
-    
-    ctx.arc(  // draw next arc
-      center[0],
-      center[1],
-      radius,
-      Math.PI * (-0.5 + 0), // -0.5 pra começar do topo
-      Math.PI * (-0.5 + step*2),
-      true // anti horário
-      );
-    
-    ctx.lineTo(center[0], center[1]); // line back to the center
-    ctx.closePath();
-    
-    ctx.fillStyle = 'rgb(40,40,40)';    // color
-    
-    ctx.fill();
-  }
-}
-
-				 
-/*
- * loadToolbar - loads the toolbar
- */
-function loadToolbar() {
-  // TODO: determine how to handle adding a control for a gauge vs a non gauge toggling control. maybe seperate methods?
-  /**
-   * for (var i=0; i < obj.length; i++) {
-    
-   }
-   */
-  /*
-   * TODO: maybe define a control that is icon, title and name, or is that redundant when it's incorporated into the Gauge?
-   * maybe the title and description should be removed from Gauge and added to a new type called Control.... Then the control
-   * could be linked to the gauge so it knows what it controls... 
-   */
-  
-  // TODO: load this information from remote source or from local storage...
-  
-  addControlToToolbar('toolbar', 'toggleConnection',  'assets/icons/drawable-xhdpi-v11/ic_stat_power.png',   'Connection',  'Connectivity to the vehicle');
-  addControlToToolbar('toolbar', 'toggleHal',         'assets/icons/drawable-xhdpi-v11/ic_stat_gauge.png',   'Hal 9000',    'Test to control guages');
-  
-  addControlToToolbar('toolbar', 'toggle' + videoGauge.name, videoGauge.icon, videoGauge.title, videoGauge.description);
-
-  addControlToToolbar('toolbar', 'toggle' + speedGauge.name, speedGauge.icon, speedGauge.title, speedGauge.description);
-  addControlToToolbar('toolbar', 'toggle' + attitudeGauge.name, attitudeGauge.icon, attitudeGauge.title, attitudeGauge.description);
-  addControlToToolbar('toolbar', 'toggle' + altimeterGauge.name, altimeterGauge.icon, altimeterGauge.title, altimeterGauge.description);
-  addControlToToolbar('toolbar', 'toggle' + headingGauge.name, headingGauge.icon, headingGauge.title, headingGauge.description);
-  addControlToToolbar('toolbar', 'toggle' + vsiGauge.name, vsiGauge.icon, vsiGauge.title, vsiGauge.description);
-  addControlToToolbar('toolbar', 'toggle' + thermometerGauge.name, thermometerGauge.icon, thermometerGauge.title, thermometerGauge.description);
-
-  $('#toggleConnection').click(function() {
-    if(connected) {
-      disconnect();
-    } else {
-      connect();
-    }
-    return false;
-  });
-
-  $('#toggleHal').click(function() {
-    if(halEnabled) {
-      disableHal();
-      $('#toggleHal' + 'ControlArea').toggleClass('controlIconAreaSelected');
-    } else {
-      enableHal();
-      $('#toggleHal' + 'ControlArea').toggleClass('controlIconAreaSelected');
-    }
-    return false;
-  });
-
-  // define the function for toggling the gauge control
-  var toggleGaugeFn = function(gauge) {
-    if(gauge.enabled) {
-      gauge.enabled = !hideGauge(gauge.id);
-      $('#toggle' + gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
-    } else {
-      gauge.enabled = showGauge(gauge);
-      $('#toggle'  + gauge.name + 'ControlArea').toggleClass('controlIconAreaSelected');
-    }
-    return false;
-  }
-  
-  $('#toggle' + videoGauge.name).click(function() {toggleGaugeFn(videoGauge)});
-  $('#toggle' + speedGauge.name).click(function() {toggleGaugeFn(speedGauge)});
-  $('#toggle' + attitudeGauge.name).click(function() {toggleGaugeFn(attitudeGauge)});
-  $('#toggle' + altimeterGauge.name).click(function() {toggleGaugeFn(altimeterGauge)});
-  $('#toggle' + headingGauge.name).click(function() {toggleGaugeFn(headingGauge)});
-  $('#toggle' + vsiGauge.name).click(function() {toggleGaugeFn(vsiGauge)});
-  $('#toggle' + thermometerGauge.name).click(function() {toggleGaugeFn(thermometerGauge)});
-}
-
-/*
- * addControlToToolbar - adds a new control entry to the toolbar
- *
- * parentid the parent that the control will be added to
- * id       the id for the control
- * icon     the icon representing the gaugue
- * name     the name of the control
- * subText  a description of the control
- */
-
-function addControlToToolbar(parentId, id, icon, name, subText) {
-  $('#' + parentId).append(
-    '<div id="' + id + '" class="controlBar">' +
-    '  <div id="' + id + 'ControlArea" class="controlIconArea">' +
-    '    <img class="controlIcon" src="' + icon + '" />' +
-    '  </div>' +
-    '  <div class="controlText">' +
-    '    <div class="controlName">' +
-           name + 
-    '    </div>' +
-    '    <div class="controlSubText">' +
-           subText + 
-    '    </div>' +
-    '  </div>' +
-    /*
-    '  <div class="controlToggle">' +
-    '    <img class="controlToggleImage" src="assets/icons/drawable-xhdpi-v11/ic_stat_unlocked.png" />' +
-    '  </div>' +
-    '  <div class="controlToggle">' +
-    '    <img class="controlToggleImage" src="assets/icons/drawable-xhdpi-v11/ic_stat_hidden.png" />' +
-    '  </div>' +
-    */
-    '</div>');
-}
-
 /*
  * showGauge() displays a panel, creating it if it doesn't exist
  * 
@@ -2556,19 +2357,70 @@ function serverDisconnected(e, server, actionBar) {
 function receivedTelemetry(server, e) {
   console.log("received telemetry from server " + server.name + " for vehicle " + e);
 
+  var vehicles = contentManager.getVehiclesForServer(server.name);
+  
+  // remoteVehicles["Asterix"][0].id === e.id
+  
+  for(var i = 0, l = vehicles.length; i < l; i++) {
+    if(vehicles[i].id === e.id) {
+      // update this one
+      updateVehicleTelemetry(server, vehicles[i], e);
+      break;
+    }
+  }
 }
 
-function serverMessageReceived(e) {
-  // var chatdiv = document.getElementById('chat');
-  // chatdiv.innerHTML = chatdiv.innerHTML + event.data + "<br />";
-  
-  
-}
 
+// TODO: add handling for errors
 function serverError(e) {
   // document.getElementById('chat').innerHTML = "There was an error: " + event.data;
 }
+
+function updateVehicleTelemetry(server, vehicle, telemetry) {
+
+  // update the vehicle
+  vehicle.telemetry = telemetry;
+
+  // if the vehicle is the currently selected vehicle, then update the widgets
+  if(contentManager.currentVehicleId === vehicle.id) {
+    // temperature is not reported in V1
+    // setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 90, '750ms');
+    
+    // heading is atttiude.yaw?
+    setGaugeAngle('gaugeId', headingGauge, 'needle1', 176, '100s');
+    
+    // vertical speed indicator m/s
+    // setGaugeAngle('gaugeId', vsiGauge, 'needle1', 98, '100ms');
+    
+    // altimeter in meters, first needle is from 0m to 10m - each bar is 20cm, second meter is from 0m to 0 to 1000m, each bar is 20m
+    
+    var altitude1Km = 0;
+    var altitude10m = 0;
+    setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 45, '100ms');
+    setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 36, '100ms');
+    
+    setGaugeAngle('gaugeId', speedGauge, 'needle1', 45, '100ms');
   
+    var roll = 45;
+    var pitch = 25;
+    
+    setGaugeAngle('gaugeId', attitudeGauge, 'needle2', roll, '100ms');
+    setGauge('gaugeId', attitudeGauge, 'needle1', roll, pitch + 'px', '100ms');
+    // gaugeId, gauge, indicatorName, degree, value, time
+  
+    /*
+    setGaugeAngle('gaugeId', headingGauge, 'needle1', 0, '500ms');
+    setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 0, '300ms');
+    setGaugeAngle('gaugeId', vsiGauge, 'needle1', 0, '300ms');
+    setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 0, '300ms');
+    setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 0, '300ms');
+    setGaugeAngle('gaugeId', speedGauge, 'needle1', 0, '300ms');
+  
+    setGaugeAngle('gaugeId', attitudeGauge, 'needle2', -45, '750ms');
+    setGauge('gaugeId', attitudeGauge, 'needle1', -45, '-25px', '750ms');
+    */
+  }
+}
 
 
 </script>
