@@ -220,6 +220,9 @@ ContentManager.prototype = {
             return this.settings[contentId].settings;
         }
     },
+    setCurrentVehicle: function(vehicle) {
+        this.currentVehicle = vehicle;
+    }
 };
 
 var MAP_DEFAULT_LAYER = '';
