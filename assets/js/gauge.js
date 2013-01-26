@@ -134,6 +134,18 @@ var Gauge = function (argmap) {
         this.mask = argmap.mask;
     }
 }
+
+Gauge.SPEED = 'SpeadGauge';
+Gauge.ATTITUDE = 'AttitudeGauge';
+Gauge.ALTIMETER = 'AltimeterGauge';
+Gauge.THERMOMETER = 'ThermometerGauge';
+Gauge.HEADING = 'HeadingGauge';
+Gauge.VSI  = 'VSIGauge';
+
+Gauge.NEEDLE_1 = 'needle1';
+Gauge.NEEDLE_2 = 'needle2';
+Gauge.NEEDLE_3 = 'needle3';
+
     
 Gauge.prototype = {
     setBackgroundImage: function(i, b) {

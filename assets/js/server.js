@@ -221,11 +221,11 @@ Server.prototype = {
         if(event.data) {
             var msg = Message.deconstructMessage(event.data);
         
-            if(this.log) {
-                console.log(this.name + " webSocket msg rcvd: " + msg.id + " : " + msg.body);
-            }
-            
             if(!this.authenticated) {
+                if(this.log) {
+                    console.log(this.name + " webSocket msg rcvd: " + msg.id + " : " + msg.body);
+                }
+            
                 switch(msg.id) {
                     case MSG_AUTHENTICATION_ACCEPTED:
                         console.log(this.name + " Authentication successful");
