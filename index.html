@@ -785,9 +785,8 @@ function createVehicle() {
  */
 function removeVehicleFromSidebar(vehicle) {
   var vehicleControlId = VEHICLE_CONTROL + vehicle.position;
-  var vehicleContentId = VEHICLE_CONTENT + vehicle.position;
 
-  if(contentManager.focusedPaneId === vehicleContentId) {
+  if(contentManager.focusedPaneId === VEHICLE_CONTENT) {
     // currently focused on content so change focus, this indirectly removes the content as well
     setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
   }
@@ -834,15 +833,14 @@ function addVehicleToSidebar(vehicle, server) {
   // adding the vehicle to the content manager sets it's position
   var vehicleNumber = vehicle.position;
   var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
-  var vehicleContentId = VEHICLE_CONTENT + vehicleNumber;
 
   // add the control that lets the user select the vehicle content UI on the side bar
   addControlToSidebarBeforeId(ADD_VEHICLE_CONTROL_ID, vehicleControlId, icon, vehicle.name);
   
   // add the listener for the ui to activate the side bar 
-  addListenerToSidebarControl(LEFT_SIDEBAR_ID, vehicleControlId, vehicleContentId, function() {
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, vehicleControlId, VEHICLE_CONTENT, function() {
     // add the ui content for the vehicle
-    addVehicleContentUI(vehicleContentId, vehicle, server);
+    addVehicleContentUI(VEHICLE_CONTENT, vehicle, server);
   });
   
   // TODO: we have no UI to maintain the settings for the vehicle, need to add an option to provide this
@@ -1236,12 +1234,12 @@ function addVehicleContentUI(id, vehicle, server) {
   }
   
   // TODO: gauges and their options are to be cached locally but obtained remotely (possibly configured locally)
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'SpeadGauge', speedGauge, {x: 0, y: 0, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AttitudeGauge', attitudeGauge, {x: 150, y: 0, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'AltimeterGauge', altimeterGauge, {x: 300, y: 0, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'ThermometerGauge', thermometerGauge, {x: 0, y: 150, width: 150, visible: false}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'HeadingGauge', headingGauge, {x: 150, y: 150, width: 150, visible: true}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + 'VSIGauge', vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.SPEED, speedGauge, {x: 0, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.ATTITUDE, attitudeGauge, {x: 150, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.ALTIMETER, altimeterGauge, {x: 300, y: 0, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.THERMOMETER, thermometerGauge, {x: 0, y: 150, width: 150, visible: false}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.HEADING, headingGauge, {x: 150, y: 150, width: 150, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.VSI, vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
 
   // setup the remote control settings
   var remoteControlSettings = new ContentSettings();
@@ -1315,6 +1313,7 @@ function addVehicleContentUI(id, vehicle, server) {
   contentManager.setFocusedTabNbr(id, 0);
   contentManager.setFocusedTabId(id, id  + TELEMETRY_SUB_ID);
   contentManager.setCurrentContent(id  + TELEMETRY_SUB_ID);
+  contentManager.setCurrentVehicle(vehicle);
   
   /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
    * the issues with side bar navigation are sorted out
@@ -1346,6 +1345,8 @@ function addVehicleContentUI(id, vehicle, server) {
 		    e.strengthX + ' Y Str: ' +
 		    e.strengthY);
 		    */
+    
+    setTelemetry(contentManager.currentVehicle.telemetry);
     
     if(e.controlId == TouchControls.LEFT) {
       switch(e.controlId) {
@@ -2066,9 +2067,8 @@ var thermometerGauge = new Gauge({name: 'thermometer', title: 'Thermometer', des
   // angle was calculated roughly from image, may need adjustment
   var degree = 1.615;
   var value = 1.615 * 100;
- * setInstrument('speed', 'needle', myWidgetAngle, 45, '200ms')
  */
-function setGaugeAngle(gaugeId, gauge, indicatorName, degree, time) {
+function setGaugeAngle(gaugeId, indicatorName, degree, time) {
   // lets play with the speed
   var currentAngle = 0; 
   var direction = 1;  // default positive
@@ -2095,7 +2095,7 @@ function setGaugeAngle(gaugeId, gauge, indicatorName, degree, time) {
   }
 }
 
-function setGauge(gaugeId, gauge, indicatorName, degree, value, time) {
+function setGauge(gaugeId, indicatorName, degree, value, time) {
   // lets play with the speed
   var currentAngle = 0; 
   var direction = 1;  // default positive
@@ -2171,24 +2171,24 @@ function showGauge(gaugeSetting, parentId) {
 	if(typeof gaugeSetting.gauge.needleImg1XOffset != "undefined") {
 	gaugeHTML += 
 	//'<img id="instrument' + gauge.name + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg1    + '" width="' + gauge.width + '" height="' + gauge.needleImg1Height + '" />';
-	'<img id="instrument' + gaugeSetting.gaugeId + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg1    + '" width="' + gaugeSetting.gauge.width + '" style="top: ' + gaugeSetting.gauge.needleImg1XOffset + '"/>';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_' + Gauge.NEEDLE_1 + '"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg1    + '" width="' + gaugeSetting.gauge.width + '" style="top: ' + gaugeSetting.gauge.needleImg1XOffset + '"/>';
 	} else {
 	gaugeHTML += 
 	//'<img id="instrument' + gauge.name + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gauge.needleImg1    + '" width="' + gauge.width + '" height="' + gauge.needleImg1Height + '" />';
-	'<img id="instrument' + gaugeSetting.gaugeId + '_needle1"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg1    + '" width="' + gaugeSetting.gauge.width + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_' + Gauge.NEEDLE_1 + '"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg1    + '" width="' + gaugeSetting.gauge.width + '" />';
 	}
       }
 	
       // if the second needle is specified, then set
       if(typeof gaugeSetting.gauge.needleImg2 != "undefined") {
 	gaugeHTML += 
-	'<img id="instrument' + gaugeSetting.gaugeId + '_needle2"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg2    + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_' + Gauge.NEEDLE_2 + '"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg2    + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
       }
 	
       // if the third needle is specified, then set
       if(typeof gaugeSetting.gauge.needleImg3 != "undefined") {
 	gaugeHTML += 
-	'<img id="instrument' + gaugeSetting.gaugeId + '_needle3"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg3    + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
+	'<img id="instrument' + gaugeSetting.gaugeId + '_' + Gauge.NEEDLE_3 + '"    class="gaugeOverlay gaugeNeedle"     src="' + gaugeSetting.gauge.needleImg3    + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
       }
 
       if(typeof gaugeSetting.gauge.overlayImg != "undefined") {
@@ -2359,7 +2359,7 @@ function serverDisconnected(e, server, actionBar) {
 }
 
 function receivedTelemetry(server, e) {
-  console.log("received telemetry from server " + server.name + " for vehicle " + e);
+  // console.log("received telemetry from server " + server.name + " for vehicle " + e);
 
   var vehicles = contentManager.getVehiclesForServer(server.name);
   
@@ -2386,44 +2386,60 @@ function updateVehicleTelemetry(server, vehicle, telemetry) {
   vehicle.telemetry = telemetry;
 
   // if the vehicle is the currently selected vehicle, then update the widgets
-  if(contentManager.currentVehicleId === vehicle.id) {
-    // temperature is not reported in V1
-    // setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 90, '750ms');
-    
-    // heading is atttiude.yaw?
-    setGaugeAngle('gaugeId', headingGauge, 'needle1', 176, '100s');
-    
-    // vertical speed indicator m/s
-    // setGaugeAngle('gaugeId', vsiGauge, 'needle1', 98, '100ms');
-    
-    // altimeter in meters, first needle is from 0m to 10m - each bar is 20cm, second meter is from 0m to 0 to 1000m, each bar is 20m
-    
-    var altitude1Km = 0;
-    var altitude10m = 0;
-    setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 45, '100ms');
-    setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 36, '100ms');
-    
-    setGaugeAngle('gaugeId', speedGauge, 'needle1', 45, '100ms');
-  
-    var roll = 45;
-    var pitch = 25;
-    
-    setGaugeAngle('gaugeId', attitudeGauge, 'needle2', roll, '100ms');
-    setGauge('gaugeId', attitudeGauge, 'needle1', roll, pitch + 'px', '100ms');
-    // gaugeId, gauge, indicatorName, degree, value, time
-  
-    /*
-    setGaugeAngle('gaugeId', headingGauge, 'needle1', 0, '500ms');
-    setGaugeAngle('gaugeId', thermometerGauge, 'needle1', 0, '300ms');
-    setGaugeAngle('gaugeId', vsiGauge, 'needle1', 0, '300ms');
-    setGaugeAngle('gaugeId', altimeterGauge, 'needle1', 0, '300ms');
-    setGaugeAngle('gaugeId', altimeterGauge, 'needle2', 0, '300ms');
-    setGaugeAngle('gaugeId', speedGauge, 'needle1', 0, '300ms');
-  
-    setGaugeAngle('gaugeId', attitudeGauge, 'needle2', -45, '750ms');
-    setGauge('gaugeId', attitudeGauge, 'needle1', -45, '-25px', '750ms');
-    */
+  if(contentManager.currentVehicle.id === vehicle.id) {
+    setTelemetry(telemetry);
   }
+}
+
+function setTelemetry(telemetry) {
+  if(!telemetry) {
+    return;
+  }
+  // temperature is not reported in V1
+  // setGaugeAngle('gaugeId', Gauge.NEEDLE_1, 90, '750ms');
+  
+  var time = 0;
+  
+  console.log("yaw: " + telemetry.attitude.yaw);
+  
+  // heading is atttiude.yaw?
+  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.HEADING, Gauge.NEEDLE_1, telemetry.attitude.yaw, time + 'ms');
+  
+  // vertical speed indicator m/s
+  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.VSI, Gauge.NEEDLE_1, 98, time + 'ms');
+  
+  // altimeter in meters, needle 1 is from 0m to 10m - each bar is 20cm, needle 2 is from 0m to 0 to 1000m, each bar is 20m
+  // 0 degrees is 0, 90 degress is 5 and 360 degreess is 10
+  //
+  // needle 1, 10m = 360, 1m = 360 / 10
+  // needle 2, 1000m = 360, 100m = 360 / 10, 10m = 360 / 100, 1m = 360 / 1000
+  //
+  // thus needle 1 is altitude mod 10 * 36 and needle 2 is altitude / 1000
+  
+  var altitudeNeedle1 = (telemetry.altitude % 10) * 36;
+  var altitudeNeedle2 = (telemetry.altitude / 1000) * 36;
+  
+  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ALTIMETER, Gauge.NEEDLE_1, altitudeNeedle1, time + 'ms');
+  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ALTIMETER, Gauge.NEEDLE_2, altitudeNeedle2, time + 'ms');
+  
+  // speed is in meters, needle 1 is from 0m/s to 200m/s
+  // 0 degrees is 0, 64.16 degress is 100
+  //
+  // thus needle 1 is speed * 1.5586 (100/64.16)
+  var speed = telemetry.speed * 1.5586;
+  
+  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.SPEED, Gauge.NEEDLE_1, speed, time + 'ms');
+
+  var roll = 45;
+  var pitch = 25;
+  
+  // pitch is based on pixels, 18px per 10 degrees, so pitch is multiplied by 1.8 to determine the px, should we round?
+  var pitch = telemetry.attitude.pitch * 1.8;
+  
+  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_2, telemetry.attitude.roll, time + 'ms');
+  setGauge(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_1, telemetry.attitude.roll, pitch + 'px', time + 'ms');
+  // gaugeId, gauge, indicatorName, degree, value, time
+
 }
 
 
