@@ -1,5 +1,5 @@
 /*
- * actionBar.js v0.1 alpha
+ * actionBar.js
  *
  * Copyright (c) 2012 James G Jenner
  *

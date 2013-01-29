@@ -1,5 +1,5 @@
 /*
- * dropdown.js v0.1 alpha
+ * dropdown.js
  *
  * Copyright (c) 2012 James G Jenner
  *
