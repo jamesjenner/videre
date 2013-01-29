@@ -47,7 +47,10 @@ function Navigation(options) {
     this.pointMenuId = options.pointMenuId || 'navigationPointMenu';
     this.vehicleMenuItemListener = options.vehicleMenuItemListener || function() {};
     this.pointMenuItemListener = options.pointMenuItemListener || function() {};
-    this.vehicles = options.vehicles || new Array();
+    
+    this.remoteVehicles = options.remoteVehicles;
+    this.servers = options.servers || new Array();
+    this.localVehicles = options.localVehicles || new Array();
     
     this.flightPathColor = options.flightPathColor || 'red';
     this.navPathColor = options.navPathColor || 'blue';
@@ -108,41 +111,87 @@ function Navigation(options) {
     L.control.layers(this.mapLayers).addTo(this.map);
     
     L.control.scale().addTo(this.map);
+    
+    // add all the vehicles...
+    this._addVehiclesToMap();
+    
+    // this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: this.vehicleMenuItemListener});
+    // this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: this.pointMenuItemListener});
+    
+    this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: function(e) {that._vehicleMenuItemSelected(e, that); }});
+    this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {that._pointMenuItemSelected(e, that); }});
 
-    // TODO: make these dynamic
-    this.navigationPoints = new Array(
+    this.map.on('click', function(e) {that._onNavigationMapClick(e, that); });
+}
+
+Navigation.prototype.addVehicle = function(vehicle) {
+    // add a vehicle and it's associated path to the map
+}
+
+Navigation.prototype.removeVehicle = function(vehicle) {
+    // remove a vehicle and it's associated path from the map
+    
+}
+
+Navigation.prototype.removeAllVehicles = function() {
+    // remove all vehicles from the map
+    this.vehicles = null;
+    
+}
+
+Navigation.prototype.setVehicles = function(vehicles) {
+    // set the vehicles to the passed vehicle list, this removes existing vehicles
+    this.vehicles = vehicles;
+}
+
+Navigation.prototype._addVehiclesToMap = function() {
+    // iterate through all the vehicles
+    
+    // iterate through the servers and then the vehicles for each server
+    
+    // iterate through the local vehicles
+    for(var i = 0, l = this.servers.length; i < l; i++) {
+        for(var i2 = 0, l2 = this.remoteVehicles[this.servers[i].name].length; i2 < l2; i2++) {
+            this._addVehicleIcon(this.remoteVehicles[this.servers[i].name][i2]);
+        }
+    }
+    
+    for(var i = 0, l = this.localVehicles.length; i < l; i++) {
+        // add the vehicle icon
+        this._addVehicleIcon(this.localVehicles[i]);
+        
+        // add the navigation path
+        this._addNavPath();
+        
+        // add the actual path
+        this._addActualPath();
+    }
+    /*
+    this._addNavPath(new Array(
         [-27.62531, 153.14351],
         [-27.61957, 153.15287],
         [-27.62499, 153.16169],
         [-27.63523, 153.16038],
-        [-27.63252, 153.14302]);
-    
-    // create the navigation polyline
-    this.navigationPolyLine = L.polyline(this.navigationPoints, {color: this.navPathColor}).addTo(this.map);
-    
-    var markerDragged = function (i) {
-        return function(e) {
-            var newPoint = e.target.getLatLng();
-            
-            this.navigationPoints[i].lat = newPoint.lat;
-            this.navigationPoints[i].lng = newPoint.lng;
-            
-            this.navigationPolyLine.setLatLngs(navigationPoints);
-        }
-    }
-    
-    for(var i=0, l=this.navigationPoints.length; i < l; i++) {
-        L.marker(this.navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(this.map).on('drag', markerDragged(i)).on('click', function(e) {that._onNavigationPointClick(e, that); });
-    }
+        [-27.63252, 153.14302]), true);
+        */
+}
 
+Navigation.prototype._addVehicleIcon = function(vehicle, position) {
+    var that = this;
     // add the vehicle icon to the map
     var vehicleIcon = L.icon({iconUrl: Navigation.AIRPLANE_MAP_ICON, iconAnchor: [21, 21]});
     
     // use the div icon so we can rotate it based on the custom class
     var vehicleIconDiv = L.divIcon({className: Navigation.VEHICLE_ICON_CLASS, iconAnchor: [17, 21], iconSize: [35, 42]});
     
-    var vehicleMarker = L.marker([-27.61657, 153.15387], {icon: vehicleIconDiv}).addTo(this.map);
+    var vehicleMarker = L.marker([-27.61657, 153.15387], {
+        icon: vehicleIconDiv,
+//         vehicle: vehicle,
+        })
+        .addTo(this.map)
+        .on('click', function(e) {that._onVehicleMarkerClick(e, that, vehicle); });
     
+    /* rotate the vehicle icon...
     var vehicleIconElement = $("." + Navigation.VEHICLE_ICON_CLASS);
     
     var currentTransform = vehicleIconElement.css("-webkit-transform");
@@ -160,7 +209,51 @@ function Navigation(options) {
     vehicleIconElement.css({
     '-webkit-transform': _T.toString(n)
     });
+    */
+ }
+
+Navigation.prototype._addNavPath = function(points, vehicleSelected) {
+    vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
+    var that = this;
+    // create the navigation polyline
+    var navigationPolyLine = L.polyline(points, {color: this.navPathColor}).addTo(this.map);
     
+    var markerDragged = function (i, that) {
+        return function(e) {
+            var newPoint = e.target.getLatLng();
+            
+            points[i].lat = newPoint.lat;
+            points[i].lng = newPoint.lng;
+            
+            navigationPolyLine.setLatLngs(points);
+        }
+    }
+    
+    if(vehicleSelected) {
+        for(var i=0, l=points.length; i < l; i++) {
+            if(i != 0) {
+                L.marker(points[i], {
+                    icon: new L.NumberedDivIcon({number: i+''}),
+                    vehicleId: 'thunderbird123',
+                    draggable: true,
+                    opacity: 0.5})
+                    .addTo(this.map)
+                    .on('drag', markerDragged(i, that))
+                    .on('click', function(e) {that._onNavigationPointClick(e, that); });
+            } else {
+                L.marker(points[i], {
+                    draggable: false,
+                    opacity: 0.5})
+                    .addTo(this.map)
+                    .on('click', function(e) {that._onNavigationPointClick(e, that); });
+            }
+        }
+    }
+}
+
+Navigation.prototype._addActualPath = function(points) {
+    var that = this;
+    /*
     // add the flight path points to the map
     this.flightPathPoints = new Array(
         [-27.62531, 153.14351],
@@ -174,17 +267,111 @@ function Navigation(options) {
         [-27.61457, 153.15187],
         [-27.61557, 153.15287],
         [-27.61657, 153.15387]);
-    
-    var flightPathPolyLine = L.polyline(this.flightPathPoints, {color: this.flightPathColor}).addTo(this.map).on('click', function(e) {that._onFlightPathClick(e, that); });    
-    
-    // this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: this.vehicleMenuItemListener});
-    // this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: this.pointMenuItemListener});
-    
-    this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: function(e) {that._vehicleMenuItemSelected(e, that); }});
-    this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {that._pointMenuItemSelected(e, that); }});
+    */
+    var flightPathPolyLine = L.polyline(this.flightPathPoints, {color: this.flightPathColor})
+        .addTo(this.map)
+        .on('click', function(e) {that._onFlightPathClick(e, that); });
+}
 
-    vehicleMarker.on('click', function(e) {that._onVehicleMarkerClick(e, that); });
-    this.map.on('click', function(e) {that._onNavigationMapClick(e, that); });
+
+    /*
+     *e.latlng.lat, e.latlng.lng
+    var popup2 = L.popup();
+    popup2
+        .setLatLng(e.latlng)
+        .setContent("You clicked the map at " + e.latlng.toString())
+        .openOn(this.map);
+        */
+
+
+
+Navigation.prototype._onNavigationMapClick = function(e, that) {
+    // if a menu is open, treat the click on the map as a request to close the menu
+    if(that.pointMenu.isActive()) {
+        that.pointMenu.hideMenu();
+        return;
+    }
+    if(that.vehicleMenu.isActive()) {
+        that.vehicleMenu.hideMenu();
+        return;
+    }
+    
+    switch(that.mapTouchMode) {
+        case Navigation.MODE_APPEND:
+            // add a new nav point based on the current co-ords
+            break;
+        
+        case Navigation.MODE_INSERT_BEFORE:
+            // insert a new point between the current and previous points, at the current co-ords
+            break;
+        
+        case Navigation.MODE_INSERT_AFTER:
+            // insert a new point between the current and next points, at the current co-ords
+            break;
+    }
+}
+
+Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
+    console.log("vehicle clicked");
+    
+    // TODO: select the vehicle, allow options to go to: just show that vehicle, go to vehicle, centre on vehicle, zoom to vehicles flight path, etc
+    
+    if(that.vehicleMenu.isActive()) {
+        that.vehicleMenu.hideMenu();
+        return;
+    }
+
+    if(that.pointMenu.isActive()) {
+        that.pointMenu.hideMenu();
+        return;
+    }
+
+    // auto select the current vehicle, if already selected then unselect
+    if(that.selectedVehicle && that.selectedVehicle.id == vehicle.id) {
+        
+        // TODO: try: if selected and menu not displayed then display menu, perhaps tap and hold should be display menu, while tap is toggle?
+        
+        
+        // when selected then we are in edit mode, so unselect
+        that.selectedVehicle = null;
+        
+        // change the colour of the icon to deselected
+        
+        // change the colour of the path to deselected
+        
+    } else {
+        // determine the vehicle and then set it selected
+        that.selectedVehicle = vehicle;
+
+        // show the menu
+        // that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
+    }
+    
+    // note that the offset due to the action bar requires an adjustment to y by -40
+    // vehicleMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
+}
+  
+Navigation.prototype._onNavigationPointClick = function(e, that) {
+    // if a menu is open, treat the click on a point as a request to close the menu
+    if(that.vehicleMenu.isActive()) {
+        that.vehicleMenu.hideMenu();
+        return;
+    }
+
+    if(that.pointMenu.isActive()) {
+        that.pointMenu.hideMenu();
+        return;
+    }
+    // this.pointMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
+    that.pointMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
+    
+    // TODO: add options to remove point, remove flight path, append point, prepend point, set altitude, set speed, toggle patrol, set patrol duration
+    console.log("navigation point clicked");
+}
+  
+  // TODO: not working, but beleive that the dev branch of leaflet supports it
+Navigation.prototype._onFlightPathClick = function(e) {
+    console.log("navigation path clicked");
 }
 
 Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
@@ -193,6 +380,8 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
 
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.VEHICLE_DELETE_PATH):
+            // remove the path (if there is a path for the vehicle)
+            
             break;
 
         case(Navigation.VEHICLE_EDIT_PATH):
@@ -204,12 +393,15 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
             break;
 
         case(Navigation.VEHICLE_TOGGLE_DIR):
+            // change the direction/order of the path
             break;
 
         case(Navigation.VEHICLE_RETURN_TO_BASE):
+            // complete path by adding a path between the last point and the base (only to be done if path is not complete)
             break;
 
         case(Navigation.VEHICLE_COMPLETE):
+            // change the path to complete, making the last point the finishing point (only to be done if path is not complete)
             break;
     }
   
@@ -252,97 +444,6 @@ Navigation.prototype._pointMenuItemSelected = function(e, that) {
     return false;
 }
 
-    /*
-     *e.latlng.lat, e.latlng.lng
-    var popup2 = L.popup();
-    popup2
-        .setLatLng(e.latlng)
-        .setContent("You clicked the map at " + e.latlng.toString())
-        .openOn(this.map);
-        */
+Navigation.prototype._addPath = function() {
 
-
-
-Navigation.prototype._onNavigationMapClick = function(e, that) {
-    // if a menu is open, treat the click on the map as a request to close the menu
-    if(that.pointMenu.isActive()) {
-        that.pointMenu.hideMenu();
-        return;
-    }
-    if(that.vehicleMenu.isActive()) {
-        that.vehicleMenu.hideMenu();
-        return;
-    }
-    
-    switch(that.mapTouchMode) {
-        case Navigation.MODE_APPEND:
-            // add a new nav point based on the current co-ords
-            break;
-        
-        case Navigation.MODE_INSERT_BEFORE:
-            // insert a new point between the current and previous points, at the current co-ords
-            break;
-        
-        case Navigation.MODE_INSERT_AFTER:
-            // insert a new point between the current and next points, at the current co-ords
-            break;
-    }
 }
-
-Navigation.prototype._onVehicleMarkerClick = function(e, that) {
-    console.log("vehicle clicked");
-    
-    // TODO: select the vehicle, allow options to go to: just show that vehicle, go to vehicle, centre on vehicle, zoom to vehicles flight path, etc
-    
-    if(that.vehicleMenu.isActive()) {
-        that.vehicleMenu.hideMenu();
-        return;
-    }
-
-    if(that.pointMenu.isActive()) {
-        that.pointMenu.hideMenu();
-        return;
-    }
-
-    // auto select the current vehicle, if already selected then unselect
-    if(that.selectedVehicle) {
-        // when selected then we are in edit mode, so unselect
-        this.selectedVehicle = null;
-        
-        // change the colour of the icon to deselected
-        // change the colour of the path to deselected
-    } else {
-        // determine the vehicle and then set it selected
-        that.selectedVehicle = null;
-
-        // show the menu
-        that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
-    }
-    
-    // note that the offset due to the action bar requires an adjustment to y by -40
-    // vehicleMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
-}
-  
-Navigation.prototype._onNavigationPointClick = function(e, that) {
-    // if a menu is open, treat the click on a point as a request to close the menu
-    if(that.vehicleMenu.isActive()) {
-        that.vehicleMenu.hideMenu();
-        return;
-    }
-
-    if(that.pointMenu.isActive()) {
-        that.pointMenu.hideMenu();
-        return;
-    }
-    // this.pointMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
-    that.pointMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
-    
-    // TODO: add options to remove point, remove flight path, append point, prepend point, set altitude, set speed, toggle patrol, set patrol duration
-    console.log("navigation point clicked");
-}
-  
-  // TODO: not working, but beleive that the dev branch of leaflet supports it
-Navigation.prototype._onFlightPathClick = function(e) {
-    console.log("navigation path clicked");
-}
-
