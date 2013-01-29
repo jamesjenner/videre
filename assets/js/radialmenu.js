@@ -101,10 +101,12 @@ var RadialMenu = function(contentId, options) {
     
     $(this).hide();
     $(this).mouseleave(function() {
-      $(this).stop().fadeOut("fast");
+      // $(this).stop().fadeOut("fast");
+      
     });
   });
   
+  this.displayed = false;
   // setup the options with the correponsing defaults
 }
  
@@ -113,6 +115,9 @@ RadialMenu.prototype = {
       if(!id) return null;
       
       return this;
+    },
+    isActive: function() {
+      return this.displayed;
     },
     removeMenuItem: function() {
       
@@ -160,11 +165,14 @@ RadialMenu.prototype = {
   
         setTimeout(function() { scaleUp(menu, 0.25) }, 10);
         
+        this.displayed = true;
+        
         return false;
       }
     },
     hideMenu: function() {
       $('#' + this.contentId).stop().fadeOut("fast");
+      this.displayed = false;
     },
     destroy: function() {
     }
