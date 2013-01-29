@@ -23,12 +23,6 @@
     <script src="assets/js/iscroll.js" type="text/javascript"></script>
     <script src="assets/js/gauge.js" type="text/javascript"></script>
     <script src="assets/js/server.js" type="text/javascript"></script>
-    <script src="videre-common/js/vehicle.js" type="text/javascript"></script>
-    <script src="videre-common/js/telemetry.js" type="text/javascript"></script>
-    <script src="videre-common/js/attitude.js" type="text/javascript"></script>
-    <script src="videre-common/js/position.js" type="text/javascript"></script>
-    <script src="videre-common/js/path.js" type="text/javascript"></script>
-    <script src="videre-common/js/videre_comms.js" type="text/javascript"></script>
     <script src="assets/js/contentmanager.js" type="text/javascript"></script>
     <script src="assets/js/leaflet-src.js" type="text/javascript"></script>
     <script src="assets/js/sylvester.js" type="text/javascript"></script>
@@ -38,7 +32,26 @@
     <script src="assets/js/actionBar.js" type="text/javascript"></script>
     <script src="assets/js/Vector2.js" type="text/javascript"></script>
     <script src="assets/js/touchControls.js" type="text/javascript"></script>
+    <script src="assets/js/navigation.js" type="text/javascript"></script>
 
+    <!--
+    note that the common libs use exports for compatibility with node.js,
+    however this causes a conflict with leaflet which tests for exports to
+    determine if L should be declared globally or within a local scope.
+    TODO: determine if using L globally is best or should we define exports?
+    TODO: confirm that the definition of exports in the virst videre-common lib doesn't impact the others.
+    -->
+    
+    <script src="videre-common/js/vehicle.js" type="text/javascript"></script>
+    <script src="videre-common/js/telemetry.js" type="text/javascript"></script>
+    <script src="videre-common/js/attitude.js" type="text/javascript"></script>
+    <script src="videre-common/js/position.js" type="text/javascript"></script>
+    <script src="videre-common/js/path.js" type="text/javascript"></script>
+    <script src="videre-common/js/message.js" type="text/javascript"></script>
+    <script src="videre-common/js/drone.js" type="text/javascript"></script>
+    <script src="videre-common/js/droneCapabilities.js" type="text/javascript"></script>
+    
+    
 <script type='text/javascript'>
 
 /*
@@ -63,17 +76,7 @@
 var verticalScrollLeftSidebar;
 */
 
-
-var MENU_DELETE_NODE = "menuDeleteNode";
-var MENU_ADD_NODE = "menuAddNode";
-var MENU_SET_SPEED = "menuSetSpeed";
-var MENU_SET_ELEVATION = "menuSetElevation";
-var MENU_TOGGLE_PATROL = "menuTogglePatrol";
-var MENU_TOGGLE_DIRECTION = "menuToggleDirection";
-
-
 var verticalScrollRightSidebar;
-var navigationMapMenu;
 
 var currentActionBar = null;
 
@@ -94,35 +97,6 @@ function loaded() {
     hScrollbar: false,
     zIndex: 0
   });
-
-  navigationMapMenu = new RadialMenu('navigationMapMenu', {selectionListener: navigationMapMenuClicked});
-}
-
-function navigationMapMenuClicked(e) {
-  navigationMapMenu.hideMenu();
-  
-  switch(e.originalEvent.currentTarget.id) {
-    case(MENU_DELETE_NODE):
-      
-      break;
-    case(MENU_ADD_NODE):
-      console.log("add node");
-      break;
-    case(MENU_SET_SPEED):
-      console.log("set speed");
-      break;
-    case(MENU_SET_ELEVATION):
-      console.log("set elevation");
-      break;
-    case(MENU_TOGGLE_PATROL):
-      console.log("toggle patrol");
-      break;
-    case(MENU_TOGGLE_DIRECTION):
-      console.log("toggle direction");
-      break;
-  }
-  
-  return false;
 }
 
 document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
@@ -757,7 +731,7 @@ function createVehicle() {
       }
       
       if(remoteServer.isConnected && !duplicate) {
-        remoteServer.sendMessage(MSG_ADD_VEHICLE, vehicle);
+        remoteServer.sendMessage(Message.ADD_VEHICLE, vehicle);
       } else {
         error = true;
       }
@@ -806,13 +780,13 @@ function getVehicleIcon(vehicle) {
   var icon = AIRPLANE_ICON;
   
   switch(vehicle.type) {
-    case VEHICLE_AIR:
+    case Vehicle.TYPE_AIR:
       icon = AIRPLANE_ICON;
       break;
-    case VEHICLE_SURFACE:
+    case Vehicle.TYPE_SURFACE:
       icon = SURFACE_ICON;
       break;
-    case VEHICLE_SUBMERSIBLE:
+    case Vehicle.TYPE_SUBMERSIBLE:
       icon = SUBMERSIBLE_ICON;
       break;
   }
@@ -1253,19 +1227,19 @@ function addVehicleContentUI(id, vehicle, server) {
     takeoff: true,
     takeoffFunction: function() {
       if(server) {
-        server.sendMessage(MSG_CMD_TAKEOFF, {id: vehicle.id, name: vehicle.name});
+        server.sendMessage(Message.CMD_TAKEOFF, {id: vehicle.id, name: vehicle.name});
       }
     },
     land: true,
     landFunction: function() {
       if(server) {
-        server.sendMessage(MSG_CMD_LAND, {id: vehicle.id, name: vehicle.name});
+        server.sendMessage(Message.CMD_LAND, {id: vehicle.id, name: vehicle.name});
       }
     },
     abort: true,
     abortFunction: function() {
       if(server) {
-        server.sendMessage(MSG_CMD_EMERGENCY_STOP, {id: vehicle.id, name: vehicle.name});
+        server.sendMessage(Message.CMD_EMERGENCY_STOP, {id: vehicle.id, name: vehicle.name});
       }
     },
     settings: true,
@@ -1500,23 +1474,6 @@ function addPayloadContentUI(id) {
   // L.control.layers(payloadLayers).addTo(payloadMap);
 
   // payloadMap.panTo(new L.LatLng(-27.47718, 153.02712));
-  
-  // setup the initial waypoints to the navigation
-  // TODO: this should be loaded, uncertain where from...
-  var navigationPoints = new Array(
-    [-27.62531, 153.14351],
-    [-27.61957, 153.15287],
-    [-27.62499, 153.16169],
-    [-27.63523, 153.16038],
-    [-27.63252, 153.14302]);
-  // iterate through the array and add a marker for each navigation waypoint
-  // TODO: special marker for special events, and/or for landing/takeoff
-  /*
-  for(var i=0, l=navigationPoints.length; i < l; i++) {
-    L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i));
-  }
-  */
-  
 }
 
 function addNavigationContentUI(id) {
@@ -1605,177 +1562,14 @@ function addNavigationContentUI(id) {
   
   // TODO: tidy up the mapping logic
   
-  var mapquestOsmTileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-      mapquestOsmAttribution = "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>, Tiles Courtesy of <a href='http://open.mapquest.com' target='_blank'>MapQuest</a>";
-
-  var opencyclemapLandscapeUrl = 'http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png',
-      opencyclemapLandscapeAttribution = '&copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
-      
-      
-  var esriWorldTopographicalUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-      esriWorldTopographicalAttribution = 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community';
-  
-  var esriWorldImageryUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      esriWorldImageryAttribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
-
-  var cloudmadeTilesUrl = 'http://{s}.tile.cloudmade.com/21AE2933E8054FF8b90A537357289E78/{styleId}/256/{z}/{x}/{y}.png',
-      cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
-
-  var esriWorldImageryTileLayer = new L.TileLayer(esriWorldImageryUrl, {maxZoom: 18, attribution: esriWorldImageryAttribution,subdomains: ['1', '2', '3', '4']});
-  var esriWorldTopographicalTileLayer = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
-  var esriWorldTopographicalTileLayer2 = new L.TileLayer(esriWorldTopographicalUrl, {maxZoom: 18, attribution: esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
-
-  var mapquestOsmTileLayer = new L.TileLayer(mapquestOsmTileUrl, {maxZoom: 18, attribution: mapquestOsmAttribution, subdomains: ['1', '2', '3', '4']});
-  
-  var minimal   = L.tileLayer(cloudmadeTilesUrl, {styleId: 22677, attribution: cloudmadeAttribution}),
-    fresh  = L.tileLayer(cloudmadeTilesUrl, {styleId: 997, attribution: cloudmadeAttribution}),
-    midnightCommander  = L.tileLayer(cloudmadeTilesUrl, {styleId: 999, attribution: cloudmadeAttribution}),
-    nightVision  = L.tileLayer(cloudmadeTilesUrl, {styleId: 78125, attribution: cloudmadeAttribution}),
-    minimalMarkers = L.tileLayer(cloudmadeTilesUrl, {styleId: 63044, attribution: cloudmadeAttribution});
-//    motorways = L.tileLayer(cloudmadeTilesUrl, {styleId: 46561, attribution: cloudmadeAttribution});
-
-  // set the default image path for te icon
-  L.Icon.Default.imagePath = 'assets/img/';
+  var navigationManager = new Navigation({
+    vehicleMenuId: 'vehicleMenu',
+    pointMenuId: 'navPointMenu',
     
-  var navigationLayers = {
-    "Cloudmade Fresh": fresh,
-    "Cloudmade Minimal": minimal,
-    "Cloudmade Minimal 2": minimalMarkers,
-    "Cloudmade Night Vision": nightVision,
-    "Cloudmade Night View": midnightCommander,
-    "Map Quest Street": mapquestOsmTileLayer,
-    "ESRI World Imagery": esriWorldImageryTileLayer,
-    "ESRI World Topographical": esriWorldTopographicalTileLayer
-  };
-  
-  var navigationMap = new L.Map('navigationMap', {
-    center: [-27.632600, 153.146466],
-    zoom: 14,
-    layers: [mapquestOsmTileLayer],
-    zoomControl: false
-  });
-
-  L.control.layers(navigationLayers).addTo(navigationMap);
-  
-  L.control.scale().addTo(navigationMap);
-  
-  // navigationMap.panTo(new L.LatLng(-27.47718, 153.02712));
-  
-/*
-  var circle = L.circle([-27.62499, 153.16169], 50, {
-    color: 'blue',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-  }).addTo(payloadMap);
-*/
-
-  // setup the initial waypoints to the navigation
-  // TODO: this should be loaded, uncertain where from...
-  var navigationPoints = new Array(
-    [-27.62531, 153.14351],
-    [-27.61957, 153.15287],
-    [-27.62499, 153.16169],
-    [-27.63523, 153.16038],
-    [-27.63252, 153.14302]);
-  
-  // create the navigation polyline
-  var navigationPolyLine = L.polyline(navigationPoints, {color: 'blue'}).addTo(navigationMap);
-
-  // define the function for supporting dragging of waypoints
-  var markerDragged = function (i) {
-    return function(e) {
-      newPoint = e.target.getLatLng();
-      navigationPoints[i].lat = newPoint.lat;
-      navigationPoints[i].lng = newPoint.lng;
-      
-      navigationPolyLine.setLatLngs(navigationPoints);
-    }
-  }
-  
-  // iterate through the array and add a marker for each navigation waypoint
-  // TODO: special marker for special events, and/or for landing/takeoff
-  for(var i=0, l=navigationPoints.length; i < l; i++) {
-    L.marker(navigationPoints[i], { draggable: true, opacity: 0.5}).addTo(navigationMap).on('drag', markerDragged(i)).on('click', onNavigationPointClick);
-  }
-  
-  // add the vehicle icon to the map
-  var vehicleIcon = L.icon({iconUrl: AIRPLANE_MAP_ICON, iconAnchor: [21, 21]});
-  // use the div icon so we can rotate it based on the custom class
-  var vehicleIconDiv = L.divIcon({className: 'vehicleIcon', iconAnchor: [17, 21], iconSize: [35, 42]});
-  var vehicleMarker = L.marker([-27.61657, 153.15387], {icon: vehicleIconDiv}).addTo(navigationMap);
-
-  var currentTransform = $(".vehicleIcon").css("-webkit-transform");
-  var vehicleIconElement = $(".vehicleIcon");
-  
-  // $(".vehicleIcon").css("-webkit-transform", "rotate(30deg)");
-  
-  // get the transform matrix
-  var t = _T.fromString(vehicleIconElement.css('-webkit-transform'));
-  // create a rotate matrix
-  var r = _T.rotate(50);
-  // multiply the two matrixes together
-  var n = t.x(r);
-
-  // apply the new matrix
-  vehicleIconElement.css({
-     '-webkit-transform': _T.toString(n)
-  });
-  
-  // add the flight path points to the map
-  var flightPathPoints = new Array(
-    [-27.62531, 153.14351],
-    [-27.62297, 153.14487],
-    [-27.62057, 153.14587],
-    [-27.61857, 153.14687],
-    [-27.61657, 153.14787],
-    [-27.61557, 153.14887],
-    [-27.61457, 153.14987],
-    [-27.61427, 153.15087],
-    [-27.61457, 153.15187],
-    [-27.61557, 153.15287],
-    [-27.61657, 153.15387]);
-  var flightPathPolyLine = L.polyline(flightPathPoints, {color: 'red'}).addTo(navigationMap).on('click', onFlightPathClick);
-  
-  
-  var popup2 = L.popup();
-
-  function onNavigationMapClick(e) {
-    // note that the offset due to the action bar requires an adjustment to y by -40
-    navigationMapMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
-    
-    // TODO: add options specific to action, add point (if vehicle selected), 
-    
-    /*
-     *e.latlng.lat, e.latlng.lng
-    popup2
-        .setLatLng(e.latlng)
-        .setContent("You clicked the map at " + e.latlng.toString())
-        .openOn(navigationMap);
-        */
-          
-  }
-  
-  function onVehicleMarkerClick(e) {
-    console.log("vehicle clicked");
-    // TODO: select the vehicle, allow options to go to: just show that vehicle, go to vehicle, centre on vehicle, zoom to vehicles flight path, etc
-  }
-  
-  function onNavigationPointClick(e) {
-    // TODO: add options to remove point, remove flight path, append point, prepend point, set altitude, set speed, toggle patrol, set patrol duration
-    console.log("navigation point clicked");
-  }
-  
-  // TODO: not working, but beleive that the dev branch of leaflet supports it
-  function onFlightPathClick(e) {
-    console.log("navigation path clicked");
-  }
-  
-  vehicleMarker.on('click', onVehicleMarkerClick);
-  
-  navigationMap.on('click', onNavigationMapClick);
+    // vehicleMenuItemListener: navigationMapMenuClicked,
+    // pointMenuItemListener: navigationPointMenuClicked
+    });
 }
-
-
 
 function removeVehicle(vehicle) {
   // TODO: prompt to confirm the action
@@ -2518,31 +2312,54 @@ function setTelemetry(telemetry) {
       <!-- app content goes here -->
     </div>
 
-    <!-- radial menu for navigation map -->
-    <ul class="radial" id="navigationMapMenu">
+    <!-- radial menu for vehicle -->
+    <ul class="radial" id="vehicleMenu">
       <li>
-        <a href="#" id="menuAddNode">Add point</a>
+        <a href="#" id="menuVehicleDeletePath">Delete path</a>
         <span>+</span>
       </li>
       <li>
-        <a href="#" id="menuDeleteNode">Remove point</a>
+        <a href="#" id="menuVehicleEditPath">Edit path</a>
+        <span>+</span>
+      </li>
+      <li>
+        <a href="#" id="menuVehicleToggleDirection">Clockwise</a>
         <span>-</span>
       </li>
       <li>
-        <a href="#" id="menuSetSpeed">Set speed</a>
-        <span>&raquo;</span>
-      </li>
-      <li>
-        <a href="#" id="menuSetElevation">Set elevation</a>
+        <a href="#" id="menuVehicleReturnToBase">Return to base</a>
         <span>&Xi;</span>
       </li>
       <li>
-        <a href="#" id="menuTogglePatrol">Toggle patrol</a>
-        <span>&Theta;</span>
+        <a href="#" id="menuVehicleComplete">Finish on last point</a>
+        <span>&raquo;</span>
+      </li>
+    </ul>
+    <!-- radial menu for navigation points -->
+    <ul class="radial" id="navPointMenu">
+      <li>
+        <a href="#" id="menuPointDeleteNavPoint">Delete</a>
+        <span>-</span>
       </li>
       <li>
-        <a href="#" id="menuToggleDirection">Toggle direction</a>
-        <span>&alpha;&#32;&Omega;</span>
+        <a href="#" id="menuPointInsertBefore">Add before</a>
+        <span>+</span>
+      </li>
+      <li>
+        <a href="#" id="menuPointInsertAfter">Add after</a>
+        <span>&raquo;</span>
+      </li>
+      <li>
+        <a href="#" id="menuPointLoiterToggle">Loiter on</a>
+        <span>&Xi;</span>
+      </li>
+      <li>
+        <a href="#" id="menuPointReturnToBase">Return to base</a>
+        <span>&Xi;</span>
+      </li>
+      <li>
+        <a href="#" id="menuPointFinishHere">Finish here</a>
+        <span>&Theta;</span>
       </li>
     </ul>
     
