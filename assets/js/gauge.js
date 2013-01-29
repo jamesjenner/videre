@@ -1,5 +1,5 @@
 /*
- * gauge.js v0.1 alpha
+ * gauge.js
  *
  * Copyright (c) 2012 James G Jenner
  *
