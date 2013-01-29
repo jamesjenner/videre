@@ -16,6 +16,7 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
     <link rel="stylesheet" type="text/css" href="assets/css/radialmenu.css" />
     <link rel="stylesheet" type="text/css" href="assets/css/dropdown.css" />
+    <link rel="stylesheet" type="text/css" href="assets/css/numberedMarker.css" />
     <script type='text/javascript' src='assets/js/jquery-1.8.0.min.js'></script>
     <script type='text/javascript' src='assets/js/jquery-ui-1.8.23.custom.min.js'></script>
     <script src="assets/js/jquery.touchSwipe.min.js"  type="text/javascript"></script>
@@ -32,6 +33,7 @@
     <script src="assets/js/actionBar.js" type="text/javascript"></script>
     <script src="assets/js/Vector2.js" type="text/javascript"></script>
     <script src="assets/js/touchControls.js" type="text/javascript"></script>
+    <script src="assets/js/numberedMarker.js" type="text/javascript"></script>
     <script src="assets/js/navigation.js" type="text/javascript"></script>
 
     <!--
@@ -1562,14 +1564,18 @@ function addNavigationContentUI(id) {
   
   // TODO: tidy up the mapping logic
   
-  var navigationManager = new Navigation({
+  navigationManager = new Navigation({
     vehicleMenuId: 'vehicleMenu',
     pointMenuId: 'navPointMenu',
-    
+    remoteVehicles: contentManager.remoteVehicles,
+    servers: contentManager.servers,
+    localVehicles: contentManager.vehicles
     // vehicleMenuItemListener: navigationMapMenuClicked,
     // pointMenuItemListener: navigationPointMenuClicked
     });
 }
+
+var navigationManager = null;
 
 function removeVehicle(vehicle) {
   // TODO: prompt to confirm the action
