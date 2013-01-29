@@ -1,5 +1,5 @@
 /*
- * server.js v0.1 alpha
+ * server.js
  *
  * Copyright (c) 2012 James G Jenner
  *
@@ -153,9 +153,9 @@ Server.prototype = {
         
         // setup the authenticate object
         if(this.secureOnly) {
-            this.sendAuthentication(COMMS_TYPE_SECURE_ONLY);
+            this.sendAuthentication(Message.COMMS_TYPE_SECURE_ONLY);
         } else {
-            this.sendAuthentication(COMMS_TYPE_MIXED);
+            this.sendAuthentication(Message.COMMS_TYPE_MIXED);
         }
     },
     openUnsecureEvent: function (event) {
@@ -168,10 +168,10 @@ Server.prototype = {
         if(this.secureAndUnsecure) {
             var sessionDetails = new Object();
             sessionDetails.sessionId = this.sessionId;
-            this.sendUnsecureMessage(MSG_SESSION, sessionDetails);
+            this.sendUnsecureMessage(Message.SESSION, sessionDetails);
         } else {
             // must be unsecure only, send authentication
-            this.sendAuthentication(COMMS_TYPE_UNSECURE_ONLY);
+            this.sendAuthentication(Message.COMMS_TYPE_UNSECURE_ONLY);
         }
     },
     sendAuthentication: function(connectionType) {
@@ -181,7 +181,7 @@ Server.prototype = {
         authDetails.password = this.password;
         authDetails.connectionType = connectionType;
         
-        this.sendMessage(MSG_AUTHENTICATE, authDetails);
+        this.sendMessage(Message.AUTHENTICATE, authDetails);
     },
     closeSecureEvent: function (event) {
         if(this.log) {
@@ -227,7 +227,7 @@ Server.prototype = {
                 }
             
                 switch(msg.id) {
-                    case MSG_AUTHENTICATION_ACCEPTED:
+                    case Message.AUTHENTICATION_ACCEPTED:
                         console.log(this.name + " Authentication successful");
                         this.authenticated = true;
                         this.sessionId = msg.body.sessionId;
@@ -239,7 +239,7 @@ Server.prototype = {
                          * in such a case dont allow the session negotiation by connecting unsecure
                          */
                         
-                        if(this.secureOnly || this.unsecureOnly || connectionTypeAllowed === COMMS_TYPE_SECURE_ONLY) {
+                        if(this.secureOnly || this.unsecureOnly || connectionTypeAllowed === Message.COMMS_TYPE_SECURE_ONLY) {
                             // can fire the connection sucessful event as secure only and unsecure only do not need session negotiation
                             this.isConnected = true;
                             this.connectionListener(event);
@@ -250,7 +250,7 @@ Server.prototype = {
                         
                         break;
                     
-                    case MSG_AUTHENTICATION_REJECTED:
+                    case Message.AUTHENTICATION_REJECTED:
                         console.log(this.name + " Authentication failed");
                         this.disconnect();
                         break;
@@ -258,36 +258,36 @@ Server.prototype = {
             }
         
             switch(msg.id) {
-                case MSG_SESSION_CONFIRMED:
+                case Message.SESSION_CONFIRMED:
                     // can fire the connection sucessful event, this only occurs for secureAndUnsecure
                     this.isConnected = true;
                     this.connectionListener(event);
                     break;
 
-                case MSG_VEHICLES:
+                case Message.VEHICLES:
                     var data = msg.body;
                     for(var i = 0, l = msg.body.length; i < l; i++) {
                         this.rcvdAddVehicle(this, new Vehicle(msg.body[i]));
                     }
                     break;
                 
-                case MSG_ADD_VEHICLE:
+                case Message.ADD_VEHICLE:
                     this.rcvdAddVehicle(this, new Vehicle(msg.body));
                     break;
           
-                case MSG_DELETE_VEHICLE:
+                case Message.DELETE_VEHICLE:
                     this.rcvdDeleteVehicle(new Vehicle(msg.body));
                     break;
           
-                case MSG_UPDATE_VEHICLE:
+                case Message.UPDATE_VEHICLE:
                     this.rcvdUpdateVehicle(new Vehicle(msg.body));
                     break;
                 
-                case MSG_VEHICLE_TELEMETRY:
+                case Message.VEHICLE_TELEMETRY:
                     this.rcvdTelemetry(this, msg.body);
                     break;
                 
-                case MSG_VEHICLE_PAYLOAD:
+                case Message.VEHICLE_PAYLOAD:
                     this.rcvdPayload(msg.body);
                     break;
             }

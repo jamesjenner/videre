@@ -1,5 +1,5 @@
 /*
- * contentmanager.js v0.1 alpha
+ * contentmanager.js
  *
  * Copyright (c) 2012 James G Jenner
  *
@@ -64,7 +64,7 @@ ContentManager.prototype = {
                 key = prop.substring(0, i);
                 
                 switch(key) {
-                    case VEHICLE_KEY:
+                    case Vehicle.KEY:
                         // we have a vehicle object
                         obj = ioRetreiveObject(prop);
                         this.addVehicle(new Vehicle(obj), false);
@@ -87,12 +87,12 @@ ContentManager.prototype = {
         
         // persist the data
         if(persist) {
-            ioStoreObject(VEHICLE_KEY + '_' + this.vehicles[i].position, vehicle);
+            ioStoreObject(Vehicle.KEY + '_' + this.vehicles[i].position, vehicle);
         }
     },
     removeVehicle: function(vehicle) {
         // remove the persisted vehicle
-        ioDelete(VEHICLE_KEY + '_' + vehicle.position);
+        ioDelete(Vehicle.KEY + '_' + vehicle.position);
         
         // remove from the array
         this.vehicles.splice(vehicle.position, 1);
@@ -130,7 +130,7 @@ ContentManager.prototype = {
         }
     },
     updateVehicle: function(vehicle) {
-        ioStoreObject(VEHICLE_KEY + '_' + vehicle.position, vehicle);
+        ioStoreObject(Vehicle.KEY + '_' + vehicle.position, vehicle);
     },
     addServer: function(server, persist) {
         var i = this.servers.length;
