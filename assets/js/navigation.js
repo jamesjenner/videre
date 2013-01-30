@@ -161,10 +161,10 @@ Navigation.prototype._addVehiclesToMap = function() {
         this._addVehicleIcon(this.localVehicles[i]);
         
         // add the navigation path
-        this._addNavPath();
+        // this._addNavPath();
         
         // add the actual path
-        this._addActualPath();
+        // this._addActualPath();
     }
     /*
     this._addNavPath(new Array(
@@ -296,10 +296,32 @@ Navigation.prototype._onNavigationMapClick = function(e, that) {
         return;
     }
     
-    console.log("clicked on map");
+    
     switch(that.mapTouchMode) {
         case Navigation.MODE_APPEND:
             // add a new nav point based on the current co-ords
+            console.log("appending point at " + e.latlng.toString());
+            if(that.selectedVehicle) {
+
+                // if the navigation path is empty then we need to add the vehicle base position
+                if(that.selectedVehicle.navigationPath.isEmpty()) {
+                    that.selectedVehicle.navigationPath.append(-27.61657, 153.15387);
+                }
+                
+                // append the point
+                that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng);
+                
+                // redisplay the path for the vehicle
+                
+                // remove the path from the map
+                // that.map.removeLayer();
+                // TODO: either add polys to L.LayerGroup and then add LayerGroup to map, or remember all added so they can be removed.
+                // refer http://leafletjs.com/reference.html#layergroup and http://leafletjs.com/reference.html#featuregroup
+                
+                
+                // add the path to the map
+                that._addNavPath(that.selectedVehicle.navigationPath.toArray(), true);
+            }
             break;
         
         case Navigation.MODE_INSERT_BEFORE:
