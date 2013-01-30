@@ -241,22 +241,6 @@ var Map = function (options) {
     this.layer = this.options.layer || MAP_DEFAULT_LAYER;
 }
 
-var POINT_START = 0;
-var POINT_FINISH = 1;
-var POINT_TRANSIENT = 2;
-var POINT_CURRENT = 0;
-
-var Point = function (lat, lng, ele, flag) {
-    this.latitude = lat || 0;
-    this.longitude = lng || 0;
-    this.elevation = ele || 0;
-    this.flag = flag || POINT_TRANSIENT;
-}
-
-var Path = function (path) {
-    this.path = path | new Array();
-}
-
 var Pane = function (options) {
     this.currentTab = 0;
     this.tabs = new Object();
@@ -275,7 +259,6 @@ ContentSettings.prototype = {
         this.settings[this.settings.length] = setting;
     },
 };
-
 
 var GaugeSetting = function (gaugeId, gauge, options) {
     if(!gaugeId) return null;
