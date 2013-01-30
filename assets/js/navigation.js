@@ -296,6 +296,7 @@ Navigation.prototype._onNavigationMapClick = function(e, that) {
         return;
     }
     
+    console.log("clicked on map");
     switch(that.mapTouchMode) {
         case Navigation.MODE_APPEND:
             // add a new nav point based on the current co-ords
@@ -342,9 +343,14 @@ Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
     } else {
         // determine the vehicle and then set it selected
         that.selectedVehicle = vehicle;
-
-        // show the menu
-        // that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
+        
+        if(vehicle.navigationPath.isEmpty()) {
+            // if there is no navigation path then go into append mode
+            that.mapTouchMode = Navigation.MODE_APPEND;
+        } else {
+            // otherwise show the menu
+            that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
+        }
     }
     
     // note that the offset due to the action bar requires an adjustment to y by -40
