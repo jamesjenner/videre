@@ -810,6 +810,10 @@ function addVehicleToSidebar(vehicle, server) {
   var vehicleNumber = vehicle.position;
   var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
 
+  if(server) {
+    vehicleControlId += 's' + server.position;
+  }
+
   // add the control that lets the user select the vehicle content UI on the side bar
   addControlToSidebarBeforeId(ADD_VEHICLE_CONTROL_ID, vehicleControlId, icon, vehicle.name);
   
@@ -1615,17 +1619,21 @@ function appendControlToSidebar(groupId, id, icon, name) {
 
 var deletePreviousContent = false;
 var previousContentId;
+var previousControlId;
 
 function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFunction) {
   $('#' + controlId).click(function() {
     // if reselecting the same then nothing to do other than hide the sidebar
-    if(paneId !== previousContentId) {
+    // note that using control id as the content id for vehicles is always the same
+    // TODO: may need to change checks in setFocus to use controlId instead of content Id
+    if(controlId !== previousControlId) {
     
       // if the previous content is deletable then delete it
       if(deletePreviousContent) {
         $('#' + previousContentId).remove();
       }
       
+      previousControlId = controlId;
       previousContentId = paneId;
       deletePreviousContent = false;
       
@@ -1636,7 +1644,7 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFu
       }
   
       // set the focus, which switches the view to the content
-      setFocus(controlId, paneId);
+      setFocus(controlId, paneId, true);
     }
     
     // hide the sidebar as it is hidden when a content selection is made
@@ -1674,9 +1682,11 @@ function contentTabChanged(e, position, id, contentNbr) {
   }
 }
 
-function setFocus(controlId, paneId) {
+function setFocus(controlId, paneId, forceFocus) {
+  forceFocus = ((forceFocus != null) ? forceFocus : false);
+
   // if the current focus is the selected focus then no need to do anything
-  if(contentManager.focusedPaneId == paneId) {
+  if(contentManager.focusedPaneId == paneId && !forceFocus) {
     return;
   }
   
@@ -1697,7 +1707,7 @@ function setFocus(controlId, paneId) {
   $('#' + paneId).css('visibility', 'visible');
 
   // update the visbility of the previously focused pane  
-  if(contentManager.focusedPaneId != '') {
+  if(contentManager.focusedPaneId != '' && contentManager.focusedPaneId != paneId) {
     $('#' + contentManager.focusedPaneId).css('visibility', 'hidden');
   }
   
