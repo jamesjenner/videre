@@ -212,43 +212,58 @@ Navigation.prototype._addVehicleIcon = function(vehicle, position) {
     */
  }
 
-Navigation.prototype._addNavPath = function(points, vehicleSelected) {
+// TODO: this should be updated to include adding points for actual path as well as nav path
+Navigation.prototype._addNavPoint = function(navGroup, fromPoint, toPoint, position, vehicleSelected) {
     vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
     var that = this;
-    // create the navigation polyline
-    var navigationPolyLine = L.polyline(points, {color: this.navPathColor}).addTo(this.map);
-    
-    var markerDragged = function (i, that) {
-        return function(e) {
-            var newPoint = e.target.getLatLng();
-            
-            points[i].lat = newPoint.lat;
-            points[i].lng = newPoint.lng;
-            
-            navigationPolyLine.setLatLngs(points);
-        }
+
+    if(!navGroup) {
+        // create the navigation polyline and add it to the map
+        navGroup = L.layerGroup()
+            .addTo(this.map);
     }
     
-    if(vehicleSelected) {
-        for(var i=0, l=points.length; i < l; i++) {
-            if(i != 0) {
-                L.marker(points[i], {
-                    icon: new L.NumberedDivIcon({number: i+''}),
-                    vehicleId: 'thunderbird123',
-                    draggable: true,
-                    opacity: 0.5})
-                    .addTo(this.map)
-                    .on('drag', markerDragged(i, that))
-                    .on('click', function(e) {that._onNavigationPointClick(e, that); });
-            } else {
-                L.marker(points[i], {
-                    draggable: false,
-                    opacity: 0.5})
-                    .addTo(this.map)
-                    .on('click', function(e) {that._onNavigationPointClick(e, that); });
-            }
-        }
+    if(!that.currentPolyLine) {
+        // we have no poly line, so lets create it and add it to the nav group
+        that.currentPolyLine = L.polyline(that.selectedVehicle.navigationPath.toArray(), {color: this.navPathColor})
+            .addTo(navGroup);
     }
+    
+    that.currentPolyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
+    
+    // add a marker for the point when the vehicle is selected
+    // if(vehicleSelected) {
+        L.marker(toPoint, {
+            icon: new L.NumberedDivIcon({number: position+''}),
+//          vehicleId: 'thunderbird123',
+            draggable: true,
+            opacity: 0.5})
+             .addTo(navGroup)
+            // .on('drag', markerDragged(that, position))
+            .on('drag', function(e) {that._markerDragged(e, that, position);})
+            .on('click', function(e) {that._onNavigationPointClick(e, that, position); });
+    /* TODO: decide if we need the following, ie. will we show markers for non selected vehicles?
+     * suspect that the logic here should go in a generic load routine for paths
+    }
+     else {
+        L.marker(toPoint, {
+            draggable: false,
+            opacity: 0.5})
+             .addTo(navGroup)
+            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+    } */
+    
+    return navGroup;
+}
+
+Navigation.prototype._markerDragged = function (e, that, position) {
+    var newPoint = e.target.getLatLng();
+    
+    // update the points on the navigation path
+    that.selectedVehicle.navigationPath.updatePointPos(position, newPoint.lat, newPoint.lng);
+    
+    // update the whole poly line
+    that.currentPolyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
 }
 
 Navigation.prototype._addActualPath = function(points) {
@@ -300,27 +315,39 @@ Navigation.prototype._onNavigationMapClick = function(e, that) {
     switch(that.mapTouchMode) {
         case Navigation.MODE_APPEND:
             // add a new nav point based on the current co-ords
-            console.log("appending point at " + e.latlng.toString());
             if(that.selectedVehicle) {
 
                 // if the navigation path is empty then we need to add the vehicle base position
                 if(that.selectedVehicle.navigationPath.isEmpty()) {
+                    // TODO: when adding vehicle is sorted, make this point the vehicle point
+                    console.log("setting start pos at " + -27.61657 + ', ' + 153.15387);
                     that.selectedVehicle.navigationPath.append(-27.61657, 153.15387);
+                    that.prevLatLng = new L.LatLng(-27.61657, 153.15387);
                 }
-                
-                // append the point
+
+                // setup the previous point if required
+                if(!that.prevLatLng) {
+                    // set to the last point on the path
+                    var point = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+                    that.prevLatLng = new L.LatLng(point.position.latitude, point.position.longitude);
+                }
+
+                // append the point to the vehicle's navigation path
+                console.log("appending point at " + e.latlng.toString());
                 that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng);
-                
-                // redisplay the path for the vehicle
+
+                // add the point to the map
+                that.currentNavGroup = that._addNavPoint(that.currentNavGroup, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, true);
+                that.prevLatLng = e.latlng;
                 
                 // remove the path from the map
-                // that.map.removeLayer();
+                // that.map.removeLayer(that.currentNavGroup);
+                
                 // TODO: either add polys to L.LayerGroup and then add LayerGroup to map, or remember all added so they can be removed.
                 // refer http://leafletjs.com/reference.html#layergroup and http://leafletjs.com/reference.html#featuregroup
                 
                 
                 // add the path to the map
-                that._addNavPath(that.selectedVehicle.navigationPath.toArray(), true);
             }
             break;
         
