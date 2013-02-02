@@ -38,7 +38,7 @@ var RadialMenu = function(contentId, options) {
   this.contentId = contentId;
   
   if(options.selectionListener) {
-    $('#' + this.contentId + ' a').click(options.selectionListener);
+    $('#' + this.contentId + ' a').on('click', options.selectionListener);
   }
   
   // setup the menu based on the specified content
@@ -116,6 +116,10 @@ RadialMenu.prototype = {
       
       return this;
     },
+    setListener: function(listener) {
+      $('#' + this.contentId + ' a').off('click');
+      $('#' + this.contentId + ' a').on('click', listener);
+    },
     isActive: function() {
       return this.displayed;
     },
@@ -144,7 +148,7 @@ RadialMenu.prototype = {
       
       if(contextId) {
         // setup the listener to display the menu
-        $('#' + contextId).click(function(e) {
+        $('#' + contextId).on('click', function(e) {
           that.displayMenu(e.pageY, e.pageX);
         });
       }
