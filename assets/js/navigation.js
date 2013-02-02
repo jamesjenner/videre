@@ -48,6 +48,8 @@ function Navigation(options) {
     this.vehicleMenuItemListener = options.vehicleMenuItemListener || function() {};
     this.pointMenuItemListener = options.pointMenuItemListener || function() {};
     
+    this.pathOpacity = options.pathOpacity || 0.75;
+    
     this.remoteVehicles = options.remoteVehicles;
     this.servers = options.servers || new Array();
     this.localVehicles = options.localVehicles || new Array();
@@ -213,39 +215,34 @@ Navigation.prototype._addVehicleIcon = function(vehicle, position) {
  }
 
 // TODO: this should be updated to include adding points for actual path as well as nav path
-Navigation.prototype._addNavPoint = function(navGroup, fromPoint, toPoint, position, vehicleSelected) {
+Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, position, vehicleSelected) {
     vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
     var that = this;
 
-    if(!navGroup) {
-        // create the navigation polyline and add it to the map
-        navGroup = L.layerGroup()
-            .addTo(this.map);
+    if(!mapPath) {
+        // we're starting out, so set the poly line based on the from and to points
+        var polyLine = L.polyline([fromPoint, toPoint], {color: this.navPathColor});
+        
+        mapPath = new MapPath({map: this.map, polyLine: polyLine});
+    } else {
+        mapPath.polyLine.spliceLatLngs(position, 0, toPoint);
     }
-    
-    if(!that.currentPolyLine) {
-        // we have no poly line, so lets create it and add it to the nav group
-        that.currentPolyLine = L.polyline(that.selectedVehicle.navigationPath.toArray(), {color: this.navPathColor})
-            .addTo(navGroup);
-    }
-    
-    that.currentPolyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
     
     // add a marker for the point when the vehicle is selected
-    // if(vehicleSelected) {
-        L.marker(toPoint, {
-            icon: new L.NumberedDivIcon({number: position+''}),
-//          vehicleId: 'thunderbird123',
+    if(vehicleSelected) {
+        var marker = L.marker(toPoint, {
+            icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
             draggable: true,
-            opacity: 0.5})
-             .addTo(navGroup)
-            // .on('drag', markerDragged(that, position))
-            .on('drag', function(e) {that._markerDragged(e, that, position);})
-            .on('click', function(e) {that._onNavigationPointClick(e, that, position); });
+            opacity: this.pathOpacity})
+            .on('drag', function(e) {that._markerDragged(e, that);})
+            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+    
+        mapPath.addMarker(marker);
+    }
+    
     /* TODO: decide if we need the following, ie. will we show markers for non selected vehicles?
      * suspect that the logic here should go in a generic load routine for paths
-    }
-     else {
+    else {
         L.marker(toPoint, {
             draggable: false,
             opacity: 0.5})
@@ -253,17 +250,30 @@ Navigation.prototype._addNavPoint = function(navGroup, fromPoint, toPoint, posit
             .on('click', function(e) {that._onNavigationPointClick(e, that); });
     } */
     
-    return navGroup;
+    return mapPath;
 }
 
-Navigation.prototype._markerDragged = function (e, that, position) {
+Navigation.prototype._loadNavPath = function(vehicle, navGroup, polyLine, vehicleSelected, that) {
+}
+
+Navigation.prototype._markerDragged = function (e, that) {
+    // determine which marker position was dragged
+    for(var pos = 0, l = that.currentMapPath.markers.length; pos < l; pos++) {
+        if(that.currentMapPath.markers[pos] === e.target) {
+            break;
+        }
+    }
+    
+    // need to add 1 as the first point is the vehicle, while the mapPath doesn't include the vehicle
+    pos++;
+    
     var newPoint = e.target.getLatLng();
     
     // update the points on the navigation path
-    that.selectedVehicle.navigationPath.updatePointPos(position, newPoint.lat, newPoint.lng);
+    that.selectedVehicle.navigationPath.updatePointPos(pos, newPoint.lat, newPoint.lng);
     
-    // update the whole poly line
-    that.currentPolyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
+    // update the whole poly line, we could use splice to replace the point in question. TODO: test which is more efficient, suspect they are the same
+    that.currentMapPath.polyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
 }
 
 Navigation.prototype._addActualPath = function(points) {
@@ -337,7 +347,7 @@ Navigation.prototype._onNavigationMapClick = function(e, that) {
                 that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng);
 
                 // add the point to the map
-                that.currentNavGroup = that._addNavPoint(that.currentNavGroup, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, true);
+                that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, true);
                 that.prevLatLng = e.latlng;
                 
                 // remove the path from the map
@@ -407,6 +417,16 @@ Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
 }
   
 Navigation.prototype._onNavigationPointClick = function(e, that) {
+    // determine which marker position was dragged
+    for(var pos = 0, l = that.currentMapPath.markers.length; pos < l; pos++) {
+        if(that.currentMapPath.markers[pos] === e.target) {
+            break;
+        }
+    }
+    
+    // need to add 1 as the first point is the vehicle, while the mapPath doesn't include the vehicle
+    pos++;
+
     // if a menu is open, treat the click on a point as a request to close the menu
     if(that.vehicleMenu.isActive()) {
         that.vehicleMenu.hideMenu();
@@ -417,6 +437,12 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
         that.pointMenu.hideMenu();
         return;
     }
+    
+    // reset the listener so that the correct position is used
+    that.pointMenu.setListener(function(e) {
+        that._pointMenuItemSelected(e, that, pos);
+    });
+    
     // this.pointMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
     that.pointMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
     
@@ -463,12 +489,30 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
     return false;
 }
 
-Navigation.prototype._pointMenuItemSelected = function(e, that) {
+Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
     that.pointMenu.hideMenu();
     
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.POINT_DELETE):
-            // delete the current point
+            // remove the point from the vehicle nav path
+            that.selectedVehicle.navigationPath.delete(position);
+
+            // remove the marker
+            that.currentMapPath.removeMarker(position);
+            
+            // remove the point from the polyline
+            that.currentMapPath.polyLine.spliceLatLngs(position, 1);
+            
+            // iterate through the positions and reset the number 
+            for(var i = position + 1, l = that.currentMapPath.markers.length + 1; i <= l; i++) {
+                // get the div container that holds the number
+                var numberDiv =  $('#' + that.selectedVehicle.id + '_marker_' + i);
+                // reset the number down by 1
+                numberDiv.text((i - 1) +'');
+                // reset the div id as well, as the div refers to it's position to be unique
+                numberDiv.attr('id', that.selectedVehicle.id + '_marker_' + (i - 1));
+            }
+            
             break;
         
         case(Navigation.POINT_INSERT_BEFORE):
@@ -489,10 +533,14 @@ Navigation.prototype._pointMenuItemSelected = function(e, that) {
         
         case(Navigation.POINT_RETURN_TO_BASE):
             // set the path to complete and the current point to return to base afterwards
+            
+            // this is only valid if the last point on the path
             break;
         
         case(Navigation.POINT_FINISH_HERE):
             // set the path to complete and the current point as the final point
+            
+            // this is only valid if the last point on the path
             break;
     }
   
