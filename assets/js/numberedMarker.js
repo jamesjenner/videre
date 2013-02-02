@@ -34,6 +34,7 @@ L.NumberedDivIcon = L.Icon.extend({
         iconUrl: 'assets/img/marker_hole.png',
         // iconUrl: '<%= image_path("leaflet/marker_hole.png") %>',
         number: '',
+        idPrefix: '',
         shadowUrl: null,
         iconSize: new L.Point(25, 41),
         iconAnchor: new L.Point(13, 41),
@@ -51,6 +52,13 @@ L.NumberedDivIcon = L.Icon.extend({
         var numdiv = document.createElement('div');
         
         numdiv.setAttribute("class", "number");
+        if(this.options['number']) {
+            if(this.options['idPrefix']) {
+                numdiv.setAttribute("id", this.options['idPrefix'] + this.options['number']);
+            } else {
+                numdiv.setAttribute("id", "nbr" + this.options['number']);
+            }
+        }
         
         numdiv.innerHTML = this.options['number'] || '';
         
