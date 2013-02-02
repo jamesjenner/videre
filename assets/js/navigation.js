@@ -214,45 +214,6 @@ Navigation.prototype._addVehicleIcon = function(vehicle, position) {
     */
  }
 
-// TODO: this should be updated to include adding points for actual path as well as nav path
-Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, position, vehicleSelected) {
-    vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
-    var that = this;
-
-    if(!mapPath) {
-        // we're starting out, so set the poly line based on the from and to points
-        var polyLine = L.polyline([fromPoint, toPoint], {color: this.navPathColor});
-        
-        mapPath = new MapPath({map: this.map, polyLine: polyLine});
-    } else {
-        mapPath.polyLine.spliceLatLngs(position, 0, toPoint);
-    }
-    
-    // add a marker for the point when the vehicle is selected
-    if(vehicleSelected) {
-        var marker = L.marker(toPoint, {
-            icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
-            draggable: true,
-            opacity: this.pathOpacity})
-            .on('drag', function(e) {that._markerDragged(e, that);})
-            .on('click', function(e) {that._onNavigationPointClick(e, that); });
-    
-        mapPath.addMarker(marker);
-    }
-    
-    /* TODO: decide if we need the following, ie. will we show markers for non selected vehicles?
-     * suspect that the logic here should go in a generic load routine for paths
-    else {
-        L.marker(toPoint, {
-            draggable: false,
-            opacity: 0.5})
-             .addTo(navGroup)
-            .on('click', function(e) {that._onNavigationPointClick(e, that); });
-    } */
-    
-    return mapPath;
-}
-
 Navigation.prototype._loadNavPath = function(vehicle, navGroup, polyLine, vehicleSelected, that) {
 }
 
@@ -326,48 +287,132 @@ Navigation.prototype._onNavigationMapClick = function(e, that) {
         case Navigation.MODE_APPEND:
             // add a new nav point based on the current co-ords
             if(that.selectedVehicle) {
-
-                // if the navigation path is empty then we need to add the vehicle base position
-                if(that.selectedVehicle.navigationPath.isEmpty()) {
-                    // TODO: when adding vehicle is sorted, make this point the vehicle point
-                    console.log("setting start pos at " + -27.61657 + ', ' + 153.15387);
-                    that.selectedVehicle.navigationPath.append(-27.61657, 153.15387);
-                    that.prevLatLng = new L.LatLng(-27.61657, 153.15387);
-                }
-
-                // setup the previous point if required
-                if(!that.prevLatLng) {
-                    // set to the last point on the path
-                    var point = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
-                    that.prevLatLng = new L.LatLng(point.position.latitude, point.position.longitude);
-                }
-
-                // append the point to the vehicle's navigation path
-                console.log("appending point at " + e.latlng.toString());
-                that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng);
-
-                // add the point to the map
-                that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, true);
-                that.prevLatLng = e.latlng;
-                
-                // remove the path from the map
-                // that.map.removeLayer(that.currentNavGroup);
-                
-                // TODO: either add polys to L.LayerGroup and then add LayerGroup to map, or remember all added so they can be removed.
-                // refer http://leafletjs.com/reference.html#layergroup and http://leafletjs.com/reference.html#featuregroup
-                
-                
-                // add the path to the map
+                that._appendPoint(e, that, true);
             }
             break;
         
         case Navigation.MODE_INSERT_BEFORE:
-            // insert a new point between the current and previous points, at the current co-ords
-            break;
-        
         case Navigation.MODE_INSERT_AFTER:
             // insert a new point between the current and next points, at the current co-ords
+            if(that.selectedVehicle.navigationPath.length() == that.mapInsertPoint || that.selectedVehicle.navigationPath.isEmpty()) {
+                // insert point is after the last point so change to append mode and append
+                that.mapTouchMode = Navigation.MODE_APPEND;
+                that._appendPoint(e, that, true);
+            } else {
+                // insert the point
+                that._insertPoint(e, that, that.mapInsertPoint, true);
+                
+                // increment the insert point if inserting after
+                if(that.mapTouchMode === Navigation.MODE_INSERT_AFTER) {
+                    that.mapInsertPoint++;
+                }
+            }
+            
             break;
+    }
+}
+
+Navigation.prototype._appendPoint = function(e, that, selected) {
+    // if the navigation path is empty then we need to add the vehicle base position
+    if(that.selectedVehicle.navigationPath.isEmpty()) {
+        // TODO: when adding vehicle is sorted, make this point the vehicle point
+        console.log("setting start pos at " + -27.61657 + ', ' + 153.15387);
+        that.selectedVehicle.navigationPath.append(-27.61657, 153.15387);
+        that.prevLatLng = new L.LatLng(-27.61657, 153.15387);
+    }
+    
+    // setup the previous point if required
+    if(!that.prevLatLng) {
+        // set to the last point on the path
+        var point = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+        that.prevLatLng = new L.LatLng(point.position.latitude, point.position.longitude);
+    }
+    
+    // append the point to the vehicle's navigation path
+    console.log("appending point at " + e.latlng.toString());
+    
+    // TODO: add options for default settings on append
+    that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng);
+    
+    // add the point to the map
+    that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
+    that.prevLatLng = e.latlng;
+}
+
+Navigation.prototype._insertPoint = function(e, that, position, selected) {
+    // the previous point is based on the position. the insert is between the position and the position + 1
+    console.log("inserting point at " + e.latlng.toString());
+
+    // TODO: add options for default settings on insert
+    that.selectedVehicle.navigationPath.insert(position + 1, e.latlng.lat, e.latlng.lng);
+    
+    // insert the point to the map
+    that._insertNavPoint(that, that.currentMapPath, e.latlng, position + 1, selected);
+    that.prevLatLng = e.latlng;
+    
+    // re-number the points after the inserted point
+    that._renumberMarkers(position, that, Navigation.RENUMBER_FROM_END, +1);
+}
+
+Navigation.RENUMBER_TO_END = -1;
+Navigation.RENUMBER_FROM_END = +1;
+
+// TODO: this should be updated to include adding points for actual path as well as nav path
+Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, position, vehicleSelected) {
+    vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
+    var that = this;
+
+    if(!mapPath) {
+        // we're starting out, so set the poly line based on the from and to points
+        var polyLine = L.polyline([fromPoint, toPoint], {color: this.navPathColor});
+        
+        mapPath = new MapPath({map: this.map, polyLine: polyLine});
+    } else {
+        mapPath.polyLine.spliceLatLngs(position, 0, toPoint);
+    }
+    
+    // add a marker for the point when the vehicle is selected
+    if(vehicleSelected) {
+        var marker = L.marker(toPoint, {
+            icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
+            draggable: true,
+            opacity: this.pathOpacity})
+            .on('drag', function(e) {that._markerDragged(e, that);})
+            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+    
+        // this appends a marker, it doesn't insert
+        mapPath.addMarker(marker);
+    }
+    
+    /* TODO: decide if we need the following, ie. will we show markers for non selected vehicles?
+     * suspect that the logic here should go in a generic load routine for paths
+    else {
+        L.marker(toPoint, {
+            draggable: false,
+            opacity: 0.5})
+             .addTo(navGroup)
+            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+    } */
+    
+    return mapPath;
+}
+
+Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, vehicleSelected) {
+    vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
+
+    mapPath.polyLine.spliceLatLngs(position, 0, point);
+    
+    // add a marker for the point when the vehicle is selected
+    if(vehicleSelected) {
+        var marker = L.marker(point, {
+            icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
+            draggable: true,
+            opacity: this.pathOpacity})
+            .on('drag', function(e) {that._markerDragged(e, that);})
+            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+    
+        // map path starts from 1 less than the polyline, as there is no marker at the start
+        mapPath.insertMarker(position - 1, marker);
     }
 }
 
@@ -489,6 +534,29 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
     return false;
 }
 
+Navigation.prototype._renumberMarkers = function(position, that, direction, adjustment) {
+    if(direction == Navigation.RENUMBER_TO_END) {
+        // iterate through the positions from position to the end and reset the number 
+        for(var i = position, l = that.currentMapPath.markers.length + 1; i <= l; i++) {
+            that._updateMarkerPosition(i, i + adjustment, that);
+        }
+    } else {
+        // iterate through the positions from the end to position and reset the number 
+        for(var i = that.currentMapPath.markers.length + 1, l = position; i > l; i--) {
+            that._updateMarkerPosition(i, i + adjustment, that);
+        }
+    }
+}
+
+Navigation.prototype._updateMarkerPosition = function(currentVal, newVal, that) {
+    // get the div container that holds the number
+    var numberDiv =  $('#' + that.selectedVehicle.id + '_marker_' + currentVal);
+    // reset the number down by 1
+    numberDiv.text((newVal) +'');
+    // reset the div id as well, as the div refers to it's position to be unique
+    numberDiv.attr('id', that.selectedVehicle.id + '_marker_' + (newVal));
+}
+
 Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
     that.pointMenu.hideMenu();
     
@@ -502,45 +570,54 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
             
             // remove the point from the polyline
             that.currentMapPath.polyLine.spliceLatLngs(position, 1);
+
+            // renumber the markers, reducing the count by 1
+            that._renumberMarkers(position + 1, that, Navigation.RENUMBER_TO_END, -1);
             
-            // iterate through the positions and reset the number 
-            for(var i = position + 1, l = that.currentMapPath.markers.length + 1; i <= l; i++) {
-                // get the div container that holds the number
-                var numberDiv =  $('#' + that.selectedVehicle.id + '_marker_' + i);
-                // reset the number down by 1
-                numberDiv.text((i - 1) +'');
-                // reset the div id as well, as the div refers to it's position to be unique
-                numberDiv.attr('id', that.selectedVehicle.id + '_marker_' + (i - 1));
-            }
-            
+            // reset to append mode
+            that.mapTouchMode = Navigation.MODE_APPEND;
             break;
         
         case(Navigation.POINT_INSERT_BEFORE):
             // insert between the current and the previous progresisvely
             that.mapTouchMode = Navigation.MODE_INSERT_BEFORE;
+            that.mapInsertPoint = position - 1;
             break;
         
         case(Navigation.POINT_INSERT_AFTER):
-            // if the last mode then switch to append mode
-            that.mapTouchMode = Navigation.MODE_APPEND;
-            // otherwise insert between the current and the next progresisvely 
-            that.mapTouchMode = Navigation.MODE_INSERT_AFTER;
+            if(position + 1 == that.selectedVehicle.navigationPath.length()) {
+                // if the last mode then switch to append mode
+                that.mapTouchMode = Navigation.MODE_APPEND;
+            } else {
+                // otherwise insert between the current and the next progresisvely 
+                that.mapTouchMode = Navigation.MODE_INSERT_AFTER;
+                that.mapInsertPoint = position;
+            }
             break;
         
         case(Navigation.POINT_LOITER_TOGGLE):
             // toggle loiter for the point
+            
+            // reset to append mode
+            that.mapTouchMode = Navigation.MODE_APPEND;
             break;
         
         case(Navigation.POINT_RETURN_TO_BASE):
             // set the path to complete and the current point to return to base afterwards
             
             // this is only valid if the last point on the path
+            
+            // set to no action mode
+            that.mapTouchMode = Navigation.MODE_NO_ACTION;
             break;
         
         case(Navigation.POINT_FINISH_HERE):
             // set the path to complete and the current point as the final point
             
             // this is only valid if the last point on the path
+            
+            // set to no action mode
+            that.mapTouchMode = Navigation.MODE_NO_ACTION;
             break;
     }
   

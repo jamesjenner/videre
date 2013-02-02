@@ -55,6 +55,7 @@ MapPath.prototype.addMarker = function(marker) {
  */
 MapPath.prototype.insertMarker = function(idx, marker) {
     this.markers.splice(idx, 0, marker);
+    marker.addTo(this.layerGroup);
 }
 
 /*
