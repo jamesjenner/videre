@@ -67,6 +67,13 @@ MapPath.prototype.removeMarker = function(idx) {
 }
 
 /*
+ * change the url of a marker
+ */
+MapPath.prototype.setIcon = function(idx, icon) {
+    this.markers[idx - 1].setIcon(icon);
+}
+
+/*
  * get the markers
  */
 MapPath.prototype.getMarkers = function() {
