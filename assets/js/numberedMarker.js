@@ -31,11 +31,7 @@
 
 L.NumberedDivIcon = L.Icon.extend({
     options: {
-        // iconUrl: 'assets/img/marker_hole.png',
         iconUrl: 'assets/img/number-icon.png',
-        // iconUrl: 'assets/img/patrol_icon.png',
-        // iconUrl: 'assets/img/marker-icon.png',
-        // iconUrl: '<%= image_path("leaflet/marker_hole.png") %>',
         number: '',
         idPrefix: '',
         shadowUrl: null,
