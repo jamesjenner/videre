@@ -32,12 +32,17 @@ Navigation.POINT_INSERT_BEFORE = "menuPointInsertBefore";
 Navigation.POINT_INSERT_AFTER = "menuPointInsertAfter";
 Navigation.POINT_LOITER_TOGGLE = "menuPointLoiterToggle";
 Navigation.POINT_RETURN_TO_BASE = "menuPointReturnToBase";
-Navigation.POINT_FINISH_HERE = "menuPointFinishHere";
+Navigation.POINT_TERMINUS_TOGGLE = "menuPointTerminusToggle";
 
 Navigation.MODE_NO_ACTION = 0;
 Navigation.MODE_APPEND = 1;
 Navigation.MODE_INSERT_BEFORE = 2;
 Navigation.MODE_INSERT_AFTER = 3;
+
+Navigation.NUMBER_ICON_URL = 'assets/img/number-icon.png';
+Navigation.PATROL_ICON_URL = 'assets/img/patrol-icon.png';
+Navigation.FINISH_ICON_URL = 'assets/img/finish-icon.png';
+Navigation.FINISH_PATROL_ICON_URL = 'assets/img/finish-patrol-icon.png';
 
 
 function Navigation(options) {
@@ -384,16 +389,6 @@ Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, positi
         mapPath.addMarker(marker);
     }
     
-    /* TODO: decide if we need the following, ie. will we show markers for non selected vehicles?
-     * suspect that the logic here should go in a generic load routine for paths
-    else {
-        L.marker(toPoint, {
-            draggable: false,
-            opacity: 0.5})
-             .addTo(navGroup)
-            .on('click', function(e) {that._onNavigationPointClick(e, that); });
-    } */
-    
     return mapPath;
 }
 
@@ -562,20 +557,7 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
     
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.POINT_DELETE):
-            // remove the point from the vehicle nav path
-            that.selectedVehicle.navigationPath.delete(position);
-
-            // remove the marker
-            that.currentMapPath.removeMarker(position);
-            
-            // remove the point from the polyline
-            that.currentMapPath.polyLine.spliceLatLngs(position, 1);
-
-            // renumber the markers, reducing the count by 1
-            that._renumberMarkers(position + 1, that, Navigation.RENUMBER_TO_END, -1);
-            
-            // reset to append mode
-            that.mapTouchMode = Navigation.MODE_APPEND;
+            that._deletePoint(that, position);
             break;
         
         case(Navigation.POINT_INSERT_BEFORE):
@@ -586,8 +568,8 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
         
         case(Navigation.POINT_INSERT_AFTER):
             if(position + 1 == that.selectedVehicle.navigationPath.length()) {
-                // if the last mode then switch to append mode
-                that.mapTouchMode = Navigation.MODE_APPEND;
+                // if the last mode then get touch mode for the point
+                that.mapTouchMode = that._getTouchModeForPoint(that.selectedVehicle.navigationPath.getPoint(position));
             } else {
                 // otherwise insert between the current and the next progresisvely 
                 that.mapTouchMode = Navigation.MODE_INSERT_AFTER;
@@ -597,9 +579,7 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
         
         case(Navigation.POINT_LOITER_TOGGLE):
             // toggle loiter for the point
-            
-            // reset to append mode
-            that.mapTouchMode = Navigation.MODE_APPEND;
+            that._loiterToggle(that, position);
             break;
         
         case(Navigation.POINT_RETURN_TO_BASE):
@@ -611,17 +591,141 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
             that.mapTouchMode = Navigation.MODE_NO_ACTION;
             break;
         
-        case(Navigation.POINT_FINISH_HERE):
+        case(Navigation.POINT_TERMINUS_TOGGLE):
             // set the path to complete and the current point as the final point
+            that._toggleTerminus(that, position);
             
-            // this is only valid if the last point on the path
-            
-            // set to no action mode
-            that.mapTouchMode = Navigation.MODE_NO_ACTION;
             break;
     }
   
     return false;
+}
+
+Navigation.prototype._deletePoint = function(that, position) {
+    // remove the point from the vehicle nav path
+    that.selectedVehicle.navigationPath.delete(position);
+
+    // remove the marker
+    that.currentMapPath.removeMarker(position);
+    
+    // remove the point from the polyline
+    that.currentMapPath.polyLine.spliceLatLngs(position, 1);
+
+    // renumber the markers, reducing the count by 1
+    that._renumberMarkers(position + 1, that, Navigation.RENUMBER_TO_END, -1);
+    
+    // reset touch mode
+    that.mapTouchMode = that._getMapTouchModeForCurrentPath(that);
+}
+
+Navigation.prototype._toggleTerminus = function(that, position) {
+    // nav path includes start point, but position doesn't
+    if(position + 1 < that.selectedVehicle.navigationPath.length()) {
+        return;
+    }
+    
+    // retreive the point on the path for the vehicle
+    var p = that.selectedVehicle.navigationPath.getPoint(position);
+    
+    // update the flag for the nav path point
+    p.terminus = !p.terminus;
+    
+    // update the touch mode for the point
+    that.mapTouchMode = that._getTouchModeForPoint(p);
+    
+    // set the icon
+    that.currentMapPath.setIcon(position, that._getIconForPoint(p, that));
+}
+
+Navigation.prototype._loiterToggle = function(that, position) {
+    // retreive the point on the path for the vehicle
+    var p = that.selectedVehicle.navigationPath.getPoint(position);
+    
+    // update the flag for the nav path point
+    p.loiter = !p.loiter;
+
+    // update the icon for the marker
+    that.currentMapPath.setIcon(position, that._getIconForPoint(p, that));
+    
+}
+
+Navigation.prototype._getIconForPoint = function(point, that) {
+    var icon = null;
+    
+    if(point.terminus) {
+        if(point.loiter) {
+            icon = that._createTerminusLoiterIcon(that.selectedVehicle.id, point.sequence);
+        } else {
+            icon = that._createTerminusIcon(that.selectedVehicle.id, point.sequence);
+        }
+    } else {
+        if(point.loiter) {
+            icon = that._createLoiterIcon(that.selectedVehicle.id, point.sequence);
+        } else {
+            icon = that._createNumberIcon(that.selectedVehicle.id, point.sequence);
+        }
+    }
+    
+    return icon;
+}
+
+Navigation.prototype._getMapTouchModeForCurrentPath = function(that) {
+    var p = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length());
+                                                         
+    if(p.terminus || p.returnHome) {
+        return Navigation.MODE_NO_ACTION;
+    } else {
+        return Navigation.MODE_APPEND;
+    }
+}
+
+Navigation.prototype._getTouchModeForPoint = function(point) {
+    if(point.terminus) {
+        return Navigation.MODE_NO_ACTION;
+    } else {
+        return Navigation.MODE_APPEND;
+    }
+}
+
+
+Navigation.prototype._createNumberIcon = function(vehicleId, position) {
+    return new L.NumberedDivIcon({
+        idPrefix: vehicleId + '_marker_',
+        number: position+'',
+        iconSize: new L.Point(25, 41),
+        iconAnchor: new L.Point(13, 41),
+        iconUrl: Navigation.NUMBER_ICON_URL
+        });
+}
+
+Navigation.prototype._createLoiterIcon = function(vehicleId, position) {
+    return new L.NumberedDivIcon({
+        idPrefix: vehicleId + '_marker_',
+        number: position+'',
+        iconSize: new L.Point(42, 41),
+        iconAnchor: new L.Point(21, 41),
+        iconUrl: Navigation.PATROL_ICON_URL,
+        });
+}
+
+Navigation.prototype._createTerminusIcon = function(vehicleId, position) {
+    return new L.NumberedDivIcon({
+        idPrefix: vehicleId + '_marker_',
+        number: position+'',
+        iconSize: new L.Point(28, 41),
+        iconAnchor: new L.Point(14, 41),
+        iconUrl: Navigation.FINISH_ICON_URL,
+        });
+}
+
+Navigation.prototype._createTerminusLoiterIcon = function(vehicleId, position) {
+    return new L.NumberedDivIcon({
+        idPrefix: vehicleId + '_marker_',
+        number: position+'',
+        iconSize: new L.Point(42, 41),
+        iconAnchor: new L.Point(21, 41),
+        iconUrl: Navigation.FINISH_PATROL_ICON_URL,
+        });
 }
 
 Navigation.prototype._addPath = function() {
