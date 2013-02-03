@@ -27,10 +27,12 @@ Navigation.VEHICLE_TOGGLE_DIR = "menuVehicleToggleDirection";
 Navigation.VEHICLE_RETURN_TO_BASE = "menuVehicleReturnToBase";
 Navigation.VEHICLE_COMPLETE = "menuVehicleComplete";
 
+Navigation.POINT_PROPERTIES = "menuPointNavPointProperties";
 Navigation.POINT_DELETE = "menuPointDeleteNavPoint";
 Navigation.POINT_INSERT_BEFORE = "menuPointInsertBefore";
 Navigation.POINT_INSERT_AFTER = "menuPointInsertAfter";
 Navigation.POINT_LOITER_TOGGLE = "menuPointLoiterToggle";
+Navigation.POINT_LOITER_PROPERTIES = "menuPointLoiterProperties";
 Navigation.POINT_RETURN_TO_BASE = "menuPointReturnToBase";
 Navigation.POINT_TERMINUS_TOGGLE = "menuPointTerminusToggle";
 
@@ -223,7 +225,8 @@ Navigation.prototype._loadNavPath = function(vehicle, navGroup, polyLine, vehicl
 }
 
 Navigation.prototype._markerDragged = function (e, that) {
-    // determine which marker position was dragged
+    var newPoint = e.target.getLatLng();
+    
     for(var pos = 0, l = that.currentMapPath.markers.length; pos < l; pos++) {
         if(that.currentMapPath.markers[pos] === e.target) {
             break;
@@ -233,10 +236,21 @@ Navigation.prototype._markerDragged = function (e, that) {
     // need to add 1 as the first point is the vehicle, while the mapPath doesn't include the vehicle
     pos++;
     
-    var newPoint = e.target.getLatLng();
+    // retreive the point on the path for the current position and the home point
+    var point = that.selectedVehicle.navigationPath.getPoint(pos);
     
-    // update the points on the navigation path
-    that.selectedVehicle.navigationPath.updatePointPos(pos, newPoint.lat, newPoint.lng);
+    point.position.latitude = newPoint.lat;
+    point.position.longitude = newPoint.lng;
+    
+    // presume that only the last point can return home
+    if(point.returnHome) {
+        var homePoint = that.selectedVehicle.navigationPath.getPoint(0);
+        
+        // need to update the return home path as well
+        that.currentMapPath.returnHomePolyLine.setLatLngs(
+            [[point.position.latitude, point.position.longitude],
+             [homePoint.position.latitude, homePoint.position.longitude]]);
+    }
     
     // update the whole poly line, we could use splice to replace the point in question. TODO: test which is more efficient, suspect they are the same
     that.currentMapPath.polyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
@@ -286,7 +300,6 @@ Navigation.prototype._onNavigationMapClick = function(e, that) {
         that.vehicleMenu.hideMenu();
         return;
     }
-    
     
     switch(that.mapTouchMode) {
         case Navigation.MODE_APPEND:
@@ -556,6 +569,12 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
     that.pointMenu.hideMenu();
     
     switch(e.originalEvent.currentTarget.id) {
+        
+        case(Navigation.POINT_PROPERTIES):
+            // edit the properties of the point
+            // TODO: implement point properties editing
+            break;
+        
         case(Navigation.POINT_DELETE):
             that._deletePoint(that, position);
             break;
@@ -567,14 +586,7 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
             break;
         
         case(Navigation.POINT_INSERT_AFTER):
-            if(position + 1 == that.selectedVehicle.navigationPath.length()) {
-                // if the last mode then get touch mode for the point
-                that.mapTouchMode = that._getTouchModeForPoint(that.selectedVehicle.navigationPath.getPoint(position));
-            } else {
-                // otherwise insert between the current and the next progresisvely 
-                that.mapTouchMode = Navigation.MODE_INSERT_AFTER;
-                that.mapInsertPoint = position;
-            }
+            that._pointInsertAfter(that, position);
             break;
         
         case(Navigation.POINT_LOITER_TOGGLE):
@@ -582,19 +594,19 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
             that._loiterToggle(that, position);
             break;
         
+        case(Navigation.POINT_LOITER_PROPERTIES):
+            // edit the properties of the loiter
+            // TODO: implement loiter properties editing
+            break;
+        
         case(Navigation.POINT_RETURN_TO_BASE):
             // set the path to complete and the current point to return to base afterwards
-            
-            // this is only valid if the last point on the path
-            
-            // set to no action mode
-            that.mapTouchMode = Navigation.MODE_NO_ACTION;
+            that._returnHomeToggle(that, position);
             break;
         
         case(Navigation.POINT_TERMINUS_TOGGLE):
             // set the path to complete and the current point as the final point
             that._toggleTerminus(that, position);
-            
             break;
     }
   
@@ -602,6 +614,23 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
 }
 
 Navigation.prototype._deletePoint = function(that, position) {
+    // if we're the last point then we need to do some special checks
+    if(position + 1 == that.selectedVehicle.navigationPath.length()) {
+        // get the last point
+        var p = that.selectedVehicle.navigationPath.getPoint(position);
+        
+        if(p.terminus) {
+            // we are a terminus point so change the terminus flag
+            that._toggleTerminus(that, position);
+        }
+        if(p.returnHome) {
+            // we are a return home point so change the return home flag
+            that._returnHomeToggle(that, position);
+        }
+        // go to append mode
+        that.mapTouchMode = Navigation.MODE_APPEND;
+    }
+
     // remove the point from the vehicle nav path
     that.selectedVehicle.navigationPath.delete(position);
 
@@ -618,14 +647,43 @@ Navigation.prototype._deletePoint = function(that, position) {
     that.mapTouchMode = that._getMapTouchModeForCurrentPath(that);
 }
 
+Navigation.prototype._pointInsertAfter = function(that, position) {
+    // if we're the last point then we need to do some special checks
+    if(position + 1 == that.selectedVehicle.navigationPath.length()) {
+        // get the last point
+        var p = that.selectedVehicle.navigationPath.getPoint(position);
+        
+        if(p.terminus) {
+            // we are a terminus point so change the terminus flag
+            that._toggleTerminus(that, position);
+        }
+        if(p.returnHome) {
+            // we are a return home point so change the return home flag
+            that._returnHomeToggle(that, position);
+        }
+        // go to append mode
+        that.mapTouchMode = Navigation.MODE_APPEND;
+    } else {
+        // insert after the current point
+        that.mapTouchMode = Navigation.MODE_INSERT_AFTER;
+        that.mapInsertPoint = position;
+    }
+}
+
 Navigation.prototype._toggleTerminus = function(that, position) {
     // nav path includes start point, but position doesn't
+    // do nothing if not the last point
     if(position + 1 < that.selectedVehicle.navigationPath.length()) {
         return;
     }
     
     // retreive the point on the path for the vehicle
     var p = that.selectedVehicle.navigationPath.getPoint(position);
+    
+    if(p.returnHome) {
+        // we are a return home point so change the return home flag
+        that._returnHomeToggle(that, position);
+    }
     
     // update the flag for the nav path point
     p.terminus = !p.terminus;
@@ -646,7 +704,37 @@ Navigation.prototype._loiterToggle = function(that, position) {
 
     // update the icon for the marker
     that.currentMapPath.setIcon(position, that._getIconForPoint(p, that));
+}
+
+Navigation.prototype._returnHomeToggle = function(that, position) {
+    // do nothing if not the last point
+    if(position + 1 < that.selectedVehicle.navigationPath.length()) {
+        return;
+    }
+
+    // retreive the point on the path for the vehicle
+    var lastPoint = that.selectedVehicle.navigationPath.getPoint(position);
+    var homePoint = that.selectedVehicle.navigationPath.getPoint(0);
+
+    if(lastPoint.terminus) {
+        // we are a terminus point so change the terminus flag
+        that._toggleTerminus(that, position);
+    }
     
+    // update the flag for the nav path point
+    lastPoint.returnHome = !lastPoint.returnHome;
+
+    if(lastPoint.returnHome) {
+        var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
+                                   [homePoint.position.latitude, homePoint.position.longitude]],
+                                  {color: this.navPathColor});
+        that.currentMapPath.addReturnHomePolyLine(polyline);
+    } else {
+        that.currentMapPath.removeReturnHomePolyLine();
+    }
+    
+    // update the touch mode for the point
+    that.mapTouchMode = that._getTouchModeForPoint(lastPoint);
 }
 
 Navigation.prototype._getIconForPoint = function(point, that) {
@@ -670,8 +758,10 @@ Navigation.prototype._getIconForPoint = function(point, that) {
 }
 
 Navigation.prototype._getMapTouchModeForCurrentPath = function(that) {
-    var p = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length());
-                                                         
+    // retreive the last point
+    var p = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+
+    // check the status
     if(p.terminus || p.returnHome) {
         return Navigation.MODE_NO_ACTION;
     } else {
@@ -680,13 +770,12 @@ Navigation.prototype._getMapTouchModeForCurrentPath = function(that) {
 }
 
 Navigation.prototype._getTouchModeForPoint = function(point) {
-    if(point.terminus) {
+    if(point.terminus || point.returnHome) {
         return Navigation.MODE_NO_ACTION;
     } else {
         return Navigation.MODE_APPEND;
     }
 }
-
 
 Navigation.prototype._createNumberIcon = function(vehicleId, position) {
     return new L.NumberedDivIcon({
@@ -728,6 +817,7 @@ Navigation.prototype._createTerminusLoiterIcon = function(vehicleId, position) {
         });
 }
 
+// TODO: implement adding a path...
 Navigation.prototype._addPath = function() {
 
 }
