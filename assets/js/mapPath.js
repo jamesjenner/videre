@@ -26,6 +26,9 @@ function MapPath(options) {
     
     this.markers = new Array();
     this.polyLine = options.polyLine || null;
+
+    this.returnHomePolyLine = options.returnHomePolyLine || null;
+    
     
     this.map = options.map || null;
 
@@ -36,6 +39,10 @@ function MapPath(options) {
         
         if(this.polyLine) {
             this.polyLine.addTo(this.layerGroup);
+        }
+        
+        if(this.returnHomePolyLine) {
+            this.returnHomePolyLine.addTo(this.layerGroup);
         }
     }
     
@@ -85,6 +92,8 @@ MapPath.prototype.getMarkers = function() {
  */
 MapPath.prototype.setPolyLine = function(polyLine) {
     this.polyLine = polyLine;
+    
+    // TODO: check if the poly line has already been added to the layer group
     if(this.layerGroup) {
         this.polyLine.addTo(this.layerGroup);
     }
@@ -95,6 +104,39 @@ MapPath.prototype.setPolyLine = function(polyLine) {
  */
 MapPath.prototype.getPolyLine = function() {
     return this.polyLine;
+}
+
+/*
+ * add the return home poly line
+ */
+MapPath.prototype.addReturnHomePolyLine = function(polyLine) {
+    
+    if(this.returnHomePolyLine) {
+        this.removeReturnHomePolyLine();
+    }
+    
+    this.returnHomePolyLine = polyLine;
+    
+    if(this.layerGroup) {
+        this.returnHomePolyLine.addTo(this.layerGroup);
+    }
+}
+
+/*
+ * remove the return home poly line
+ */
+MapPath.prototype.removeReturnHomePolyLine = function() {
+    if(this.layerGroup) {
+        this.layerGroup.removeLayer(this.returnHomePolyLine);
+        this.returnHomePolyLine = null;
+    }
+}
+
+/*
+ * get the return home poly line
+ */
+MapPath.prototype.getReturnHomePolyLine = function() {
+    return this.returnHomePolyLine;
 }
 
 
