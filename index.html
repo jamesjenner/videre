@@ -31,6 +31,7 @@
     <script src="assets/js/radialmenu.js" type="text/javascript"></script>
     <script src="assets/js/dropdown.js" type="text/javascript"></script>
     <script src="assets/js/actionBar.js" type="text/javascript"></script>
+    <script src="assets/js/modalBar.js" type="text/javascript"></script>
     <script src="assets/js/Vector2.js" type="text/javascript"></script>
     <script src="assets/js/touchControls.js" type="text/javascript"></script>
     <script src="assets/js/numberedMarker.js" type="text/javascript"></script>
@@ -173,6 +174,9 @@ function touchHandler(event) {
     first.target.dispatchEvent(simulatedEvent);
     event.preventDefault();
 }
+
+var ACTION_BAR = 'ActionBar';
+var MODAL_BAR = 'ModalBar';
 
 var connected = false;
 var halEnabled = false;
@@ -914,8 +918,6 @@ function addVehicleCreateFormUI(id, title) {
   new DropDown( $('#vehicleCreateVehicleTypeWrapper') );
 }
 
-var ACTION_BAR = 'ActionBar';
-
 /**
  * toggleSwitch() Toggles a checkbox hidden by css.
  *
@@ -1485,11 +1487,18 @@ function addPayloadContentUI(id) {
 }
 
 function addNavigationContentUI(id) {
+  var navigationMapId = 'navigationMap';
+  
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
-    '  <div id="navigationMap" class="map">' +
+    '  <div id="' + navigationMapId + '" class="map">' +
     '  </div>' +
     '</div>');
+  
+  // TODO: insert nav marker properties here
+  addNavPointForm(id, navigationMapId + "NavPoint");
+  
+  // TODO: insert vehicle properties here (if required)
   
   // setup the navigation settings  
   var navigationSettings = new ContentSettings();
@@ -1581,6 +1590,85 @@ function addNavigationContentUI(id) {
     // vehicleMenuItemListener: navigationMapMenuClicked,
     // pointMenuItemListener: navigationPointMenuClicked
     });
+}
+
+function addNavPointForm(parentId, id) {
+
+  $('#' + parentId).append(
+    '<div id="' + id + '" class="applicationContents modalContents">' +
+    '  <div id="' + id + 'Form" class="formContainer">' +
+    '    <div class="formContents">' +
+    '      <div class="formContents">' +
+    '       <form id="updateNavPointForm">' +
+    '         <ul>' + 
+    '           <li>' +
+    '             <label for="navPointSequence">Sequence</label>' +
+    '             <input type="text" name="sequence" id="navPointSequence" readonly="readonly" disabled="disabled"><br>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '             <label for="navPointUpdateLabel">Label</label>' +
+    '             <input type="text" name="label" id="navPointUpdateLabel" placeholder="Label" ><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="navPointUpdateAltitude">Altitude</label>' +
+    '             <input type="text" name="altitude" id="navPointUpdateAltitude" placeholder="100" required><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="navPointUpdateSpeed">Speed</label>' +
+    '             <input type="text" name="address" id="navPointUpdateSpeed" placeholder="100%" required><br>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '           <li>' +
+    '             <label for="navPointUpdateLoiterSpeed">Loiter Radius</label>' +
+    '             <input type="number" min="1" max="99999" name="loiterRadius" id="navPointUpdateLoiterRadius" placeholder="loiter radius"><br>' +
+    '           </li>' + 
+    '           <li>' +
+    '             <label for="navPointUpdateLoiterSpeed">Loiter Speed</label>' +
+    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="navPointUpdateLoiterSpeed" placeholder="100%"><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="navPointUpdateLoiterDuration">Loiter Duration</label>' +
+    '             <input type="number" min="1" max="99999" name="loiterDuration" id="navPointUpdateLoiterDuration" placeholder="1"><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="navPointUpdateLoiterDurationUOM">Loiter Duration UOM</label>' +
+    '             <input type="text" name="loiterDurationUOM" id="navPointUpdateLoiterDurationUOM" placeholder="Minute"><br>' +
+    '           </li>' +
+    '       </form>' +
+    '      </div>' +
+    '    </div>' +
+    '  </div>' +
+    '</div>');
+
+  // setup and initialise the action bar
+  navPointModalBar = new ModalBar({ targetId: id, id: id + MODAL_BAR,})
+    .initialise();
+}
+
+var navPointModalBar = null;
+
+function showNavPointForm(navPoint) {
+  // set values
+  $('#navPointSequence').val(navPoint.sequence);
+  $('#navPointUpdateAltitude').val(navPoint.altitude);
+  $('#navPointUpdateSpeed').val(navPoint.speed);
+  $('#navPointUpdateLoiterRadius').val(navPoint.loiterRadius);
+  $('#navPointUpdateLoiterSpeed').val(navPoint.loiterSpeed);
+  $('#navPointUpdateLoiterDuration').val(navPoint.loiterTime);
+  $('#navPointUpdateLoiterDurationUOM').val(navPoint.loiterDurationUOM);
+  
+  navPointModalBar.setAcceptFunction(function() {acceptNavPointUpdate(navPoint)});
+  navPointModalBar.show();
+}
+
+function acceptNavPointUpdate(navPoint) {
+  // update the navPoint
+  navPoint.altitude = $('#navPointUpdateAltitude').val();
+  navPoint.speed = $('#navPointUpdateSpeed').val();
+  navPoint.loiterRadius = $('#navPointUpdateLoiterRadius').val();
+  navPoint.loiterSpeed = $('#navPointUpdateLoiterSpeed').val();
+  navPoint.loiterTime = $('#navPointUpdateLoiterDuration').val();
+  navPoint.loiterDurationUOM = $('#navPointUpdateLoiterDurationUOM').val();
 }
 
 var navigationManager = null;

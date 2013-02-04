@@ -572,6 +572,7 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
         case(Navigation.POINT_PROPERTIES):
             // edit the properties of the point
             // TODO: implement point properties editing
+            showNavPointForm(that.selectedVehicle.navigationPath.getPoint(position));
             break;
         
         case(Navigation.POINT_DELETE):

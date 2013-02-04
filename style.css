@@ -200,6 +200,15 @@ div.taskBar {
 	position: absolute;
 }
 
+div.modalBarAction {
+	height: 100%;
+}
+
+div.modalContents {
+	z-index: 1000;
+}
+
+
 div.actionBarAction {
 	height: 100%;
 	padding-left: 30px;
@@ -322,6 +331,25 @@ form input[type="text"], input[type="number"], input[type="popup"], input[type="
 	font-size: medium;
 	color-background: #CCCCCC;
 }
+
+textarea[readonly="readonly"], textarea[readonly] {
+}
+
+form input[type="text"][readonly="readonly"],
+	input[type="text"][readonly],
+	input[type="number"][readonly="readonly"],
+	input[type="number"][readonly],
+	input[type="popup"][readonly="readonly"],
+	input[type="popup"][readonly]
+	{
+	outline: none;
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	border-bottom: none;
+	background: white;
+}
+
 
 input[type="popup"], input[type="popup"]:focus {
 	border-top: none;
