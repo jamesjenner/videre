@@ -32,7 +32,6 @@ Navigation.POINT_DELETE = "menuPointDeleteNavPoint";
 Navigation.POINT_INSERT_BEFORE = "menuPointInsertBefore";
 Navigation.POINT_INSERT_AFTER = "menuPointInsertAfter";
 Navigation.POINT_LOITER_TOGGLE = "menuPointLoiterToggle";
-Navigation.POINT_LOITER_PROPERTIES = "menuPointLoiterProperties";
 Navigation.POINT_RETURN_TO_BASE = "menuPointReturnToBase";
 Navigation.POINT_TERMINUS_TOGGLE = "menuPointTerminusToggle";
 
@@ -592,11 +591,6 @@ Navigation.prototype._pointMenuItemSelected = function(e, that, position) {
         case(Navigation.POINT_LOITER_TOGGLE):
             // toggle loiter for the point
             that._loiterToggle(that, position);
-            break;
-        
-        case(Navigation.POINT_LOITER_PROPERTIES):
-            // edit the properties of the loiter
-            // TODO: implement loiter properties editing
             break;
         
         case(Navigation.POINT_RETURN_TO_BASE):
