@@ -136,7 +136,7 @@ RadialMenu.prototype = {
       $('#' + id).addClass('disabled');
       return this;
     },
-    enableMenuItem: function() {
+    enableMenuItem: function(id) {
       // change the style so it is enabled
       $('#' + id).removeClass('disabled');
       return this;
