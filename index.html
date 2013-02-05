@@ -1648,6 +1648,25 @@ function addNavPointForm(parentId, id) {
 var navPointModalBar = null;
 
 function showNavPointForm(navPoint) {
+  
+  // disable/enable the loiter fields, as appropriate
+  $('#navPointUpdateLoiterRadius').prop('disabled', !navPoint.loiter);
+  $('#navPointUpdateLoiterSpeed').prop('disabled', !navPoint.loiter);
+  $('#navPointUpdateLoiterDuration').prop('disabled', !navPoint.loiter);
+  $('#navPointUpdateLoiterDurationUOM').prop('disabled', !navPoint.loiter);
+  
+  // we need to do this so css for the style is applied
+  if(navPoint.loiter) {
+    $('#navPointUpdateLoiterRadius').removeAttr('readonly', '');
+    $('#navPointUpdateLoiterSpeed').removeAttr('readonly', '');
+    $('#navPointUpdateLoiterDuration').removeAttr('readonly', '');
+    $('#navPointUpdateLoiterDurationUOM').removeAttr('readonly', '');;
+  } else {
+    $('#navPointUpdateLoiterRadius').attr('readonly', 'readonly');
+    $('#navPointUpdateLoiterSpeed').attr('readonly', 'readonly');
+    $('#navPointUpdateLoiterDuration').attr('readonly', 'readonly');
+    $('#navPointUpdateLoiterDurationUOM').attr('readonly', 'readonly');;
+  }
   // set values
   $('#navPointSequence').val(navPoint.sequence);
   $('#navPointUpdateAltitude').val(navPoint.altitude);
