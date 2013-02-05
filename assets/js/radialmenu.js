@@ -118,7 +118,11 @@ RadialMenu.prototype = {
     },
     setListener: function(listener) {
       $('#' + this.contentId + ' a').off('click');
-      $('#' + this.contentId + ' a').on('click', listener);
+      $('#' + this.contentId + ' a').on('click', function(e) {
+        if(!$(this).hasClass("disabled")) {
+          listener(e);
+        }
+      });
     },
     isActive: function() {
       return this.displayed;
