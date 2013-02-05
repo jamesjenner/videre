@@ -74,6 +74,37 @@ MapPath.prototype.removeMarker = function(idx) {
 }
 
 /*
+ * remove all markers
+ */
+MapPath.prototype.removeMarkers = function() {
+    for(var i = 0, l = this.markers.length; i < l; i++) {
+        this.layerGroup.removeLayer(this.markers[i]);
+    }
+    
+    this.markers = new Array();
+}
+
+/*
+ * set the colour of the path, options are:
+ *
+ *   stroke
+ *   color
+ *   weight
+ *   opacity
+ *   fill
+ *   fillColor
+ *   fillOpacity
+ *   dashArray
+ *
+ *   refer http://leafletjs.com/reference.html#path-options
+ */
+MapPath.prototype.setPathStyle = function(style) {
+    if(this.polyLine) {
+        this.polyLine.setStyle(style);
+    }
+}
+
+/*
  * change the url of a marker
  */
 MapPath.prototype.setIcon = function(idx, icon) {
