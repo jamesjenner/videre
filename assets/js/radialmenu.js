@@ -127,12 +127,14 @@ RadialMenu.prototype = {
       
       return this;
     },
-    disableMenuItem: function() {
-      
+    disableMenuItem: function(id) {
+      // change the style so it is disabled
+      $('#' + id).addClass('disabled');
       return this;
     },
     enableMenuItem: function() {
-      
+      // change the style so it is enabled
+      $('#' + id).removeClass('disabled');
       return this;
     },
     hideMenuItem: function() {

@@ -29,6 +29,11 @@ ul.radial li a {
   color: #3f3f3f;
 }
 
+a.disabled {
+  color: rgb(100, 100, 100);
+  text-decoration: none;
+}
+
 ul.radial li span {
   position: absolute;
 }

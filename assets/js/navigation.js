@@ -495,6 +495,28 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
         that._pointMenuItemSelected(e, that, pos);
     });
     
+    // setup the elements as enabled/disabled as appropriate
+    var p = that.selectedVehicle.navigationPath.getPoint(pos);
+    
+    // TODO: add logic to disable/enable as appropriate, this is based on whether the vehicle is editable or not... possibly
+    if(true) {
+        that.pointMenu.disableMenuItem(Navigation.POINT_PROPERTIES);
+        that.pointMenu.disableMenuItem(Navigation.POINT_DELETE);
+        that.pointMenu.disableMenuItem(Navigation.POINT_INSERT_BEFORE);
+        that.pointMenu.disableMenuItem(Navigation.POINT_INSERT_AFTER);
+        that.pointMenu.disableMenuItem(Navigation.POINT_LOITER_TOGGLE);
+        that.pointMenu.disableMenuItem(Navigation.POINT_RETURN_TO_BASE);
+        that.pointMenu.disableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
+    } else {
+        that.pointMenu.enableMenuItem(Navigation.POINT_PROPERTIES);
+        that.pointMenu.enableMenuItem(Navigation.POINT_DELETE);
+        that.pointMenu.enableMenuItem(Navigation.POINT_INSERT_BEFORE);
+        that.pointMenu.enableMenuItem(Navigation.POINT_INSERT_AFTER);
+        that.pointMenu.enableMenuItem(Navigation.POINT_LOITER_TOGGLE);
+        that.pointMenu.enableMenuItem(Navigation.POINT_RETURN_TO_BASE);
+        that.pointMenu.enableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
+    }
+
     // this.pointMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
     that.pointMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
     
