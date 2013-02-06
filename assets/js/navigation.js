@@ -31,8 +31,8 @@ Navigation.POINT_TERMINUS_TOGGLE = "menuPointTerminusToggle";
 
 Navigation.VEHICLE_DELETE_PATH = "menuVehicleDeletePath";
 Navigation.VEHICLE_EDIT_DEFAULTS = "menuVehicleEditDefaults";
-Navigation.VEHICLE_SELECT_PATH = "menuVehicleSelectPath";
-Navigation.VEHICLE_DESELECT_PATH = "menuVehicleDeselectPath";
+Navigation.VEHICLE_SELECT_VEHICLE = "menuVehicleSelectVehicle";
+Navigation.VEHICLE_DESELECT_VEHICLE = "menuVehicleDeselectVehicle";
 Navigation.VEHICLE_REVERSE_DIRECTION = "menuVehicleReverseDirection";
 Navigation.VEHICLE_REMOVE_VEHICLE = "menuVehicleRemoveVehicle";
 
@@ -444,6 +444,28 @@ Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
     }
 
     that.clickedVehicle = vehicle;
+
+    // if the path is selected then disable select
+    if(that.selectedVehicle == that.clickedVehicle) {
+        that.pointMenu.disableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
+        that.pointMenu.enableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
+    } else {
+        that.pointMenu.enableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
+        that.pointMenu.disableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
+    }
+    
+    // if the vehicle has a path then allow delete
+    if(vehicle.navigationPath.isEmpty()) {
+        that.pointMenu.disableMenuItem(Navigation.VEHICLE_DELETE_PATH);
+    } else {
+        that.pointMenu.enableMenuItem(Navigation.VEHICLE_DELETE_PATH);
+    }
+    // if the vehicle has a path and the last point is return to home then allow revserse
+    if(vehicle.navigationPath.returnsHome()) {
+        that.pointMenu.enableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+    } else {
+        that.pointMenu.disableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+    }
     
     // otherwise show the menu
     that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
@@ -484,20 +506,10 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
     var p = that.selectedVehicle.navigationPath.getPoint(pos);
     
     // TODO: add logic to disable/enable as appropriate, this is based on the mode of the ui... possibly...
-    if(false) {
-        that.pointMenu.disableMenuItem(Navigation.POINT_PROPERTIES);
-        that.pointMenu.disableMenuItem(Navigation.POINT_DELETE);
-        that.pointMenu.disableMenuItem(Navigation.POINT_INSERT_BEFORE);
-        that.pointMenu.disableMenuItem(Navigation.POINT_INSERT_AFTER);
-        that.pointMenu.disableMenuItem(Navigation.POINT_LOITER_TOGGLE);
+    if(that.selectedVehicle.navigationPath.length() -1 != pos) {
         that.pointMenu.disableMenuItem(Navigation.POINT_RETURN_TO_BASE);
         that.pointMenu.disableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
     } else {
-        that.pointMenu.enableMenuItem(Navigation.POINT_PROPERTIES);
-        that.pointMenu.enableMenuItem(Navigation.POINT_DELETE);
-        that.pointMenu.enableMenuItem(Navigation.POINT_INSERT_BEFORE);
-        that.pointMenu.enableMenuItem(Navigation.POINT_INSERT_AFTER);
-        that.pointMenu.enableMenuItem(Navigation.POINT_LOITER_TOGGLE);
         that.pointMenu.enableMenuItem(Navigation.POINT_RETURN_TO_BASE);
         that.pointMenu.enableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
     }
@@ -533,7 +545,7 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
             break;
 //    that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
         
-        case(Navigation.VEHICLE_SELECT_PATH):
+        case(Navigation.VEHICLE_SELECT_VEHICLE):
             // TODO: change the colour of the vehicle to selected (possibly not required)
             
             // set the selected vehicle to the clicked vehicle
@@ -557,7 +569,7 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
             }
             break;
         
-        case(Navigation.VEHICLE_DESELECT_PATH):
+        case(Navigation.VEHICLE_DESELECT_VEHICLE):
             // TODO: change the colour of the vehicle to deselected (possibly not required)
             
             // change the colour of the path to deselected
