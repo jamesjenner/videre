@@ -102,6 +102,9 @@ MapPath.prototype.setPathStyle = function(style) {
     if(this.polyLine) {
         this.polyLine.setStyle(style);
     }
+    if(this.returnHomePolyLine) {
+        this.returnHomePolyLine.setStyle(style);
+    }
 }
 
 /*
