@@ -125,9 +125,15 @@ MapPath.prototype.getMarkers = function() {
  * set the poly line
  */
 MapPath.prototype.setPolyLine = function(polyLine) {
-    this.polyLine = polyLine;
+
+    // remove it if it exists
+    if(this.polyLine && this.layerGroup) {
+        this.layerGroup.removeLayer(this.polyLine);
+    }
     
-    // TODO: check if the poly line has already been added to the layer group
+    this.polyLine = polyLine;
+
+    // add the poly line    
     if(this.layerGroup) {
         this.polyLine.addTo(this.layerGroup);
     }
@@ -160,7 +166,7 @@ MapPath.prototype.addReturnHomePolyLine = function(polyLine) {
  * remove the return home poly line
  */
 MapPath.prototype.removeReturnHomePolyLine = function() {
-    if(this.layerGroup) {
+    if(this.layerGroup && this.returnHomePolyLine) {
         this.layerGroup.removeLayer(this.returnHomePolyLine);
         this.returnHomePolyLine = null;
     }
