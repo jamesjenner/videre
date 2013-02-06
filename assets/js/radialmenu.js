@@ -64,6 +64,11 @@ var RadialMenu = function(contentId, options) {
     var left = 0;
     
     $(this).children("li").each(function(i) {
+      // enable links
+      $(this).children("a").each(function(i) {
+        $(this).addClass("enabled");
+      });
+      
       $(this).width(max_width);
       $(this).height(max_height);
       var theta = (alpha * i) - (Math.PI / 2);
@@ -96,8 +101,9 @@ var RadialMenu = function(contentId, options) {
       $(this).wrapInner("<div class='aligner'></div>");
       var aligner = $(this).children("div.aligner")
       var aligner_height = aligner.outerHeight();
-      aligner.css("position", "absolute").css("width", "100%").css("top", "50%").css("margin-top", -(aligner_height / 2)); 
+      aligner.css("position", "absolute").css("width", "100%").css("top", "50%").css("margin-top", -(aligner_height / 2));
     });
+    
     
     $(this).hide();
     $(this).mouseleave(function() {
@@ -134,11 +140,13 @@ RadialMenu.prototype = {
     disableMenuItem: function(id) {
       // change the style so it is disabled
       $('#' + id).addClass('disabled');
+      $('#' + id).removeClass('enabled');
       return this;
     },
     enableMenuItem: function(id) {
       // change the style so it is enabled
       $('#' + id).removeClass('disabled');
+      $('#' + id).addClass('enabled');
       return this;
     },
     hideMenuItem: function() {
