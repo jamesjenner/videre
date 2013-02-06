@@ -36,6 +36,10 @@ Navigation.VEHICLE_DESELECT_VEHICLE = "menuVehicleDeselectVehicle";
 Navigation.VEHICLE_REVERSE_DIRECTION = "menuVehicleReverseDirection";
 Navigation.VEHICLE_REMOVE_VEHICLE = "menuVehicleRemoveVehicle";
 
+Navigation.MAP_ADD_VEHICLE = "menuMapAddVehicle";
+Navigation.MAP_REMOVE_ALL_VEHICLES = "menuMapRemoveAllVehicles";
+Navigation.MAP_ZOOM_TO_VEHICLES = "menuMapZoomToVehicles";
+
 Navigation.MODE_NO_ACTION = 0;
 Navigation.MODE_APPEND = 1;
 Navigation.MODE_INSERT_BEFORE = 2;
@@ -50,7 +54,8 @@ Navigation.FINISH_PATROL_ICON_URL = 'assets/img/finish-patrol-icon.png';
 function Navigation(options) {
     options = options || {};
     
-    this.vehicleMenuId = options.vehicleMenuId || 'navigationMapMenu';
+    this.mapMenuId = options.mapMenuId || 'navigationMapMenu';
+    this.vehicleMenuId = options.vehicleMenuId || 'navigationVehicleMenu';
     this.pointMenuId = options.pointMenuId || 'navigationPointMenu';
     this.vehicleMenuItemListener = options.vehicleMenuItemListener || function() {};
     this.pointMenuItemListener = options.pointMenuItemListener || function() {};
@@ -137,9 +142,7 @@ function Navigation(options) {
     // add all the vehicles...
     this._addVehiclesToMap();
     
-    // this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: this.vehicleMenuItemListener});
-    // this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: this.pointMenuItemListener});
-    
+    this.mapMenu = new RadialMenu(this.mapMenuId, {selectionListener: function(e) {that._mapMenuItemSelected(e, that); }});
     this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: function(e) {that._vehicleMenuItemSelected(e, that); }});
     this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {that._pointMenuItemSelected(e, that); }});
 
@@ -153,6 +156,8 @@ Navigation.prototype._addVehiclesToMap = function() {
     for(var i = 0, l = this.servers.length; i < l; i++) {
         for(var i2 = 0, l2 = this.remoteVehicles[this.servers[i].name].length; i2 < l2; i2++) {
             vehicle = this.remoteVehicles[this.servers[i].name][i2];
+            
+            // if the vehicle has a path then add it at the point specified
             
             this._addVehicleIcon(vehicle);
             
@@ -290,6 +295,11 @@ Navigation.prototype._markerDragged = function (e, that) {
 
 Navigation.prototype._onNavigationMapClick = function(e, that) {
     // if a menu is open, treat the click on the map as a request to close the menu
+    if(that.mapMenu.isActive()) {
+        that.mapMenu.hideMenu();
+        return;
+    }
+    
     if(that.pointMenu.isActive()) {
         that.pointMenu.hideMenu();
         return;
@@ -325,7 +335,27 @@ Navigation.prototype._onNavigationMapClick = function(e, that) {
             }
             
             break;
+        
+        case Navigation.MODE_NO_ACTION:
+            // display the map menu
+            that._displayMapMenu(e, that);
+            break;
     }
+}
+
+Navigation.prototype._displayMapMenu = function(e, that) {
+    
+    // if the path is selected then disable select
+    /*
+    if(that.selectedVehicle == that.clickedVehicle) {
+        that.pointMenu.disableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
+    } else {
+        that.pointMenu.enableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
+    }
+    */
+    
+    // show the menu
+    that.mapMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
 }
 
 Navigation.prototype._appendPoint = function(e, that, selected) {
@@ -421,9 +451,10 @@ Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, 
 }
 
 Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
-    console.log("vehicle clicked");
-    
-    // TODO: select the vehicle, allow options to go to: just show that vehicle, go to vehicle, centre on vehicle, zoom to vehicles flight path, etc
+    if(that.mapMenu.isActive()) {
+        that.mapMenu.hideMenu();
+        return;
+    }
     
     if(that.vehicleMenu.isActive()) {
         that.vehicleMenu.hideMenu();
@@ -439,27 +470,27 @@ Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
 
     // if the path is selected then disable select
     if(that.selectedVehicle == that.clickedVehicle) {
-        that.pointMenu.disableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
-        that.pointMenu.enableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
+        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
+        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
     } else {
-        that.pointMenu.enableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
-        that.pointMenu.disableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
+        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
+        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
     }
     
     // if the vehicle has a path then allow delete
     if(vehicle.navigationPath.isEmpty()) {
-        that.pointMenu.disableMenuItem(Navigation.VEHICLE_DELETE_PATH);
+        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_DELETE_PATH);
     } else {
-        that.pointMenu.enableMenuItem(Navigation.VEHICLE_DELETE_PATH);
+        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_DELETE_PATH);
     }
     // if the vehicle has a path and the last point is return to home then allow revserse
     if(vehicle.navigationPath.returnsHome()) {
-        that.pointMenu.enableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
     } else {
-        that.pointMenu.disableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
     }
     
-    // otherwise show the menu
+    // show the menu
     that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
 }
   
@@ -475,6 +506,11 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
     pos++;
 
     // if a menu is open, treat the click on a point as a request to close the menu
+    if(that.mapMenu.isActive()) {
+        that.mapMenu.hideMenu();
+        return;
+    }
+    
     if(that.vehicleMenu.isActive()) {
         that.vehicleMenu.hideMenu();
         return;
@@ -506,16 +542,30 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
         that.pointMenu.enableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
     }
 
-    // this.pointMenu.displayMenu(e.containerPoint.y + 40, e.containerPoint.x);
     that.pointMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
-    
-    // TODO: add options to remove point, remove flight path, append point, prepend point, set altitude, set speed, toggle patrol, set patrol duration
-    console.log("navigation point clicked");
 }
   
   // TODO: not working, but beleive that the dev branch of leaflet supports it
 Navigation.prototype._onFlightPathClick = function(e) {
     console.log("navigation path clicked");
+}
+
+Navigation.prototype._mapMenuItemSelected = function(e, that) {
+    that.mapMenu.hideMenu();
+
+    switch(e.originalEvent.currentTarget.id) {
+        case(Navigation.MAP_ADD_VEHICLE):
+            console.log("add vehicle");
+            break;
+        
+        case(Navigation.MAP_REMOVE_ALL_VEHICLES):
+            console.log("remove all vehicles");
+            break;
+        
+        case(Navigation.MAP_ZOOM_TO_VEHICLES):
+            console.log("zoom to vehicles");
+            break;
+    }
 }
 
 Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
