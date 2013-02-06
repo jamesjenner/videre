@@ -26,6 +26,9 @@ ul.radial li {
 ul.radial li a {
   font-weight: bold;
   font-size: 16px;
+}
+
+a.enabled {
   color: #3f3f3f;
 }
 
