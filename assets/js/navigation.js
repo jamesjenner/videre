@@ -378,15 +378,7 @@ Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, positi
     vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
     var that = this;
 
-    if(!mapPath) {
-        // TODO: this is most prob. redundant, should be deleted, commented out for now
-        /*
-        
-        var polyLine = L.polyline([fromPoint, toPoint], that.selectedNavPathStyle);
-        
-        mapPath = new MapPath({map: this.map, polyLine: polyLine});
-        */
-    } else if (position == 1) {
+    if (position == 1) {
         // we're starting out, so set the poly line based on the from and to points
         mapPath.setPolyLine(L.polyline([fromPoint, toPoint], that.selectedNavPathStyle));
     } else {
@@ -590,10 +582,27 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
                 // reverse the path
                 that.clickedVehicle.navigationPath.reverse();
                 
-                // remove the current path
+                // remove the current markers
+                that.currentMapPath.removeMarkers();
+                
+                // remove the return home polyline
+                that.currentMapPath.removeReturnHomePolyLine();
+
+                // set the new polyline
+                that.currentMapPath.setPolyLine(L.polyline(that.clickedVehicle.navigationPath.toArray(), that.selectedNavPathStyle));
+
+                // add the return home polyline (if required)
+                if(that.selectedVehicle.navigationPath.returnsHome()) {
+                    var lastPoint = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+                    var homePoint = that.selectedVehicle.navigationPath.getPoint(0);
+                    var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
+                                               [homePoint.position.latitude, homePoint.position.longitude]],
+                                              that.selectedNavPathStyle);
+                    that.currentMapPath.addReturnHomePolyLine(polyline);
+                }
                 
                 // add the current path
-                
+                that._addMarkers(that.navMapPaths[that.selectedVehicle.id], that.selectedVehicle, that);
             }
             break;
         
