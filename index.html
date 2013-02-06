@@ -1582,13 +1582,12 @@ function addNavigationContentUI(id) {
   // TODO: tidy up the mapping logic
   
   navigationManager = new Navigation({
+    mapMenuId: 'mapMenu',
     vehicleMenuId: 'vehicleMenu',
     pointMenuId: 'navPointMenu',
     remoteVehicles: contentManager.remoteVehicles,
     servers: contentManager.servers,
     localVehicles: contentManager.vehicles
-    // vehicleMenuItemListener: navigationMapMenuClicked,
-    // pointMenuItemListener: navigationPointMenuClicked
     });
 }
 
@@ -2495,6 +2494,21 @@ function setTelemetry(telemetry) {
       <li>
         <a href="#" id="menuPointTerminusToggle">Terminus Toggle</a>
         <span>&Theta;</span>
+      </li>
+    </ul>
+    <!-- radial menu for map -->
+    <ul class="radial" id="mapMenu">
+      <li>
+        <a href="#" id="menuMapAddVehicle">Add Vehicle</a>
+        <span>+</span>
+      </li>
+      <li>
+        <a href="#" id="menuMapRemoveAllVehicles">Remove Vehicles</a>
+        <span>-</span>
+      </li>
+      <li>
+        <a href="#" id="menuMapZoomToVehicles">Zoom vehicles</a>
+        <span>[ ]</span>
       </li>
     </ul>
     
