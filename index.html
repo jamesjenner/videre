@@ -1497,6 +1497,7 @@ function addNavigationContentUI(id) {
   
   // TODO: insert nav marker properties here
   addNavPointForm(id, navigationMapId + "NavPoint");
+  addVehicleToMapForm(id, navigationMapId + "AddVehicleToMap");
   
   // TODO: insert vehicle properties here (if required)
   
@@ -1589,6 +1590,159 @@ function addNavigationContentUI(id) {
     servers: contentManager.servers,
     localVehicles: contentManager.vehicles
     });
+}
+
+function addVehicleToMapForm(parentId, id) {
+
+  var vehicleList = '';
+
+  // generate the vehicle list by first iterating through all servers...
+  if(contentManager.servers) {
+    for(var i = 0, l = contentManager.servers.length; i < l; i++) {
+      for(var i2 = 0, l2 = contentManager.remoteVehicles[contentManager.servers[i].name].length; i2 < l2; i2++) {
+        vehicle = contentManager.remoteVehicles[contentManager.servers[i].name][i2];
+        
+        // if the vehicle is on the map then add it
+        if(!vehicle.onMap) {
+          vehicleList += 
+            '              <li>' +
+            '                <a href="#">' +
+            '                  <img class="dropdownIcon" src="' + getVehicleIcon(vehicle) + '" />' +
+            '                  <span class="dropdownText" key="' + vehicle.id + '">' +  vehicle.name + '</span>' +
+            '                </a>' +
+            '              </li>';
+        }
+      }
+    }
+  }
+  
+  if(contentManager.localVehicles) {
+    for(var i = 0, l = contentManager.localVehicles.length; i < l; i++) {
+      vehicleList += 
+        '              <li>' +
+        '                <a href="#">' +
+        '                  <img class="dropdownIcon" src="' + getVehicleIcon(contentManager.localVehicles[i]) + '" />' +
+        '                  <span class="dropdownText">' +  contentManager.localVehicles[i].name + '</span>' +
+        '                </a>' +
+        '              </li>';
+        
+    }
+  }
+  
+  
+  $('#' + parentId).append(
+    '<div id="' + id + '" class="applicationContents modalContents">' +
+    '  <div id="' + id + 'Form" class="formContainer">' +
+    '    <div class="formContents">' +
+    '      <div class="formContents">' +
+    '       <form id="vehicleAddToMapForm">' +
+    '         <ul>' +
+
+    '           <li>' +
+    '            <label for="vehicleAddToMapVehicle">Type of vehicle</label>' +
+    '            <div id="vehicleAddToMapVehicleWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="remoteServer" id="vehicleAddToMapVehicle" placeholder="VehicleType" readonly="true">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    
+    vehicleList +
+    
+    '             </ul>' +
+    '            </div>' +
+    '           </li>' +
+    
+    '           <li class="breakTop">' + 
+    '             <label for="vehicleAddToMapAltitude">Default Altitude</label>' +
+    '             <input type="text" name="altitude" id="vehicleAddToMapAltitude" placeholder="100" required><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="vehicleAddToMapSpeed">Default Speed</label>' +
+    '             <input type="text" name="address" id="vehicleAddToMapSpeed" placeholder="100%" required><br>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '           <li>' +
+    '             <label for="vehicleAddToMapLoiterSpeed">Default Loiter Radius</label>' +
+    '             <input type="number" min="1" max="99999" name="loiterRadius" id="vehicleAddToMapLoiterRadius" placeholder="loiter radius"><br>' +
+    '           </li>' + 
+    '           <li>' +
+    '             <label for="vehicleAddToMapLoiterSpeed">Default Loiter Speed</label>' +
+    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="vehicleAddToMapLoiterSpeed" placeholder="100%"><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="vehicleAddToMapLoiterDuration">Default Loiter Duration</label>' +
+    '             <input type="number" min="1" max="99999" name="loiterDuration" id="vehicleAddToMapLoiterDuration" placeholder="1"><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="vehicleAddToMapLoiterDurationUOM">Default Loiter Duration UOM</label>' +
+    '             <input type="text" name="loiterDurationUOM" id="vehicleAddToMapDurationUOM" placeholder="Minute"><br>' +
+    '           </li>' +
+    '       </form>' +
+    '      </div>' +
+    '    </div>' +
+    '  </div>' +
+    '</div>');
+
+  vehicleAddToMapDropDown = new DropDown($('#vehicleAddToMapVehicleWrapper'));
+  
+  // setup and initialise the action bar
+  addVehicleToMapModalBar = new ModalBar({ targetId: id, id: id + MODAL_BAR,})
+    .initialise();
+}
+
+// TODO: this drop down being here is really really ugly
+var vehicleAddToMapDropDown = null;
+
+var addVehicleToMapModalBar = null;
+
+function showAddVehicleToMapForm(latLng) {
+  // set values
+  
+  // TODO: in preferences or in vehicle setup default values for adding a vehicle to the map
+  
+  // TODO: rejig the form so vehicles drop down is dynamic
+  // TODO: only show if there are vehicles available
+  /*
+  $('#navPointSequence').val(navPoint.sequence);
+  $('#navPointUpdateAltitude').val(navPoint.altitude);
+  $('#navPointUpdateSpeed').val(navPoint.speed);
+  $('#navPointUpdateLoiterRadius').val(navPoint.loiterRadius);
+  $('#navPointUpdateLoiterSpeed').val(navPoint.loiterSpeed);
+  $('#navPointUpdateLoiterDuration').val(navPoint.loiterTime);
+  $('#navPointUpdateLoiterDurationUOM').val(navPoint.loiterDurationUOM);
+  */
+  
+  addVehicleToMapModalBar.setAcceptFunction(function() {acceptAddVehicleToMapModalBarUpdate(latLng)});
+  addVehicleToMapModalBar.show();
+}
+
+function acceptAddVehicleToMapModalBarUpdate(latLng) {
+  // process the values
+  var altitude = $('#vehicleAddToMapAltitude').val();
+  var speed = $('#vehicleAddToMapSpeed').val();
+  var loiterRadius = $('#vehicleAddToMapLoiterRadius').val();
+  var loiterSpeed = $('#vehicleAddToMapLoiterSpeed').val();
+  var loiterTime = $('#vehicleAddToMapLoiterDuration').val();
+  var loiterDurationUOM = $('#vehicleAddToMapLoiterDurationUOM').val();
+  
+  var vehicleId = $('#vehicleAddToMapVehicle').val();
+  var vehicle = null;
+  var found = false;
+  vehicleId = vehicleAddToMapDropDown.getKey();
+  // determine the vehicle, TODO: move this logic to the content manager possibly?
+  for(var i = 0, l = contentManager.servers.length; i < l; i++) {
+    for(var i2 = 0, l2 = contentManager.remoteVehicles[contentManager.servers[i].name].length; i2 < l2; i2++) {
+      vehicle = contentManager.remoteVehicles[contentManager.servers[i].name][i2];
+      if(vehicle.id == vehicleId) {
+        found = true;
+        break;
+      }
+    }
+  }
+  
+  if(found) {
+    // TODO: add the vehicle to the map
+    navigationManager.addVehicle(vehicle, latLng.lat, latLng.lng);
+  }
 }
 
 function addNavPointForm(parentId, id) {
