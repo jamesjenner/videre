@@ -149,31 +149,61 @@ function Navigation(options) {
     this.map.on('click', function(e) {that._onNavigationMapClick(e, that); });
 }
 
+Navigation.prototype.addVehicle = function(vehicle, latitude, longitude) {
+    // add a vehicle and it's associated path to the map
+    this._addVehicleIcon(vehicle, latitude, longitude);
+    
+    // TODO: presume that the path is empty, so we should be adding an entry for the path to the navMapPaths array
+    // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+}
+
+Navigation.prototype.removeVehicle = function(vehicle) {
+    // remove a vehicle and it's associated path from the map
+    
+}
+
+Navigation.prototype.removeAllVehicles = function() {
+    // remove all vehicles from the map
+    this.vehicles = null;
+    
+}
+
+Navigation.prototype.setVehicles = function(vehicles) {
+    // set the vehicles to the passed vehicle list, this removes existing vehicles
+    this.vehicles = vehicles;
+}
+
 Navigation.prototype._addVehiclesToMap = function() {
     var vehicle = null;
+    var point = null;
     
     // iterate through the servers and then the vehicles for each server
     for(var i = 0, l = this.servers.length; i < l; i++) {
         for(var i2 = 0, l2 = this.remoteVehicles[this.servers[i].name].length; i2 < l2; i2++) {
             vehicle = this.remoteVehicles[this.servers[i].name][i2];
             
-            // if the vehicle has a path then add it at the point specified
-            
-            this._addVehicleIcon(vehicle);
-            
-            this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+            // if the vehicle is on the map then add it
+            if(vehicle.onMap) {
+                point = navigationPath.getPoint(0);
+                this._addVehicleIcon(vehicle, point.position.latitude, point.position.longitude);
+                
+                this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+                
+                // TODO: add the actual path?
+            }
         }
     }
 
     // iterate through the local vehicles    
     for(var i = 0, l = this.localVehicles.length; i < l; i++) {
         // add the vehicle icon
-        this._addVehicleIcon(this.localVehicles[i]);
+        point = navigationPath.getPoint(0);
+        this._addVehicleIcon(this.localVehicles[i], point.position.latitude, point.position.longitude);
         
         // TODO: add the navigation path
-        // this._addNavPath();
+        // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
         
-        // TODO: add the actual path
+        // TODO: add the actual path?
         // this._addActualPath();
     }
 }
@@ -205,27 +235,7 @@ Navigation.prototype._addMarkers = function(mapPath, vehicle, that) {
     }
 }
 
-Navigation.prototype.addVehicle = function(vehicle) {
-    // add a vehicle and it's associated path to the map
-}
-
-Navigation.prototype.removeVehicle = function(vehicle) {
-    // remove a vehicle and it's associated path from the map
-    
-}
-
-Navigation.prototype.removeAllVehicles = function() {
-    // remove all vehicles from the map
-    this.vehicles = null;
-    
-}
-
-Navigation.prototype.setVehicles = function(vehicles) {
-    // set the vehicles to the passed vehicle list, this removes existing vehicles
-    this.vehicles = vehicles;
-}
-
-Navigation.prototype._addVehicleIcon = function(vehicle, position) {
+Navigation.prototype._addVehicleIcon = function(vehicle, latitude, longitude) {
     var that = this;
     // add the vehicle icon to the map
     var vehicleIcon = L.icon({iconUrl: Navigation.AIRPLANE_MAP_ICON, iconAnchor: [21, 21]});
@@ -233,7 +243,7 @@ Navigation.prototype._addVehicleIcon = function(vehicle, position) {
     // use the div icon so we can rotate it based on the custom class
     var vehicleIconDiv = L.divIcon({className: Navigation.VEHICLE_ICON_CLASS, iconAnchor: [17, 21], iconSize: [35, 42]});
     
-    var vehicleMarker = L.marker([-27.61657, 153.15387], {
+    var vehicleMarker = L.marker([latitude, longitude], {
         icon: vehicleIconDiv,
 //         vehicle: vehicle,
         })
@@ -353,6 +363,8 @@ Navigation.prototype._displayMapMenu = function(e, that) {
         that.pointMenu.enableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
     }
     */
+    
+    that.currentLatLng = e.latlng;
     
     // show the menu
     that.mapMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
@@ -556,6 +568,7 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.MAP_ADD_VEHICLE):
             console.log("add vehicle");
+            showAddVehicleToMapForm(that.currentLatLng);
             break;
         
         case(Navigation.MAP_REMOVE_ALL_VEHICLES):
