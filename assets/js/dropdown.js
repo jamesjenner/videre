@@ -21,6 +21,7 @@ function DropDown(el) {
     this.placeholder = this.dd.children('input');
     this.opts = this.dd.find('ul.dropdown > li');
     this.val = '';
+    this.key = '';
     this.index = -1;
     this.initEvents();
 }
@@ -36,9 +37,11 @@ DropDown.prototype = {
  
         obj.opts.on('click',function(){
             var opt = $(this);
+            obj.key = opt.find('span').attr('key');
             obj.val = opt.find('span').text();
             obj.index = opt.index();
             obj.placeholder.val(obj.val);
+            
         });
     },
     getValue : function() {
@@ -46,5 +49,8 @@ DropDown.prototype = {
     },
     getIndex : function() {
         return this.index;
+    },
+    getKey : function() {
+        return this.key;
     }
 }
