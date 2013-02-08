@@ -157,6 +157,13 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude) {
     // add a vehicle and it's associated path to the map
     this._addVehicleIcon(vehicle, latitude, longitude);
     
+    // add the start point
+    if(vehicle.navigationPath.isEmpty()) {
+        vehicle.navigationPath.append(latitude, longitude);
+    } else {
+        // TODO: do we override the start pos of the vehicle?
+    }
+    
     // setup the nav path
     this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
 }
@@ -294,7 +301,7 @@ Navigation.prototype._addVehicleIcon = function(vehicle, latitude, longitude) {
     // iconUrl: getVehicleIcon(vehicle), 
     
     // use the div icon so we can rotate it based on the custom class
-    var vehicleIconDiv = L.divIcon({className: this._getVehicleIconClass(vehicle), iconAnchor: [17, 21], iconSize: [35, 42]});
+    var vehicleIconDiv = L.divIcon({className: this._getVehicleIconClass(vehicle), iconAnchor: [32, 32], iconSize: [64, 64]});
     
     var vehicleMarker = L.marker([latitude, longitude], {
         icon: vehicleIconDiv,
@@ -654,7 +661,7 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
 //    that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
         
         case(Navigation.VEHICLE_SELECT_VEHICLE):
-            selectVehicle.bind(that)(that.clickedVehicle);
+            that.selectVehicle.bind(that)(that.clickedVehicle);
             break;
         
         case(Navigation.VEHICLE_DESELECT_VEHICLE):

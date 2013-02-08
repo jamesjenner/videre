@@ -1728,19 +1728,21 @@ function acceptAddVehicleToMapModalBarUpdate(latLng) {
   var vehicle = null;
   var found = false;
   vehicleId = vehicleAddToMapDropDown.getKey();
+  
   // determine the vehicle, TODO: move this logic to the content manager possibly?
   for(var i = 0, l = contentManager.servers.length; i < l; i++) {
     for(var i2 = 0, l2 = contentManager.remoteVehicles[contentManager.servers[i].name].length; i2 < l2; i2++) {
       vehicle = contentManager.remoteVehicles[contentManager.servers[i].name][i2];
+
       if(vehicle.id == vehicleId) {
         found = true;
         break;
       }
     }
   }
-  
+
+  // found the vehicle so lets add it  
   if(found) {
-    // TODO: add the vehicle to the map
     navigationManager.addVehicle(vehicle, latLng.lat, latLng.lng);
     navigationManager.selectVehicle(vehicle);
   }
