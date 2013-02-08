@@ -1653,28 +1653,28 @@ function addVehicleToMapForm(parentId, id) {
     
     '           <li class="breakTop">' + 
     '             <label for="vehicleAddToMapAltitude">Default Altitude</label>' +
-    '             <input type="text" name="altitude" id="vehicleAddToMapAltitude" placeholder="100" required><br>' +
+    '             <input type="text" name="altitude" id="vehicleAddToMapAltitude" placeholder="" required><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="vehicleAddToMapSpeed">Default Speed</label>' +
-    '             <input type="text" name="address" id="vehicleAddToMapSpeed" placeholder="100%" required><br>' +
+    '             <input type="text" name="address" id="vehicleAddToMapSpeed" placeholder="" required><br>' +
     '           </li>' + 
     '           <li class="breakTop">' + 
     '           <li>' +
     '             <label for="vehicleAddToMapLoiterSpeed">Default Loiter Radius</label>' +
-    '             <input type="number" min="1" max="99999" name="loiterRadius" id="vehicleAddToMapLoiterRadius" placeholder="loiter radius"><br>' +
+    '             <input type="number" min="1" max="99999" name="loiterRadius" id="vehicleAddToMapLoiterRadius" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' +
     '             <label for="vehicleAddToMapLoiterSpeed">Default Loiter Speed</label>' +
-    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="vehicleAddToMapLoiterSpeed" placeholder="100%"><br>' +
+    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="vehicleAddToMapLoiterSpeed" placeholder="1 to 100"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="vehicleAddToMapLoiterDuration">Default Loiter Duration</label>' +
-    '             <input type="number" min="1" max="99999" name="loiterDuration" id="vehicleAddToMapLoiterDuration" placeholder="1"><br>' +
+    '             <input type="number" min="1" max="99999" name="loiterDuration" id="vehicleAddToMapLoiterDuration" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="vehicleAddToMapLoiterDurationUOM">Default Loiter Duration UOM</label>' +
-    '             <input type="text" name="loiterDurationUOM" id="vehicleAddToMapDurationUOM" placeholder="Minute"><br>' +
+    '             <input type="text" name="loiterDurationUOM" id="vehicleAddToMapDurationUOM" placeholder=""><br>' +
     '           </li>' +
     '       </form>' +
     '      </div>' +
@@ -1710,8 +1710,8 @@ function showAddVehicleToMapForm(latLng) {
   $('#navPointUpdateLoiterDuration').val(navPoint.loiterTime);
   $('#navPointUpdateLoiterDurationUOM').val(navPoint.loiterDurationUOM);
   */
-  
-  addVehicleToMapModalBar.setAcceptFunction(function() {acceptAddVehicleToMapModalBarUpdate(latLng)});
+  var that = this;
+  addVehicleToMapModalBar.setAcceptFunction(function() {acceptAddVehicleToMapModalBarUpdate.bind(that)(latLng)});
   addVehicleToMapModalBar.show();
 }
 
@@ -1742,6 +1742,7 @@ function acceptAddVehicleToMapModalBarUpdate(latLng) {
   if(found) {
     // TODO: add the vehicle to the map
     navigationManager.addVehicle(vehicle, latLng.lat, latLng.lng);
+    navigationManager.selectVehicle(vehicle);
   }
 }
 
