@@ -179,8 +179,8 @@ div.noflex {
 
 .airplaneMapIcon {
 	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_airplane.png);
-	height: 42px;
-	width: 35px;
+	height: 64px;
+	width: 64px;
 	filter: invert(100%);
 	-webkit-filter: invert(100%);
 	-moz-filter: invert(100%);
@@ -190,8 +190,8 @@ div.noflex {
 
 .surfaceMapIcon {
 	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_surface.png);
-	height: 42px;
-	width: 35px;
+	height: 64px;
+	width: 64px;
 	filter: invert(100%);
 	-webkit-filter: invert(100%);
 	-moz-filter: invert(100%);
@@ -201,8 +201,8 @@ div.noflex {
 
 .submersibleMapIcon {
 	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_submersible.png);
-	height: 42px;
-	width: 35px;
+	height: 64px;
+	width: 64px;
 	filter: invert(100%);
 	-webkit-filter: invert(100%);
 	-moz-filter: invert(100%);
