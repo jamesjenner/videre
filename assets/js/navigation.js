@@ -21,6 +21,10 @@
 Navigation.VEHICLE_ICON_CLASS = 'vehicleIcon';
 Navigation.AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
+Navigation.AIRPLANE_ICON_CLASS = 'airplaneMapIcon';
+Navigation.SURFACE_ICON_CLASS = 'surfaceMapIcon';
+Navigation.SUBMERSIBLE_ICON_CLASS = 'submersibleMapIcon';
+
 Navigation.POINT_PROPERTIES = "menuPointNavPointProperties";
 Navigation.POINT_DELETE = "menuPointDeleteNavPoint";
 Navigation.POINT_INSERT_BEFORE = "menuPointInsertBefore";
@@ -153,8 +157,33 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude) {
     // add a vehicle and it's associated path to the map
     this._addVehicleIcon(vehicle, latitude, longitude);
     
-    // TODO: presume that the path is empty, so we should be adding an entry for the path to the navMapPaths array
-    // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+    // setup the nav path
+    this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+}
+
+Navigation.prototype.selectVehicle = function(vehicle) {
+    // TODO: change the colour of the vehicle to selected (possibly not required)
+    
+    this.selectedVehicle = vehicle;
+    
+    // allocate the current map path
+    this.currentMapPath = this.navMapPaths[this.selectedVehicle.id];
+    
+    if(this.currentMapPath) {
+        // change the colour of the path to selected
+        this.currentMapPath.setPathStyle(this.selectedNavPathStyle);
+        
+        // draw the points for the path
+        this._addMarkers(this.navMapPaths[this.selectedVehicle.id], this.selectedVehicle, this);
+    }
+    
+    if(!this.selectedVehicle.navigationPath.isEmpty() || !this.selectedVehicle.navigationPath.complete()) {
+        // path is either empty or not complete, so go to append mode
+        this.mapTouchMode = Navigation.MODE_APPEND;
+    } else {
+        // path is complete, so no action mode
+        this.mapTouchMode = Navigation.MODE_NO_ACTION;
+    }
 }
 
 Navigation.prototype.removeVehicle = function(vehicle) {
@@ -235,13 +264,37 @@ Navigation.prototype._addMarkers = function(mapPath, vehicle, that) {
     }
 }
 
+Navigation.prototype._getVehicleIconClass = function(vehicle) {
+  var icon = Navigation.AIRPLANE_ICON_CLASS;
+  
+  switch(vehicle.type) {
+    case Vehicle.TYPE_AIR:
+      icon = Navigation.AIRPLANE_ICON_CLASS;
+      break;
+    case Vehicle.TYPE_SURFACE:
+      icon = Navigation.SURFACE_ICON_CLASS;
+      break;
+    case Vehicle.TYPE_SUBMERSIBLE:
+      icon = Navigation.SUBMERSIBLE_ICON_CLASS;
+      break;
+  }
+  
+  return icon;
+}
+
+
 Navigation.prototype._addVehicleIcon = function(vehicle, latitude, longitude) {
     var that = this;
+    
     // add the vehicle icon to the map
-    var vehicleIcon = L.icon({iconUrl: Navigation.AIRPLANE_MAP_ICON, iconAnchor: [21, 21]});
+    
+    
+    // var vehicleIcon = L.icon({iconUrl: getVehicleIcon(vehicle), iconAnchor: [21, 21]});
+    
+    // iconUrl: getVehicleIcon(vehicle), 
     
     // use the div icon so we can rotate it based on the custom class
-    var vehicleIconDiv = L.divIcon({className: Navigation.VEHICLE_ICON_CLASS, iconAnchor: [17, 21], iconSize: [35, 42]});
+    var vehicleIconDiv = L.divIcon({className: this._getVehicleIconClass(vehicle), iconAnchor: [17, 21], iconSize: [35, 42]});
     
     var vehicleMarker = L.marker([latitude, longitude], {
         icon: vehicleIconDiv,
@@ -568,7 +621,7 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.MAP_ADD_VEHICLE):
             console.log("add vehicle");
-            showAddVehicleToMapForm(that.currentLatLng);
+            showAddVehicleToMapForm.bind(that)(that.currentLatLng);
             break;
         
         case(Navigation.MAP_REMOVE_ALL_VEHICLES):
@@ -601,27 +654,7 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
 //    that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
         
         case(Navigation.VEHICLE_SELECT_VEHICLE):
-            // TODO: change the colour of the vehicle to selected (possibly not required)
-            
-            // set the selected vehicle to the clicked vehicle
-            that.selectedVehicle = that.clickedVehicle;
-            
-            // allocate the current map path
-            that.currentMapPath = that.navMapPaths[that.selectedVehicle.id];
-            
-            // change the colour of the path to selected
-            that.currentMapPath.setPathStyle(that.selectedNavPathStyle);
-            
-            // draw the points for the path
-            that._addMarkers(that.navMapPaths[that.selectedVehicle.id], that.selectedVehicle, that);
-            
-            if(!that.selectedVehicle.navigationPath.isEmpty() || !that.selectedVehicle.navigationPath.complete()) {
-                // path is either empty or not complete, so go to append mode
-                that.mapTouchMode = Navigation.MODE_APPEND;
-            } else {
-                // path is complete, so no action mode
-                that.mapTouchMode = Navigation.MODE_NO_ACTION;
-            }
+            selectVehicle.bind(that)(that.clickedVehicle);
             break;
         
         case(Navigation.VEHICLE_DESELECT_VEHICLE):
