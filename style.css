@@ -177,10 +177,37 @@ div.noflex {
 	box-flex:0.0;
 }
 
-.vehicleIcon {
-	background-Image: url(assets/icons/airplane.png);
+.airplaneMapIcon {
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_airplane.png);
 	height: 42px;
 	width: 35px;
+	filter: invert(100%);
+	-webkit-filter: invert(100%);
+	-moz-filter: invert(100%);
+	-o-filter: invert(100%);
+	-ms-filter: invert(100%);
+}
+
+.surfaceMapIcon {
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_surface.png);
+	height: 42px;
+	width: 35px;
+	filter: invert(100%);
+	-webkit-filter: invert(100%);
+	-moz-filter: invert(100%);
+	-o-filter: invert(100%);
+	-ms-filter: invert(100%);
+}
+
+.submersibleMapIcon {
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_submersible.png);
+	height: 42px;
+	width: 35px;
+	filter: invert(100%);
+	-webkit-filter: invert(100%);
+	-moz-filter: invert(100%);
+	-o-filter: invert(100%);
+	-ms-filter: invert(100%);
 }
 
 .leaflet-control-layers-toggle {
