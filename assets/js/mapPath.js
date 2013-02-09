@@ -57,6 +57,25 @@ function MapPath(options) {
 /*
  * remove the group from the map
  */
+MapPath.prototype.getLatLngs = function() {
+    var latlngs = new Array();
+    
+    if(this.layerGroup) {
+        if(this.polyLine) {
+            latlngs.push(this.polyLine.getLatLngs());
+        }
+        if(this.returnHomePolyLine) {
+            latlngs.push(this.returnHomePolyLine.getLatLngs());
+        }
+
+    }
+    
+    return latlngs;
+}
+
+/*
+ * remove the group from the map
+ */
 MapPath.prototype.remove = function() {
     if(this.layerGroup) {
         this.map.removeLayer(this.layerGroup);
