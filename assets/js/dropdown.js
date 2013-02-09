@@ -35,13 +35,27 @@ DropDown.prototype = {
             return false;
         });
  
+        obj.opts.on('click', function(){
+            var opt = $(this);
+            obj.key = opt.find('span').attr('key');
+            obj.val = opt.find('span').text();
+            obj.index = opt.index();
+            obj.placeholder.val(obj.val);
+        });
+    },
+    initList : function() {
+        var obj = this;
+        
+        obj.opts = this.dd.find('ul.dropdown > li');
+        
+        obj.opts.off('click');
+        
         obj.opts.on('click',function(){
             var opt = $(this);
             obj.key = opt.find('span').attr('key');
             obj.val = opt.find('span').text();
             obj.index = opt.index();
             obj.placeholder.val(obj.val);
-            
         });
     },
     getValue : function() {
