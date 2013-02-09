@@ -25,6 +25,7 @@ function MapPath(options) {
     this.vehicle = options.vehicle || null;
     
     this.markers = new Array();
+    this.vehicleMarker = options.vehicleMarker || null;
     this.polyLine = options.polyLine || null;
 
     this.returnHomePolyLine = options.returnHomePolyLine || null;
@@ -37,6 +38,10 @@ function MapPath(options) {
     if(this.map) {
         this.layerGroup.addTo(this.map);
         
+        if(this.vehicleMarker) {
+            this.vehicleMarker.addTo(this.layerGroup);
+        }
+        
         if(this.polyLine) {
             this.polyLine.addTo(this.layerGroup);
         }
@@ -47,6 +52,55 @@ function MapPath(options) {
     }
     
     this.selected = options.selected || false;
+}
+
+/*
+ * remove the group from the map
+ */
+MapPath.prototype.remove = function() {
+    if(this.layerGroup) {
+        this.map.removeLayer(this.layerGroup);
+    }
+}
+
+/*
+ * remove the paths
+ */
+MapPath.prototype.removePaths = function() {
+    if(this.layerGroup) {
+        if(this.polyLine) {
+            this.layerGroup.removeLayer(this.polyLine);
+        }
+        if(this.returnHomePolyLine) {
+            this.layerGroup.removeLayer(this.returnHomePolyLine);
+        }
+    }
+}
+
+/*
+ * remove the group from the map
+ */
+MapPath.prototype.add = function(map) {
+    if(map) {
+        if(!this.layerGroup) {
+            this.layerGroup = new L.layerGroup();
+            
+            if(this.polyLine) {
+                this.polyLine.addTo(this.layerGroup);
+            }
+            
+            if(this.returnHomePolyLine) {
+                this.returnHomePolyLine.addTo(this.layerGroup);
+            }
+            if(this.markers) {
+                for(var i = 0, l = this.markers.length; i < l; i++) {
+                    this.markers[i].addTo(this.layerGroup)
+                }
+            }
+        }
+            
+        this.layerGroup.addTo(this.map);
+    }
 }
 
 /*
