@@ -1743,7 +1743,7 @@ function acceptAddVehicleToMapModalBarUpdate(latLng) {
 
   // found the vehicle so lets add it  
   if(found) {
-    navigationManager.addVehicle(vehicle, latLng.lat, latLng.lng);
+    navigationManager.addVehicle(vehicle, latLng.lat, latLng.lng, true);
     navigationManager.selectVehicle(vehicle);
   }
 }
