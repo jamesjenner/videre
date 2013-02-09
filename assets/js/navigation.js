@@ -153,23 +153,31 @@ function Navigation(options) {
     this.map.on('click', function(e) {that._onNavigationMapClick(e, that); });
 }
 
-Navigation.prototype.addVehicle = function(vehicle, latitude, longitude) {
-    // add a vehicle and it's associated path to the map
-    this._addVehicleIcon(vehicle, latitude, longitude);
-    
+Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replaceFirstPos) {
     // add the start point
     if(vehicle.navigationPath.isEmpty()) {
         vehicle.navigationPath.append(latitude, longitude);
-    } else {
-        // TODO: do we override the start pos of the vehicle?
+    } else if(replaceFirstPos) {
+        // replace the first position on the navigation path with the specified lat/lng
+        var point = vehicle.navigationPath.getPoint(0);
+        
+        point.position.latitude = latitude;
+        point.position.longitude = longitude;
     }
     
+    vehicle.onMap = true;
+    
     // setup the nav path
-    this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+    this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false);
 }
 
 Navigation.prototype.selectVehicle = function(vehicle) {
     // TODO: change the colour of the vehicle to selected (possibly not required)
+    
+    // if a vehicle is selected then deselect it before selecting this one
+    if(this.selectedVehicle) {
+        this.deselectVehicle();
+    }
     
     this.selectedVehicle = vehicle;
     
@@ -184,7 +192,7 @@ Navigation.prototype.selectVehicle = function(vehicle) {
         this._addMarkers(this.navMapPaths[this.selectedVehicle.id], this.selectedVehicle, this);
     }
     
-    if(!this.selectedVehicle.navigationPath.isEmpty() || !this.selectedVehicle.navigationPath.complete()) {
+    if(this.selectedVehicle.navigationPath.isEmpty() || !this.selectedVehicle.navigationPath.complete()) {
         // path is either empty or not complete, so go to append mode
         this.mapTouchMode = Navigation.MODE_APPEND;
     } else {
@@ -193,15 +201,54 @@ Navigation.prototype.selectVehicle = function(vehicle) {
     }
 }
 
+Navigation.prototype.deselectVehicle = function() {
+    // TODO: change the colour of the vehicle to deselected (possibly not required)
+    
+    // change the colour of the path to deselected
+    this.currentMapPath.setPathStyle(this.deselectedNavPathStyle);
+    
+    // remove the points for the path
+    this.currentMapPath.removeMarkers();
+    
+    // change to no action
+    this.mapTouchMode = Navigation.MODE_NO_ACTION;
+    
+    // clear selection of the vehicle
+    this.selectedVehicle = null;
+}
+
 Navigation.prototype.removeVehicle = function(vehicle) {
     // remove a vehicle and it's associated path from the map
+    this.selectedVehicle = null;
+    
+    // deselect the vehicle if it is selected
+    if(this.selectedVehicle && this.selectedVehicle.id == vehicle.id) {
+        this.deselectVehicle();
+    }
+
+    // update the vehicle status    
+    vehicle.onMap = true;
+
+    // remove the nav path for the vehicle
+    this.navMapPaths[vehicle.id].remove();
+    
+    // delete the map paths for the vehicle
+    delete this.navMapPaths[vehicle.id];
     
 }
 
 Navigation.prototype.removeAllVehicles = function() {
     // remove all vehicles from the map
-    this.vehicles = null;
+    if(this.selectedVehicle) {
+        this.deselectVehicle();
+    }
     
+    // iterate through all map paths and remove them
+    for(var id in this.navMapPaths) {
+        this.navMapPaths[id].remove();
+    }
+    
+    this.navMapPaths = new Object()
 }
 
 Navigation.prototype.setVehicles = function(vehicles) {
@@ -221,9 +268,7 @@ Navigation.prototype._addVehiclesToMap = function() {
             // if the vehicle is on the map then add it
             if(vehicle.onMap) {
                 point = navigationPath.getPoint(0);
-                this._addVehicleIcon(vehicle, point.position.latitude, point.position.longitude);
-                
-                this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+                this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, point.position.latitude, point.position.longitude, false);
                 
                 // TODO: add the actual path?
             }
@@ -234,21 +279,62 @@ Navigation.prototype._addVehiclesToMap = function() {
     for(var i = 0, l = this.localVehicles.length; i < l; i++) {
         // add the vehicle icon
         point = navigationPath.getPoint(0);
-        this._addVehicleIcon(this.localVehicles[i], point.position.latitude, point.position.longitude);
-        
         // TODO: add the navigation path
-        // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, false);
+        // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, point.position.latitude, point.position.longitude, false);
         
         // TODO: add the actual path?
         // this._addActualPath();
     }
 }
 
-Navigation.prototype._setupMapPath = function(path, vehicleId, vehicleSelected) {
+Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude, vehicleSelected) {
     var points = path.toArray();
     
     var polyLine = L.polyline(points, this.selectedNavPathStyle);
-    var mapPath = new MapPath({map: this.map, polyLine: polyLine});
+    
+    // this._addVehicleIcon(vehicle, point.position.latitude, point.position.longitude);
+
+    var that = this;
+    
+    var vehicleMarker = L.marker([latitude, longitude], {
+        icon: L.divIcon({className: this._getVehicleIconClass(vehicle), iconAnchor: [32, 32], iconSize: [64, 64]}),
+        })
+        .on('click', function(e) { that._onVehicleMarkerClick(e, that, vehicle); });
+    
+    /* rotate the vehicle icon...
+    var vehicleIconElement = $("." + Navigation.VEHICLE_ICON_CLASS);
+    
+    var currentTransform = vehicleIconElement.css("-webkit-transform");
+    
+    // vehicleIconElement.css("-webkit-transform", "rotate(30deg)");
+    
+    // get the transform matrix
+    var t = _T.fromString(vehicleIconElement.css('-webkit-transform'));
+    // create a rotate matrix
+    var r = _T.rotate(50);
+    // multiply the two matrixes together
+    var n = t.x(r);
+    
+    // apply the new matrix
+    vehicleIconElement.css({
+    '-webkit-transform': _T.toString(n)
+    });
+    */
+    
+    var mapPath = new MapPath({map: this.map, vehicleMarker: vehicleMarker, polyLine: polyLine});
+    
+    if(vehicle.navigationPath.returnsHome()) {
+        var lastPoint = vehicle.navigationPath.getPoint(vehicle.navigationPath.length() - 1);
+        var homePoint = vehicle.navigationPath.getPoint(0);
+        var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
+                                   [homePoint.position.latitude, homePoint.position.longitude]],
+                                  this.selectedNavPathStyle);
+        mapPath.addReturnHomePolyLine(polyline);
+    }
+    
+    // add the current path
+    // this._addMarkers(that.navMapPaths[vehicle.id], vehicle, this);
+    
     
     return mapPath;
 }
@@ -288,48 +374,6 @@ Navigation.prototype._getVehicleIconClass = function(vehicle) {
   
   return icon;
 }
-
-
-Navigation.prototype._addVehicleIcon = function(vehicle, latitude, longitude) {
-    var that = this;
-    
-    // add the vehicle icon to the map
-    
-    
-    // var vehicleIcon = L.icon({iconUrl: getVehicleIcon(vehicle), iconAnchor: [21, 21]});
-    
-    // iconUrl: getVehicleIcon(vehicle), 
-    
-    // use the div icon so we can rotate it based on the custom class
-    var vehicleIconDiv = L.divIcon({className: this._getVehicleIconClass(vehicle), iconAnchor: [32, 32], iconSize: [64, 64]});
-    
-    var vehicleMarker = L.marker([latitude, longitude], {
-        icon: vehicleIconDiv,
-//         vehicle: vehicle,
-        })
-        .addTo(this.map)
-        .on('click', function(e) {that._onVehicleMarkerClick(e, that, vehicle); });
-    
-    /* rotate the vehicle icon...
-    var vehicleIconElement = $("." + Navigation.VEHICLE_ICON_CLASS);
-    
-    var currentTransform = vehicleIconElement.css("-webkit-transform");
-    
-    // vehicleIconElement.css("-webkit-transform", "rotate(30deg)");
-    
-    // get the transform matrix
-    var t = _T.fromString(vehicleIconElement.css('-webkit-transform'));
-    // create a rotate matrix
-    var r = _T.rotate(50);
-    // multiply the two matrixes together
-    var n = t.x(r);
-    
-    // apply the new matrix
-    vehicleIconElement.css({
-    '-webkit-transform': _T.toString(n)
-    });
-    */
- }
 
 Navigation.prototype._markerDragged = function (e, that) {
     var newPoint = e.target.getLatLng();
@@ -633,6 +677,7 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
         
         case(Navigation.MAP_REMOVE_ALL_VEHICLES):
             console.log("remove all vehicles");
+            that.removeAllVehicles.bind(that)();
             break;
         
         case(Navigation.MAP_ZOOM_TO_VEHICLES):
@@ -648,11 +693,11 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.VEHICLE_DELETE_PATH):
             if(!that.clickedVehicle.navigationPath.isEmpty()) {
-                // remove the path
+                // remove the path from the vehicle
                 that.clickedVehicle.navigationPath.clear();
 
-                // remove the current path
-                
+                // remove the current nav path from the map
+                that.navMapPaths[that.clickedVehicle.id].removePaths();
             }
             break;
         
@@ -665,19 +710,7 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
             break;
         
         case(Navigation.VEHICLE_DESELECT_VEHICLE):
-            // TODO: change the colour of the vehicle to deselected (possibly not required)
-            
-            // change the colour of the path to deselected
-            that.currentMapPath.setPathStyle(that.deselectedNavPathStyle);
-            
-            // remove the points for the path
-            that.currentMapPath.removeMarkers();
-            
-            // change to no action
-            that.mapTouchMode = Navigation.MODE_NO_ACTION;
-            
-            // clear selection of the vehicle
-            that.selectedVehicle = null;
+            that.deselectVehicle.bind(that)();
             break;
         
         case(Navigation.VEHICLE_REVERSE_DIRECTION):
@@ -711,6 +744,8 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
         
         case(Navigation.VEHICLE_REMOVE_VEHICLE):
             // TODO: add logic to remove the vehicle
+            that.removeVehicle.bind(that)(that.clickedVehicle);
+            that.mapTouchMode = Navigation.MODE_NO_ACTION;            
             break;
     }
 
