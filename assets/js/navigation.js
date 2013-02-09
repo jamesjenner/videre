@@ -166,9 +166,9 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replace
     }
     
     vehicle.onMap = true;
-    
+
     // setup the nav path
-    this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false);
+    this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false, this.selectedNavPathStyle);
 }
 
 Navigation.prototype.selectVehicle = function(vehicle) {
@@ -272,7 +272,7 @@ Navigation.prototype._addVehiclesToMap = function() {
             // if the vehicle is on the map then add it
             if(vehicle.onMap) {
                 point = vehicle.navigationPath.getPoint(0);
-                this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, point.position.latitude, point.position.longitude, false);
+                this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, point.position.latitude, point.position.longitude, false, this.deselectedNavPathStyle);
                 
                 // TODO: add the actual path?
             }
@@ -284,17 +284,17 @@ Navigation.prototype._addVehiclesToMap = function() {
         // add the vehicle icon
         point = navigationPath.getPoint(0);
         // TODO: add the navigation path
-        // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, point.position.latitude, point.position.longitude, false);
+        // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, point.position.latitude, point.position.longitude, false, this.deselectedNavPathStyle);
         
         // TODO: add the actual path?
         // this._addActualPath();
     }
 }
 
-Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude, vehicleSelected) {
+Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude, vehicleSelected, pathStyle) {
     var points = path.toArray();
     
-    var polyLine = L.polyline(points, this.selectedNavPathStyle);
+    var polyLine = L.polyline(points, pathStyle);
     
     var that = this;
     
@@ -330,7 +330,7 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
         var homePoint = vehicle.navigationPath.getPoint(0);
         var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
                                    [homePoint.position.latitude, homePoint.position.longitude]],
-                                  this.selectedNavPathStyle);
+                                  pathStyle);
         mapPath.addReturnHomePolyLine(polyline);
     }
     
