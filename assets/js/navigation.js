@@ -477,10 +477,8 @@ Navigation.prototype._displayMapMenu = function(e, that) {
 Navigation.prototype._appendPoint = function(e, that, selected) {
     // if the navigation path is empty then we need to add the vehicle base position
     if(that.selectedVehicle.navigationPath.isEmpty()) {
-        // TODO: when adding vehicle is sorted, make this point the vehicle point
-        console.log("setting start pos at " + -27.61657 + ', ' + 153.15387);
-        that.selectedVehicle.navigationPath.append(-27.61657, 153.15387);
-        that.prevLatLng = new L.LatLng(-27.61657, 153.15387);
+        // this should never happen
+        return;
     }
     
     // setup the previous point if required
@@ -489,9 +487,6 @@ Navigation.prototype._appendPoint = function(e, that, selected) {
         var point = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
         that.prevLatLng = new L.LatLng(point.position.latitude, point.position.longitude);
     }
-    
-    // append the point to the vehicle's navigation path
-    console.log("appending point at " + e.latlng.toString());
     
     // TODO: add options for default settings on append
     that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng);
@@ -693,9 +688,24 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.VEHICLE_DELETE_PATH):
             if(!that.clickedVehicle.navigationPath.isEmpty()) {
+                // remove the current markers if selected and change to append mode
+                if(that.selectedVehicle) {
+                    that.currentMapPath.removeMarkers();
+                    that.mapTouchMode = Navigation.MODE_APPEND;            
+                }
+            
+                // save first point (which is the vehicle)
+                var p = that.clickedVehicle.navigationPath.getPoint(0);
+                
                 // remove the path from the vehicle
                 that.clickedVehicle.navigationPath.clear();
+                
+                // add back the first point
+                that.clickedVehicle.navigationPath.append(p.position.latitude, p.position.longitude, p);
 
+                // clear out the prevLatLng
+                that.prevLatLng = null;
+                
                 // remove the current nav path from the map
                 that.navMapPaths[that.clickedVehicle.id].removePaths();
             }
