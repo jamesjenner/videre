@@ -677,11 +677,6 @@ function createVehicleFromServer(server, vehicle) {
   }
 }
 
-function removeVehicleFromServer(vehicle) {
-
-  removeVehicleFromSidebar(vehicle);
-}
-
 var VEHICLE_LOCAL = 'Local';
 
 function createVehicle() {
@@ -765,9 +760,13 @@ function createVehicle() {
  *
  * unloads the ui elements that are used for a vehicle
  */
-function removeVehicleFromSidebar(vehicle) {
+function removeVehicleFromSidebar(vehicle, server) {
   var vehicleControlId = VEHICLE_CONTROL + vehicle.position;
 
+  if(server) {
+    vehicleControlId += 's' + server.position;
+  }
+  
   if(contentManager.focusedPaneId === VEHICLE_CONTENT) {
     // currently focused on content so change focus, this indirectly removes the content as well
     setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
@@ -1515,9 +1514,16 @@ function addNavigationContentUI(id) {
     title: "Navigation",
     settings: true,
     save: true,
+    preShowSidebarFn: function() {
+      // hide pie menus if any visible
+      navigationManager.hideMenus();
+    },
     // saveFunction: createServer,
     settingsFunction: function() {
       // loadSidebar(id, 'rightScroller');
+      
+      // hide pie menus if any visible
+      navigationManager.hideMenus();
       
       var targetId = id;
       var containerId = RIGHT_SIDEBAR_CONTAINER_ID; //'rightScroller';
@@ -2448,7 +2454,7 @@ function serverDisconnected(e, server, actionBar) {
   
   for(var i = 0, l = vehicles.length; i < l; i++) {
     // unload the ui for the server
-    removeVehicleFromSidebar(vehicles[i]);
+    removeVehicleFromSidebar(vehicles[i], server);
   }
   
   // remove the vehicles from the content manager
