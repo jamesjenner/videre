@@ -1592,10 +1592,19 @@ function addNavigationContentUI(id) {
     });
 }
 
-function addVehicleToMapForm(parentId, id) {
+var ADD_TO_MAP_VEHICLES_DROPDOWN_ID = "unallocatedVehiclesDropDownAddToMap";
 
+function populateAvailVehiclesDropDown(id) {
+  var elem = $('#' + id);
+  // remove current list
+  elem.empty();
+  
+  elem.append(getAvailVehiclesDropDown());
+}
+
+function getAvailVehiclesDropDown() {
   var vehicleList = '';
-
+  
   // generate the vehicle list by first iterating through all servers...
   if(contentManager.servers) {
     for(var i = 0, l = contentManager.servers.length; i < l; i++) {
@@ -1616,19 +1625,26 @@ function addVehicleToMapForm(parentId, id) {
     }
   }
   
+  // TODO: id for local vehicles is not set as currently have no means to obtain uuid
   if(contentManager.localVehicles) {
     for(var i = 0, l = contentManager.localVehicles.length; i < l; i++) {
       vehicleList += 
         '              <li>' +
         '                <a href="#">' +
         '                  <img class="dropdownIcon" src="' + getVehicleIcon(contentManager.localVehicles[i]) + '" />' +
-        '                  <span class="dropdownText">' +  contentManager.localVehicles[i].name + '</span>' +
+        '                  <span class="dropdownText key="' + contentManager.localVehicles[i].id + '">' +  contentManager.localVehicles[i].name + '</span>' +
         '                </a>' +
         '              </li>';
         
     }
   }
-  
+
+  return vehicleList;
+}
+
+function addVehicleToMapForm(parentId, id) {
+
+  var vehicleList = getAvailVehiclesDropDown();
   
   $('#' + parentId).append(
     '<div id="' + id + '" class="applicationContents modalContents">' +
@@ -1643,7 +1659,7 @@ function addVehicleToMapForm(parentId, id) {
     '            <div id="vehicleAddToMapVehicleWrapper" class="dropdownwrapper">' +
     '             <input type="popup" name="remoteServer" id="vehicleAddToMapVehicle" placeholder="VehicleType" readonly="true">' +
     '             <span class="triangle"></span>' +
-    '             <ul class="dropdown">' +
+    '             <ul id="' + ADD_TO_MAP_VEHICLES_DROPDOWN_ID + '" class="dropdown">' +
     
     vehicleList +
     
@@ -1697,19 +1713,23 @@ var addVehicleToMapModalBar = null;
 function showAddVehicleToMapForm(latLng) {
   // set values
   
+  // setup the drop down to only the currently available vehicles (ie. not already on the map)
+  populateAvailVehiclesDropDown(ADD_TO_MAP_VEHICLES_DROPDOWN_ID);
+  // reset the map drop down
+  vehicleAddToMapDropDown.initList();
+  
   // TODO: in preferences or in vehicle setup default values for adding a vehicle to the map
   
-  // TODO: rejig the form so vehicles drop down is dynamic
-  // TODO: only show if there are vehicles available
-  /*
-  $('#navPointSequence').val(navPoint.sequence);
-  $('#navPointUpdateAltitude').val(navPoint.altitude);
-  $('#navPointUpdateSpeed').val(navPoint.speed);
-  $('#navPointUpdateLoiterRadius').val(navPoint.loiterRadius);
-  $('#navPointUpdateLoiterSpeed').val(navPoint.loiterSpeed);
-  $('#navPointUpdateLoiterDuration').val(navPoint.loiterTime);
-  $('#navPointUpdateLoiterDurationUOM').val(navPoint.loiterDurationUOM);
-  */
+  // don't let the vehicle default to the last one used
+  $('#vehicleAddToMapVehicle').val('');
+
+  $('#vehicleAddToMapAltitude').val('');
+  $('#vehicleAddToMapSpeed').val('');
+  $('#vehicleAddToMapLoiterSpeed').val('');
+  $('#vehicleAddToMapLoiterSpeed').val('');
+  $('#vehicleAddToMapLoiterDuration').val('');
+  $('#vehicleAddToMapLoiterDurationUOM').val('');
+
   var that = this;
   addVehicleToMapModalBar.setAcceptFunction(function() {acceptAddVehicleToMapModalBarUpdate.bind(that)(latLng)});
   addVehicleToMapModalBar.show();
