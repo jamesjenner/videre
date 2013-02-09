@@ -271,7 +271,7 @@ Navigation.prototype._addVehiclesToMap = function() {
             
             // if the vehicle is on the map then add it
             if(vehicle.onMap) {
-                point = this.navigationPath.getPoint(0);
+                point = vehicle.navigationPath.getPoint(0);
                 this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, point.position.latitude, point.position.longitude, false);
                 
                 // TODO: add the actual path?
@@ -672,7 +672,7 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
     // setup the elements as enabled/disabled as appropriate
     var p = that.selectedVehicle.navigationPath.getPoint(pos);
     
-    // TODO: add logic to disable/enable as appropriate, this is based on the mode of the ui... possibly...
+    // disable and enable as appropriate
     if(that.selectedVehicle.navigationPath.length() -1 != pos) {
         that.pointMenu.disableMenuItem(Navigation.POINT_RETURN_TO_BASE);
         that.pointMenu.disableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
@@ -702,13 +702,6 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
             break;
         
         case(Navigation.MAP_ZOOM_TO_VEHICLES):
-            console.log("zoom to vehicles");
-            // map.fitBounds(LatLngBounds bounds);
-            // map.fitBounds([
-            //    [40.712, -74.227],  <- south west
-            //    [40.774, -74.125]   <- north east
-            //]);
-            // where
             that.map.fitBounds(that._getVehicleBounds());
             break;
     }
