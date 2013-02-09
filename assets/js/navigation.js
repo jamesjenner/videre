@@ -153,6 +153,26 @@ function Navigation(options) {
     this.map.on('click', function(e) {that._onMapClick(e, that); });
 }
 
+Navigation.prototype.hideMenus = function() {
+    var menuHidden = false;
+    
+    if(this.mapMenu.isActive()) {
+        this.mapMenu.hideMenu();
+        menuHidden = true;
+    }
+    
+    if(this.pointMenu.isActive()) {
+        this.pointMenu.hideMenu();
+        menuHidden = true;
+    }
+    if(this.vehicleMenu.isActive()) {
+        this.vehicleMenu.hideMenu();
+        menuHidden = true;
+    }
+    
+    return menuHidden;
+}
+
 Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replaceFirstPos) {
     // add the start point
     if(vehicle.navigationPath.isEmpty()) {
@@ -411,17 +431,8 @@ Navigation.prototype._markerDragged = function (e, that) {
 
 Navigation.prototype._onMapClick = function(e, that) {
     // if a menu is open, treat the click on the map as a request to close the menu
-    if(that.mapMenu.isActive()) {
-        that.mapMenu.hideMenu();
-        return;
-    }
-    
-    if(that.pointMenu.isActive()) {
-        that.pointMenu.hideMenu();
-        return;
-    }
-    if(that.vehicleMenu.isActive()) {
-        that.vehicleMenu.hideMenu();
+    if(that.hideMenus.bind(that)()) {
+        // menu was hidden, so just return
         return;
     }
     
@@ -590,21 +601,12 @@ Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, 
 }
 
 Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
-    if(that.mapMenu.isActive()) {
-        that.mapMenu.hideMenu();
+    // if a menu is open, treat the click on the map as a request to close the menu
+    if(that.hideMenus.bind(that)()) {
+        // menu was hidden, so just return
         return;
     }
     
-    if(that.vehicleMenu.isActive()) {
-        that.vehicleMenu.hideMenu();
-        return;
-    }
-
-    if(that.pointMenu.isActive()) {
-        that.pointMenu.hideMenu();
-        return;
-    }
-
     that.clickedVehicle = vehicle;
 
     // if the path is selected then disable select
@@ -645,18 +647,8 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
     pos++;
 
     // if a menu is open, treat the click on a point as a request to close the menu
-    if(that.mapMenu.isActive()) {
-        that.mapMenu.hideMenu();
-        return;
-    }
-    
-    if(that.vehicleMenu.isActive()) {
-        that.vehicleMenu.hideMenu();
-        return;
-    }
-
-    if(that.pointMenu.isActive()) {
-        that.pointMenu.hideMenu();
+    if(that.hideMenus.bind(that)()) {
+        // menu was hidden, so just return
         return;
     }
     
