@@ -199,6 +199,9 @@ Navigation.prototype.selectVehicle = function(vehicle) {
         // path is complete, so no action mode
         this.mapTouchMode = Navigation.MODE_NO_ACTION;
     }
+    
+    // clear out the prevLatLng
+    this.prevLatLng = null;
 }
 
 Navigation.prototype.deselectVehicle = function() {
@@ -215,12 +218,12 @@ Navigation.prototype.deselectVehicle = function() {
     
     // clear selection of the vehicle
     this.selectedVehicle = null;
+
+    // clear out the prevLatLng
+    this.prevLatLng = null;
 }
 
 Navigation.prototype.removeVehicle = function(vehicle) {
-    // remove a vehicle and it's associated path from the map
-    this.selectedVehicle = null;
-    
     // deselect the vehicle if it is selected
     if(this.selectedVehicle && this.selectedVehicle.id == vehicle.id) {
         this.deselectVehicle();
@@ -268,7 +271,7 @@ Navigation.prototype._addVehiclesToMap = function() {
             
             // if the vehicle is on the map then add it
             if(vehicle.onMap) {
-                point = navigationPath.getPoint(0);
+                point = this.navigationPath.getPoint(0);
                 this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, point.position.latitude, point.position.longitude, false);
                 
                 // TODO: add the actual path?
@@ -293,8 +296,6 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
     
     var polyLine = L.polyline(points, this.selectedNavPathStyle);
     
-    // this._addVehicleIcon(vehicle, point.position.latitude, point.position.longitude);
-
     var that = this;
     
     var vehicleMarker = L.marker([latitude, longitude], {
@@ -693,19 +694,34 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
 
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.MAP_ADD_VEHICLE):
-            console.log("add vehicle");
             showAddVehicleToMapForm.bind(that)(that.currentLatLng);
             break;
         
         case(Navigation.MAP_REMOVE_ALL_VEHICLES):
-            console.log("remove all vehicles");
             that.removeAllVehicles.bind(that)();
             break;
         
         case(Navigation.MAP_ZOOM_TO_VEHICLES):
             console.log("zoom to vehicles");
+            // map.fitBounds(LatLngBounds bounds);
+            // map.fitBounds([
+            //    [40.712, -74.227],  <- south west
+            //    [40.774, -74.125]   <- north east
+            //]);
+            // where
+            that.map.fitBounds(that._getVehicleBounds());
             break;
     }
+}
+
+Navigation.prototype._getVehicleBounds = function() {
+    var latlngs = new Array();
+    
+    for(var id in this.navMapPaths) {
+        latlngs.push(this.navMapPaths[id].getLatLngs());
+    }
+    
+    return latlngs;
 }
 
 Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
