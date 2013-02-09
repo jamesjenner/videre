@@ -38,6 +38,7 @@ var RadialMenu = function(contentId, options) {
   this.contentId = contentId;
   
   if(options.selectionListener) {
+    $('#' + this.contentId + ' a').off('click');
     $('#' + this.contentId + ' a').on('click', options.selectionListener);
   }
   
