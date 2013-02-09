@@ -43,6 +43,8 @@ function ActionBar(options) {
   this.landFunction = options.landFunction || function() {};
   this.abortAction = ((options.abort != null) ? options.abort : false);
   this.abortFunction = options.abortFunction || function() {};
+
+  this.preShowSidebarFn = options.preShowSidebarFn || function() {};
   
   this.settingsFunction = options.settingsFunction || function() {
     loadSidebar(this.targetId, 'rightScroller');
@@ -138,8 +140,13 @@ ActionBar.prototype.initialise = function() {
       
       '  </div>');
     
+    var that = this;
+    
     // add listener to the control that activates the left sidebar
     $('#leftSidebarControl' + this.id).click(function() {
+      if(that.preShowSidebarFn) {
+        that.preShowSidebarFn();
+      }
       showSidebar(LEFT_SIDEBAR_ID, 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
       
       return false;
