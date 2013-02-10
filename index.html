@@ -1535,11 +1535,11 @@ function addNavigationContentUI(id) {
     title: "Navigation",
     settings: true,
     save: true,
+    saveFunction: updateNavPathsForVehicles,
     preShowSidebarFn: function() {
       // hide pie menus if any visible
       navigationManager.hideMenus();
     },
-    // saveFunction: createServer,
     settingsFunction: function() {
       // hide pie menus if any visible
       navigationManager.hideMenus();
@@ -1622,6 +1622,54 @@ function addNavigationContentUI(id) {
       return false;
     }
   }).initialise();
+}
+
+function updateNavPathsForVehicles() {
+  // vehicles = navigationManager.getModifiedVehicles();
+
+  // presuming for remote server...
+  
+  // TODO: add support for local
+  
+  // obtain vehicle and determine which server it is on...
+  var remoteServer;
+
+  var vehicles = contentManager.getRemoteVehicles();
+
+  // find a connected server and use it
+  
+  // TODO: should determine which server has the vehicle, maybe change server to remember what vehicles are on it?
+
+  // find a server that manages the vehicle
+  for(i = 0, l = contentManager.servers.length; i < l; i++) {
+    if(contentManager.servers[i].isConnected) {
+      remoteServer = contentManager.servers[i];
+      break;
+    }
+  }
+
+  // couldn't find a connected server, do nothing
+  // TODO: add logic to display an error...
+  if(!remoteServer) {
+    return;
+  }
+
+  // TODO: include local vehicle support
+    
+  // iterate through the vehicles and send an update
+  
+  // TODO: determine which vehicles are modified and only send vehicles with dirty data, not all vehicles.
+  
+  for(var i = 0, l = vehicles.length; i < l; i++) {
+    
+    var msg = new Object();
+    
+    msg.id = vehicles[i].id;
+    msg.navPath = vehicles[i].navigationPath;
+    msg.onMap = vehicles[i].onMap;
+    
+    remoteServer.sendMessage(Message.UPDATE_NAV_PATH, msg);
+  }
 }
 
 var ADD_TO_MAP_VEHICLES_DROPDOWN_ID = "unallocatedVehiclesDropDownAddToMap";
