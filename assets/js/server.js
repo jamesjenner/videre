@@ -81,7 +81,7 @@ Server.prototype = {
     },
     connect: function() {
         if(this.log) {
-            console.log(this.name + " webSocket secure connect " + this.ipAddress + ":" + this.securePort + " " + this.protocol);
+            console.log(this.name + " webSocket connect " + this.ipAddress + ":" + this.securePort + " " + this.protocol);
         }
 
         this.secureOnly = this.commsSecurity === COMMS_SECURITY_SECURE_ONLY;
@@ -171,6 +171,7 @@ Server.prototype = {
             sessionDetails.sessionId = this.sessionId;
             this.sendUnsecureMessage(Message.SESSION, sessionDetails);
         } else {
+            this.authenticated = false;
             // must be unsecure only, send authentication
             this.sendAuthentication(Message.COMMS_TYPE_UNSECURE_ONLY);
         }
@@ -214,7 +215,7 @@ Server.prototype = {
         }
         // if unsecure only then fire disconnection event 
         if(this.unsecureOnly) {
-            this.isConnected = true;
+            this.isConnected = false;
             this.disconnectionListener(event, this);
         }
     },
@@ -229,7 +230,9 @@ Server.prototype = {
             
                 switch(msg.id) {
                     case Message.AUTHENTICATION_ACCEPTED:
-                        console.log(this.name + " Authentication successful");
+                        if(this.log) {
+                            console.log(this.name + " Authentication successful");
+                        }
                         this.authenticated = true;
                         this.sessionId = msg.body.sessionId;
                         
@@ -252,7 +255,9 @@ Server.prototype = {
                         break;
                     
                     case Message.AUTHENTICATION_REJECTED:
-                        console.log(this.name + " Authentication failed");
+                        if(this.log) {
+                            console.log(this.name + " Authentication failed");
+                        }
                         this.disconnect();
                         break;
                 }
