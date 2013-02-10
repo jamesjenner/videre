@@ -334,6 +334,7 @@ function configureApplication() {
     contentManager.servers[server].rcvdDeleteVehicle = removeVehicleFromSidebar;
     // contentManager.servers[server].rcvdUpdateVehicle = 
     contentManager.servers[server].rcvdTelemetry = receivedTelemetry;
+    contentManager.servers[server].rcvdNavPathUpdated = receivedUpdateNavPath;
     // contentManager.servers[server].rcvdPayload = 
   }
 
@@ -546,6 +547,7 @@ function createServer() {
     rcvdDeleteVehicle: removeVehicleFromSidebar,
     // rcvdUpdateVehicle: ,
     rcvdTelemetry: receivedTelemetry,
+    rcvdNavPathUpdated: receivedUpdateNavPath,
     // rcvdPayload: ,
     errorListener: serverError
   });
@@ -786,6 +788,42 @@ function removeVehicleFromSidebar(vehicle, server) {
   
   // remove the control for accessing the vehicle
   $('#' + vehicleControlId).remove();
+}
+
+function receivedUpdateNavPath(message, server) {
+  // update the details of the specified vehicle for the remote server
+  var vehicle = null;
+  // if we're on the nav map then update the nav map as well
+  for(var i = 0, l = contentManager.remoteVehicles[server.name].length; i < l; i++) {
+    if(contentManager.remoteVehicles[server.name].id == message.id) {
+      vehicle = contentManager.remoteVehicles[server.name];
+      break;
+    }
+  }
+  
+  if(!vehicle) {
+    return;
+  }
+  
+  // update the path
+  vehicle.navigationPath = message.navPath;
+  
+  if(vehicle.onMap && message.onMap) {
+    // update the path on the nav map
+  }
+  
+  if(vehicle.onMap && !message.onMap) {
+    // remove the vehicle from the map
+    
+  }
+  
+  if(!vehicle.onMap && message.onMap) {
+    // add the vehicle to the map
+    
+  }
+  
+  // update the flag
+  vehicle.onMap = message.onMap;
 }
 
 /*
