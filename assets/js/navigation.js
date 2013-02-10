@@ -115,26 +115,25 @@ function Navigation(options) {
   
     this.esriWorldImageryTileLayer = new L.TileLayer(this.esriWorldImageryUrl, {maxZoom: 18, attribution: this.esriWorldImageryAttribution,subdomains: ['1', '2', '3', '4']});
     this.esriWorldTopographicalTileLayer = new L.TileLayer(this.esriWorldTopographicalUrl, {maxZoom: 18, attribution: this.esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
-    this.esriWorldTopographicalTileLayer2 = new L.TileLayer(this.esriWorldTopographicalUrl, {maxZoom: 18, attribution: this.esriWorldTopographicalAttribution,subdomains: ['1', '2', '3', '4']});
   
     this.mapquestOsmTileLayer = new L.TileLayer(this.mapquestOsmTileUrl, {maxZoom: 18, attribution: this.mapquestOsmAttribution, subdomains: ['1', '2', '3', '4']});
     
-    this.minimal   = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 22677, attribution: this.cloudmadeAttribution});
-    this.fresh  = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 997, attribution: this.cloudmadeAttribution});
-    this.midnightCommander  = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 999, attribution: this.cloudmadeAttribution});
-    this.nightVision  = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 78125, attribution: this.cloudmadeAttribution});
-    this.minimalMarkers = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 63044, attribution: this.cloudmadeAttribution});
+    this.minimalLayer  = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 22677, attribution: this.cloudmadeAttribution});
+    this.freshLayer = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 997, attribution: this.cloudmadeAttribution});
+    this.midnightCommanderLayer  = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 999, attribution: this.cloudmadeAttribution});
+    this.nightVisionLayer = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 78125, attribution: this.cloudmadeAttribution});
+    this.minimalMarkersLayer = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 63044, attribution: this.cloudmadeAttribution});
     
     var that = this;
     
     L.Icon.Default.imagePath = options.imagePath || 'assets/img/';
     
     this.mapLayers = options.mapLayers ||  [
-      new MapLayer({title: "Fresh", description: 'Simplified streets view', tileSet: this.fresh}), 
-      new MapLayer({title: "Minimal", description: 'Minimal streets view', tileSet: this.minimal}),
-      new MapLayer({title: "Minimal 2", description: 'Minimal streets view 2', tileSet: this.minimalMarkers}),
-      new MapLayer({title: "Night Vision", description: 'Red theme to reduce affect on vision at night', tileSet: this.nightVision}),
-      new MapLayer({title: "Night View", description: 'Night theme, black and greenish', tileSet: this.midnightCommander}),
+      new MapLayer({title: "Fresh", description: 'Simplified streets view', tileSet: this.freshLayer}), 
+      new MapLayer({title: "Minimal", description: 'Minimal streets view', tileSet: this.minimalLayer}),
+      new MapLayer({title: "Minimal 2", description: 'Minimal streets view 2', tileSet: this.minimalMarkersLayer}),
+      new MapLayer({title: "Night Vision", description: 'Red theme to reduce affect on vision at night', tileSet: this.nightVisionLayer}),
+      new MapLayer({title: "Night View", description: 'Night theme, black and greenish', tileSet: this.midnightCommanderLayer}),
       new MapLayer({title: "Streets", description: 'Map Quest Street', tileSet: this.mapquestOsmTileLayer}),
       new MapLayer({title: "Satelite", description: 'ESRI World Imagery', tileSet: this.esriWorldImageryTileLayer}),
       new MapLayer({title: "Topographical", description: 'ESRI World Topographical', tileSet: this.esriWorldTopographicalTileLayer}),
@@ -144,13 +143,13 @@ function Navigation(options) {
     this.map = options.map || new L.Map('navigationMap', {
         center: [-27.632600, 153.146466],
         zoom: 14,
-        layers: [this.fresh],
+        layers: [this.freshLayer],
         zoomControl: false
     });
     
     // TODO: add search option to find a location
 
-    this.currentTileSet = this.mapquestOsmTileLayer;
+    this.currentTileSet = this.freshLayer;
     
     L.control.scale().addTo(this.map);
     
@@ -293,8 +292,8 @@ Navigation.prototype.setVehicles = function(vehicles) {
 
 Navigation.prototype.selectMapStyle = function(styleIndex) {
     if(this.mapLayers.length > styleIndex) {
+        this.map.addLayer(this.mapLayers[styleIndex].tileSet, true);
         this.map.removeLayer(this.currentTileSet);
-        this.map.addLayer(this.mapLayers[styleIndex].tileSet);
         this.currentTileSet = this.mapLayers[styleIndex].tileSet;
     }
 }
