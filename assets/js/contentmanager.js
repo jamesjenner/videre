@@ -166,6 +166,14 @@ ContentManager.prototype = {
             return new Array();
         }
     },
+    getRemoteVehicles: function() {
+        var vehicles = new Array();
+        for(var key in this.remoteVehicles) {
+            vehicles = vehicles.concat(this.remoteVehicles[key]);
+        }
+        
+        return vehicles;
+    },
     removeVehiclesFromServer: function(serverName) {
         if(this.remoteVehicles[serverName]) {
             this.remoteVehicles[serverName] = new Array();
