@@ -54,6 +54,14 @@ Navigation.PATROL_ICON_URL = 'assets/img/patrol-icon.png';
 Navigation.FINISH_ICON_URL = 'assets/img/finish-icon.png';
 Navigation.FINISH_PATROL_ICON_URL = 'assets/img/finish-patrol-icon.png';
 
+Navigation.MAP_STYLE_FRESH = 0;
+Navigation.MAP_STYLE_MINIMAL = 1;
+Navigation.MAP_STYLE_MINMAL2 = 2;
+Navigation.MAP_STYLE_NIGHT_VISION = 3;
+Navigation.MAP_STYLE_NIGHT_VIEW = 4;
+Navigation.MAP_STYLE_STREETS = 5;
+Navigation.MAP_STYLE_SATELITE = 6;
+Navigation.MAP_STYLE_TOPOGRAPHICAL = 7;
 
 function Navigation(options) {
     options = options || {};
@@ -121,25 +129,28 @@ function Navigation(options) {
     
     L.Icon.Default.imagePath = options.imagePath || 'assets/img/';
     
-    this.mapLayers = options.mapLayers ||  {
-        "Cloudmade Fresh": this.fresh,
-        "Cloudmade Minimal": this.minimal,
-        "Cloudmade Minimal 2": this.minimalMarkers,
-        "Cloudmade Night Vision": this.nightVision,
-        "Cloudmade Night View": this.midnightCommander,
-        "Map Quest Street": this.mapquestOsmTileLayer,
-        "ESRI World Imagery": this.esriWorldImageryTileLayer,
-        "ESRI World Topographical": this.esriWorldTopographicalTileLayer
-    };
-    
+    this.mapLayers = options.mapLayers ||  [
+      new MapLayer({title: "Fresh", description: 'Simplified streets view', tileSet: this.fresh}), 
+      new MapLayer({title: "Minimal", description: 'Minimal streets view', tileSet: this.minimal}),
+      new MapLayer({title: "Minimal 2", description: 'Minimal streets view 2', tileSet: this.minimalMarkers}),
+      new MapLayer({title: "Night Vision", description: 'Red theme to reduce affect on vision at night', tileSet: this.nightVision}),
+      new MapLayer({title: "Night View", description: 'Night theme, black and greenish', tileSet: this.midnightCommander}),
+      new MapLayer({title: "Streets", description: 'Map Quest Street', tileSet: this.mapquestOsmTileLayer}),
+      new MapLayer({title: "Satelite", description: 'ESRI World Imagery', tileSet: this.esriWorldImageryTileLayer}),
+      new MapLayer({title: "Topographical", description: 'ESRI World Topographical', tileSet: this.esriWorldTopographicalTileLayer}),
+    ];
+      
+    // TODO: sort out how the center is determined...
     this.map = options.map || new L.Map('navigationMap', {
         center: [-27.632600, 153.146466],
         zoom: 14,
-        layers: [this.mapquestOsmTileLayer],
+        layers: [this.fresh],
         zoomControl: false
     });
+    
+    // TODO: add search option to find a location
 
-    L.control.layers(this.mapLayers).addTo(this.map);
+    this.currentTileSet = this.mapquestOsmTileLayer;
     
     L.control.scale().addTo(this.map);
     
@@ -278,6 +289,14 @@ Navigation.prototype.removeAllVehicles = function() {
 Navigation.prototype.setVehicles = function(vehicles) {
     // set the vehicles to the passed vehicle list, this removes existing vehicles
     this.vehicles = vehicles;
+}
+
+Navigation.prototype.selectMapStyle = function(styleIndex) {
+    if(this.mapLayers.length > styleIndex) {
+        this.map.removeLayer(this.currentTileSet);
+        this.map.addLayer(this.mapLayers[styleIndex].tileSet);
+        this.currentTileSet = this.mapLayers[styleIndex].tileSet;
+    }
 }
 
 Navigation.prototype._addVehiclesToMap = function() {
