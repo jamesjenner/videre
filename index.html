@@ -656,7 +656,7 @@ function addServerCreateFormUI(id, title) {
     '            </div>' +
     
     '           </li>' + 
-    '           <li class="breakTop">' + 
+    '           <li>' + 
     '             <span class="checkboxLabel">Communication events are logged</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverCreateLoggingEnabled"></div>' +
     '           </li>' +
@@ -700,7 +700,10 @@ function createVehicle() {
     'type':$('#vehicleCreateVehicleType').val(),
     'payloadEnabled':$('#vehicleCreatePayload').is(':checked'),
     'navigationEnabled':$('#vehicleCreateNavigationEnabled').is(':checked'),
-    'remoteControlEnabled':$('#vehicleCreateRemoteControlEnabled').is(':checked')});
+    'remoteControlEnabled':$('#vehicleCreateRemoteControlEnabled').is(':checked'),
+    'vehicleAddr':$('#vehicleCreateIPAddress').val(),
+    'vehiclePort':$('#vehicleCreatePort').val(),
+    });
   
   var remoteServerName = $('#vehicleCreateRemoteServer').val();
   var remoteServer = null;
@@ -902,13 +905,13 @@ function addVehicleCreateFormUI(id, title) {
     '         <ul>' + 
     '           <li>' + 
     '             <label for="vehicleCreateName">Name</label>' +
-    '             <input type="text" name="name" id="vehicleCreateName" placeholder="Name" required><br>' +
+    '             <input type="text" name="name" id="vehicleCreateName" placeholder="The name of the vehicle" required><br>' +
     '           </li>' +
     
     '           <li class="breakTop">' +
     '            <label for="vehicleCreateVehicleType">Type of vehicle</label>' +
     '            <div id="vehicleCreateVehicleTypeWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleCreateVehicleType" placeholder="VehicleType" readonly="true">' +
+    '             <input type="popup" name="remoteServer" id="vehicleCreateVehicleType" placeholder="" readonly="true">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
     '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON + '" />' + '<span class="dropdownText">Air</span></a></li>' +
@@ -922,7 +925,7 @@ function addVehicleCreateFormUI(id, title) {
     '           <li class="breakTop">' +
     '            <label for="vehicleCreateRemoteServer">Remote Server</label>' +
     '            <div id="vehicleCreateRemoteServerWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleCreateRemoteServer" placeholder="RemoteServer" readonly="true">' +
+    '             <input type="popup" name="remoteServer" id="vehicleCreateRemoteServer" placeholder="" readonly="true">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
     '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Local</span></a></li>' + remoteServerList +
@@ -941,6 +944,14 @@ function addVehicleCreateFormUI(id, title) {
     '           <li>' +
     '             <span class="checkboxLabel">Vehicle can be controlled remotely</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControlEnabled"></div>' +
+    '           </li>' + 
+    '           <li class="breakTop">' + 
+    '             <label for="vehicleCreateIPAddress">IP Address</label>' +
+    '             <input type="text" name="address" id="vehicleCreateIPAddress" placeholder="" required ><br>' +
+    '           </li>' + 
+    '           <li>' + 
+    '             <label for="vehicleCreatePort">Port</label>' +
+    '             <input type="number" min="1" max="99999" name="port" id="vehicleCreatePort" placeholder=""><br>' +
     '           </li>' + 
     '         </ul>' + 
     '       </form>' +
@@ -2583,7 +2594,7 @@ function receivedTelemetry(server, e) {
   for(var i = 0, l = vehicles.length; i < l; i++) {
     if(vehicles[i].id === e.id) {
       // update this one
-      updateVehicleTelemetry(server, vehicles[i], e);
+      updateVehicleTelemetry(server, vehicles[i], e.telemetry);
       break;
     }
   }
