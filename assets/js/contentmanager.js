@@ -104,7 +104,7 @@ ContentManager.prototype = {
             this.remoteVehicles[server.name] = new Array();
         } else {
             // check that the vehicle doesn't exist
-            for(i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
+            for(var i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
                 if(this.remoteVehicles[server.name][i].name === vehicle.name) {
                     exists = true;
                 }
@@ -122,7 +122,7 @@ ContentManager.prototype = {
         }
     },
     removeRemoteVehicle: function(server, vehicle) {
-        for(i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
+        for(var i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
             if(this.remoteVehicles[server.name][i].name === vehicle.name) {
                 this.remoteVehicles[server.name].splice(i, 1);
                 break;
