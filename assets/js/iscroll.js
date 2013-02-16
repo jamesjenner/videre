@@ -86,6 +86,8 @@ var m = Math,
 			i;
 
 		that.wrapper = typeof el == 'object' ? el : doc.getElementById(el);
+		that.wrapperId = that.wrapper.id;
+		
 		that.wrapper.style.overflow = 'hidden';
 		that.scroller = that.wrapper.children[0];
 
@@ -912,9 +914,13 @@ iScroll.prototype = {
 			page = 0;
 
 		if (that.scale < that.options.zoomMin) that.scale = that.options.zoomMin;
+		
+		// reset the wrapper based on the id, as the client height can change
+		that.wrapper = doc.getElementById(that.wrapperId);
+
 		that.wrapperW = that.wrapper.clientWidth || 1;
 		that.wrapperH = that.wrapper.clientHeight || 1;
-
+		
 		that.minScrollY = -that.options.topOffset || 0;
 		that.scrollerW = m.round(that.scroller.offsetWidth * that.scale);
 		that.scrollerH = m.round((that.scroller.offsetHeight + that.minScrollY) * that.scale);
