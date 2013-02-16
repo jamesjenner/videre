@@ -83,6 +83,7 @@ var verticalScrollLeftSidebar;
 */
 
 var verticalScrollRightSidebar;
+var verticalScrollLeftSidebar;
 
 var currentActionBar = null;
 
@@ -96,7 +97,23 @@ function loaded() {
     zIndex: 0
   });
 
-  new iScroll(LEFT_SIDEBAR_ID, {
+  verticalScrollLeftSidebar = new iScroll(LEFT_SIDEBAR_ID, {
+    hScroll: false,
+    vScroll: true,
+    momentum: false,
+    hScrollbar: false,
+    zIndex: 0
+  });
+  
+  new iScroll('createServerFormScroller', {
+    hScroll: false,
+    vScroll: true,
+    momentum: false,
+    hScrollbar: false,
+    zIndex: 0
+  });
+
+  new iScroll('createVehicleFormScroller', {
     hScroll: false,
     vScroll: true,
     momentum: false,
@@ -605,9 +622,12 @@ function addServerCreateFormUI(id, title) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'Form" class="formContainer">' +
-    '    <div class="formContents">' +
     '      <div class="formContents">' +
     '       <form id="createServerForm">' +
+    
+    '         <div id="createServerFormScroller" class="formScroller">' +
+    '         <div class="scroller">' +
+
     '         <ul>' + 
     '           <li>' + 
     '             <label for="serverCreateName">Name</label>' +
@@ -660,10 +680,12 @@ function addServerCreateFormUI(id, title) {
     '             <span class="checkboxLabel">Communication events are logged</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverCreateLoggingEnabled"></div>' +
     '           </li>' +
+    '         </ul>' +
+    '         </div>' +
+    '         </div>' +
     '       </form>' +
     '      </div>' +
     '    </div>' +
-    '  </div>' +
     '</div>');
 
   // setup and initialise the action bar
@@ -900,8 +922,11 @@ function addVehicleCreateFormUI(id, title) {
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'Form" class="formContainer">' +
     '    <div class="formContents">' +
-    '      <div class="formContents">' +
     '       <form id="createVehicleForm">' +
+    
+    '         <div id="createVehicleFormScroller" class="formScroller">' +
+    '         <div class="scroller">' +
+    
     '         <ul>' + 
     '           <li>' + 
     '             <label for="vehicleCreateName">Name</label>' +
@@ -954,10 +979,11 @@ function addVehicleCreateFormUI(id, title) {
     '             <input type="number" min="1" max="99999" name="port" id="vehicleCreatePort" placeholder=""><br>' +
     '           </li>' + 
     '         </ul>' + 
+    '         </div>' +
+    '         </div>' +
     '       </form>' +
     '      </div>' +
     '    </div>' +
-    '  </div>' +
     '</div>');
 
   // setup and initialise the action bar
@@ -1019,9 +1045,12 @@ function addServerContentUI(id, server) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'Form" class="formContainer">' +
-    '    <div class="formContents">' +
     '      <div class="formContents">' +
     '       <form id="updateServerForm">' +
+    
+    '         <div id="updateServerFormScroller" class="formScroller">' +
+    '         <div class="scroller">' +
+    
     '         <ul>' + 
     '           <li>' +
     '               <label>Status</label>' +
@@ -1083,8 +1112,10 @@ function addServerContentUI(id, server) {
     '             <span class="checkboxLabel">Communication events are logged</span> ' +
     '             <div id="serverUpdateLoggingEnabledSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverUpdateLoggingEnabled"></div>' +
     '           </li>' +
+    '         </ul>' +
+    '         </div>' +
+    '         </div>' +
     '       </form>' +
-    '      </div>' +
     '    </div>' +
     '  </div>' +
     '</div>');
@@ -1153,6 +1184,17 @@ function addServerContentUI(id, server) {
   
   // add the drop down logic for the drop downs  
   new DropDown( $('#serverUpdateCommsSecurityWrapper') );
+
+  // setup scrolling  
+  new iScroll('updateServerFormScroller', {
+    hScroll: false,
+    vScroll: true,
+    momentum: false,
+    hScrollbar: false,
+    zIndex: 0
+  });
+  
+
 }
 
 function removeServer(server) {
@@ -1663,7 +1705,7 @@ function addNavigationContentUI(id) {
       }
       
       // TODO: this is always the same, should make it more generic?
-      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms');
+      showSidebar('rightSidebar', 'right', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms', verticalScrollRightSidebar);
       
       // reset the scroller for the right sidebar as content has changed
       verticalScrollRightSidebar.refresh();
@@ -2064,7 +2106,7 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFu
     }
     
     // hide the sidebar as it is hidden when a content selection is made
-    hideSidebar(sidebarId, 'mainApplication', 'mainApplicationOverlay', '300ms');
+    hideSidebar(sidebarId, 'mainApplication', 'mainApplicationOverlay', '300ms', verticalScrollLeftSidebar);
   });
 }
 
@@ -2137,7 +2179,7 @@ function setFocus(controlId, paneId, forceFocus) {
  * showSidebar(LEFT_SIDEBAR_ID, 'left', 'mainApplication', 'mainApplicationOverlay', 'mainApplicationOverlay', '300ms')
  * 
  */
-function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPanelCSS, time) {
+function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPanelCSS, time, scrollbar) {
   var mainPanel = $('#' + mainPanelId);
   var width = $('#' + sidebarId).width();
   var overlayPanel = $('#' + overlayPanelId);
@@ -2146,6 +2188,16 @@ function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPa
   // we move negative if the side bar is right, positive if the side bar is left
   var x = location == 'right' ? width * -1 : width;
   
+  var scrollbar = null;
+
+  if(location == 'right') {
+    scrollbar = verticalScrollRightSidebar;
+  } else {
+    scrollbar = verticalScrollLeftSidebar;
+  }
+  
+  scrollbar.enable();
+    
   if (mainPanel.length > 0) {
     // check if the overlay div exists, if not then create it
     // TODO: determine if the overlay div should always exist and remove this logic to add it
@@ -2161,7 +2213,9 @@ function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPa
 
     overlayPanel.off('click');
     // setup listener to restore main application
-    overlayPanel.on('click', function () { hideSidebar(sidebarId, mainPanelId, overlayPanelId, time) });
+    overlayPanel.on('click', function () {
+      hideSidebar(sidebarId, mainPanelId, overlayPanelId, time, scrollbar)
+    });
     
     overlayPanel.css('right', '');
     overlayPanel.css('left', '');
@@ -2205,8 +2259,12 @@ function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPa
  * showSidebar('mainApplication', 'mainApplicationOverlay', '300ms')
  * 
  */
-function hideSidebar(sidebarId, mainPanelId, overlayPanelId, time) {
+function hideSidebar(sidebarId, mainPanelId, overlayPanelId, time, scrollbar) {
   var mainPanel = $('#' + mainPanelId);
+  
+  if(scrollbar) {
+    scrollbar.disable();
+  }
   
   if (mainPanel.length > 0) {
     // make the overlay div inactive by making it invisible
