@@ -631,33 +631,33 @@ function addServerCreateFormUI(id, title) {
     '         <ul>' + 
     '           <li>' + 
     '             <label for="serverCreateName">Name</label>' +
-    '             <input type="text" name="name" id="serverCreateName" placeholder="Name" required><br>' +
+    '             <input type="text" name="name" id="serverCreateName" placeholder="" required><br>' +
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <label for="serverCreateIPAddress">IP Address</label>' +
     //'             <input type="text" name="address" id="serverCreateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
     // TODO: figure out the ip address pattern for front end validation
-    '             <input type="text" name="address" id="serverCreateIPAddress" placeholder="IP Address" required ><br>' +
+    '             <input type="text" name="address" id="serverCreateIPAddress" placeholder="" required ><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreatePort">Port</label>' +
-    '             <input type="number" min="1" max="99999" name="port" id="serverCreatePort" placeholder="Port"><br>' +
+    '             <input type="number" min="1" max="99999" name="port" id="serverCreatePort" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreateSecurePort">Secure Port</label>' +
-    '             <input type="number" min="1" max="99999" name="securePort" id="serverCreateSecurePort" placeholder="Secure Port"><br>' +
+    '             <input type="number" min="1" max="99999" name="securePort" id="serverCreateSecurePort" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreateProtocol">Protocol</label>' +
-    '             <input type="text" name="protocol" id="serverCreateProtocol" placeholder="Protocol"><br>' +
+    '             <input type="text" name="protocol" id="serverCreateProtocol" placeholder=""><br>' +
     '           </li>' +
     '           <li class="breakTop">' + 
     '             <label for="serverCreateUserId">User Id</label>' +
-    '             <input type="text" name="userId" id="serverCreateUserId" placeholder="User Id" required><br>' +
+    '             <input type="text" name="userId" id="serverCreateUserId" placeholder="" required><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreatePassword">Password</label>' +
-    '             <input type="text" name="password" id="serverCreatePassword" placeholder="Password" required><br>' +
+    '             <input type="text" name="password" id="serverCreatePassword" placeholder="" required><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <span class="checkboxLabel">Remember password</span> ' +
@@ -666,7 +666,7 @@ function addServerCreateFormUI(id, title) {
     '           <li>' +
     '            <label for="serverCreateCommsSecurity">Communications security</label>' +
     '            <div id="serverCreateCommsSecurityWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="commsSecurity" id="serverCreateCommsSecurity" placeholder="CommsSecurity" readonly="true">' +
+    '             <input type="popup" name="commsSecurity" id="serverCreateCommsSecurity" placeholder="Tap to select">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
     '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Secure and Unsecure</span></a></li>' +
@@ -930,13 +930,13 @@ function addVehicleCreateFormUI(id, title) {
     '         <ul>' + 
     '           <li>' + 
     '             <label for="vehicleCreateName">Name</label>' +
-    '             <input type="text" name="name" id="vehicleCreateName" placeholder="The name of the vehicle" required><br>' +
+    '             <input type="text" name="name" id="vehicleCreateName" placeholder="" required><br>' +
     '           </li>' +
     
     '           <li class="breakTop">' +
     '            <label for="vehicleCreateVehicleType">Type of vehicle</label>' +
     '            <div id="vehicleCreateVehicleTypeWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleCreateVehicleType" placeholder="" readonly="true">' +
+    '             <input type="popup" name="remoteServer" id="vehicleCreateVehicleType" placeholder="Tap to select">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
     '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON + '" />' + '<span class="dropdownText">Air</span></a></li>' +
@@ -950,7 +950,7 @@ function addVehicleCreateFormUI(id, title) {
     '           <li class="breakTop">' +
     '            <label for="vehicleCreateRemoteServer">Remote Server</label>' +
     '            <div id="vehicleCreateRemoteServerWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleCreateRemoteServer" placeholder="" readonly="true">' +
+    '             <input type="popup" name="remoteServer" id="vehicleCreateRemoteServer" placeholder="Tap to select">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
     '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Local</span></a></li>' + remoteServerList +
@@ -1062,33 +1062,33 @@ function addServerContentUI(id, server) {
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <label for="serverUpdateName">Name</label>' +
-    '             <input type="text" name="name" id="serverUpdateName" placeholder="Name" required><br>' +
+    '             <input type="text" name="name" id="serverUpdateName" placeholder="" required><br>' +
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <label for="serverUpdateIPAddress">IP Address</label>' +
     //'             <input type="text" name="address" id="serverUpdateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
     // TODO: figure out the ip address pattern for front end validation
-    '             <input type="text" name="address" id="serverUpdateIPAddress" placeholder="IP Address" required><br>' +
+    '             <input type="text" name="address" id="serverUpdateIPAddress" placeholder="" required><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverUpdatePort">Port</label>' +
-    '             <input type="number" min="1" max="99999" name="port" id="serverUpdatePort" placeholder="Port"><br>' +
+    '             <input type="number" min="1" max="99999" name="port" id="serverUpdatePort" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverUpdateSecurePort">Secure Port</label>' +
-    '             <input type="number" min="1" max="99999" name="securePort" id="serverUpdateSecurePort" placeholder="SecurePort"><br>' +
+    '             <input type="number" min="1" max="99999" name="securePort" id="serverUpdateSecurePort" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverUpdateProtocol">Protocol</label>' +
-    '             <input type="text" name="protocol" id="serverUpdateProtocol" placeholder="Protocol"><br>' +
+    '             <input type="text" name="protocol" id="serverUpdateProtocol" placeholder=""><br>' +
     '           </li>' +
     '           <li class="breakTop">' + 
     '             <label for="serverUpdateUserId">User Id</label>' +
-    '             <input type="text" name="userId" id="serverUpdateUserId" placeholder="User Id" required><br>' +
+    '             <input type="text" name="userId" id="serverUpdateUserId" placeholder="" required><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverUpdatePassword">Password</label>' +
-    '             <input type="text" name="password" id="serverUpdatePassword" placeholder="Password" required><br>' +
+    '             <input type="text" name="password" id="serverUpdatePassword" placeholder="" required><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <span class="checkboxLabel">Remember password</span> ' +
@@ -1097,7 +1097,7 @@ function addServerContentUI(id, server) {
     '           <li>' + 
     '            <label for="serverUpdateCommsSecurity">Communications security</label>' +
     '            <div id="serverUpdateCommsSecurityWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="commsSecurity" id="serverUpdateCommsSecurity" placeholder="CommsSecurity" readonly="true">' +
+    '             <input type="popup" name="commsSecurity" id="serverUpdateCommsSecurity" placeholder="Tap to select">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
     '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Secure and Unsecure</span></a></li>' +
@@ -1828,7 +1828,7 @@ function addVehicleToMapForm(parentId, id) {
     '           <li>' +
     '            <label for="vehicleAddToMapVehicle">Type of vehicle</label>' +
     '            <div id="vehicleAddToMapVehicleWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleAddToMapVehicle" placeholder="VehicleType" readonly="true">' +
+    '             <input type="popup" name="remoteServer" id="vehicleAddToMapVehicle" placeholder="Tap to select">' +
     '             <span class="triangle"></span>' +
     '             <ul id="' + ADD_TO_MAP_VEHICLES_DROPDOWN_ID + '" class="dropdown">' +
     
@@ -1954,32 +1954,32 @@ function addNavPointForm(parentId, id) {
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <label for="navPointUpdateLabel">Label</label>' +
-    '             <input type="text" name="label" id="navPointUpdateLabel" placeholder="Label" ><br>' +
+    '             <input type="text" name="label" id="navPointUpdateLabel" placeholder="" ><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="navPointUpdateAltitude">Altitude</label>' +
-    '             <input type="text" name="altitude" id="navPointUpdateAltitude" placeholder="100" required><br>' +
+    '             <input type="text" name="altitude" id="navPointUpdateAltitude" placeholder="" required><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="navPointUpdateSpeed">Speed</label>' +
-    '             <input type="text" name="address" id="navPointUpdateSpeed" placeholder="100%" required><br>' +
+    '             <input type="text" name="address" id="navPointUpdateSpeed" placeholder="" required><br>' +
     '           </li>' + 
     '           <li class="breakTop">' + 
     '           <li>' +
     '             <label for="navPointUpdateLoiterSpeed">Loiter Radius</label>' +
-    '             <input type="number" min="1" max="99999" name="loiterRadius" id="navPointUpdateLoiterRadius" placeholder="loiter radius"><br>' +
+    '             <input type="number" min="1" max="99999" name="loiterRadius" id="navPointUpdateLoiterRadius" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' +
     '             <label for="navPointUpdateLoiterSpeed">Loiter Speed</label>' +
-    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="navPointUpdateLoiterSpeed" placeholder="100%"><br>' +
+    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="navPointUpdateLoiterSpeed" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="navPointUpdateLoiterDuration">Loiter Duration</label>' +
-    '             <input type="number" min="1" max="99999" name="loiterDuration" id="navPointUpdateLoiterDuration" placeholder="1"><br>' +
+    '             <input type="number" min="1" max="99999" name="loiterDuration" id="navPointUpdateLoiterDuration" placeholder=""><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="navPointUpdateLoiterDurationUOM">Loiter Duration UOM</label>' +
-    '             <input type="text" name="loiterDurationUOM" id="navPointUpdateLoiterDurationUOM" placeholder="Minute"><br>' +
+    '             <input type="text" name="loiterDurationUOM" id="navPointUpdateLoiterDurationUOM" placeholder=""><br>' +
     '           </li>' +
     '       </form>' +
     '      </div>' +
