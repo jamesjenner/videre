@@ -11,6 +11,7 @@
 
 // TODO: add support for buttons, maybe regions for each...
 
+
 TouchControls = function(options) {
     options = options || {};
 
@@ -21,6 +22,35 @@ TouchControls = function(options) {
     this.canvas = options.canvas;
     
     this.debug = ((options.debug != null) ? options.debug : false);
+    
+    this.controlOverlayEnabled = ((options.controlOverlayEnabled != null) ? options.controlOverlayEnabled : true);
+    this.controlOverlayTextEnabled = ((options.controlOverlayTextEnabled != null) ? options.controlOverlayTextEnabled : true);
+    
+    this.initialTouchImg = ((options.initialTouchImg != null) ? options.initialTouchImg : TouchControls.DEFAULT_INITIAL_TOUCH_IMG);
+    this.dragTouchImg = ((options.dragTouchImg != null) ? options.dragTouchImg : TouchControls.DEFAULT_DRAG_TOUCH_IMG);
+    
+    this.initialTouchImgWidth = ((options.initialTouchImgWidth != null) ? options.initialTouchImgWidth : 175);
+    this.initialTouchImgHeight = ((options.initialTouchImgHeight != null) ? options.initialTouchImgHeight : 175);
+    this.dragTouchImgWidth = ((options.dragTouchImgWidth != null) ? options.dragTouchImgWidth : 175);
+    this.dragTouchImgHeight = ((options.dragTouchImgHeight != null) ? options.dragTouchImgHeight : 175);
+
+    this.controlIndImg = ((options.controlIndImg != null) ? options.controlIndImg : TouchControls.DEFAULT_CONTROL_INDICATOR);
+    this.controlIndImgWidth = ((options.controlIndImgWidth != null) ? options.controlIndImgWidth : 50);
+    this.controlIndImgHeight = ((options.controlIndImgHeight != null) ? options.controlIndImgHeight : 30);
+
+    this.controlFontSize = ((options.controlFontSize != null) ? options.controlFontSize : 12);
+    this.controlFontName = ((options.controlFontName != null) ? options.controlFontName : "Arial");
+    this.controlFontColor = ((options.controlFontColor != null) ? options.controlFontColor : "#2c45ff");
+    
+    this.leftUpText = ((options.leftUpText != null) ? options.leftUpText : TouchControls.DEFAULT_UP_TEXT);
+    this.leftDownText = ((options.leftDownText != null) ? options.leftDownText : TouchControls.DEFAULT_DOWN_TEXT);
+    this.leftLeftText = ((options.leftLeftText != null) ? options.leftLeftText : TouchControls.DEFAULT_LEFT_TEXT);
+    this.leftRightText = ((options.leftRightText != null) ? options.leftRightText : TouchControls.DEFAULT_RIGHT_TEXT);    
+    
+    this.rightUpText = ((options.rightUpText != null) ? options.rightUpText : TouchControls.DEFAULT_UP_TEXT);
+    this.rightDownText = ((options.rightDownText != null) ? options.rightDownText : TouchControls.DEFAULT_DOWN_TEXT);
+    this.rightLeftText = ((options.rightLeftText != null) ? options.rightLeftText : TouchControls.DEFAULT_LEFT_TEXT);
+    this.rightRightText = ((options.rightRightText != null) ? options.rightRightText : TouchControls.DEFAULT_RIGHT_TEXT);    
     
     this.leftEnabled = ((options.leftEnabled != null) ? options.leftEnabled : true);
     this.rightEnabled = ((options.rightEnabled != null) ? options.rightEnabled : true);
@@ -90,7 +120,6 @@ TouchControls = function(options) {
     this.rightVector = new Vector2(0,0);
 }
 
-
 TouchControls.LEFT_CONTROL = 'left';
 TouchControls.RIGHT_CONTROL = 'right';
 
@@ -104,6 +133,14 @@ TouchControls.UP_RIGHT = 'up_right';
 TouchControls.DOWN_LEFT = 'down_left';
 TouchControls.DOWN_RIGHT = 'down_right';
 
+TouchControls.DEFAULT_INITIAL_TOUCH_IMG = 'initial_touch.png';
+TouchControls.DEFAULT_DRAG_TOUCH_IMG = 'drag_touch.png';
+
+TouchControls.DEFAULT_CONTROL_INDICATOR = 'touch_indicator.png';
+TouchControls.DEFAULT_UP_TEXT = 'Up';
+TouchControls.DEFAULT_DOWN_TEXT = 'Down';
+TouchControls.DEFAULT_LEFT_TEXT = 'Left';
+TouchControls.DEFAULT_RIGHT_TEXT = 'Right';
 
 TouchControls.prototype.initialise = function() {
     this.setupCanvas();
@@ -138,7 +175,8 @@ TouchControls.prototype.resetCanvas = function(e) {
 
 TouchControls.prototype.drawCanvas = function(self) {
     // clear the canvas
-    this.c.clearRect(0, 0, this.canvas.width, this.canvas.height); 
+    this.c.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    var touchDrawn = false;
 
     if(this.touchable) {
         for(var i = 0; i < this.touches.length; i++) {
@@ -147,43 +185,203 @@ TouchControls.prototype.drawCanvas = function(self) {
 	    if(touch.identifier == this.leftTouchID) {
 		// draw the left touch
 		this.drawTouch(touch, this.leftTouchStartPos, this.leftTouchPos, this.leftVector);
+		touchDrawn = true;
 	    } else if(touch.identifier == this.rightTouchID) {
 		// draw the right touch
 		this.drawTouch(touch, this.rightTouchStartPos, this.rightTouchPos, this.rightVector);
-	    } else {
-		/*
-		// show the co-ords
-		c.beginPath(); 
-		c.fillStyle = "white";
-		c.fillText("touch id : "+touch.identifier+" x:"+touch.clientX+" y:"+touch.clientY, touch.clientX+30, touch.clientY-30);
-		*/
-		/*
-		c.beginPath(); 
-		c.strokeStyle = "red";
-		c.lineWidth = "6";
-		c.arc(touch.clientX, touch.clientY, 40, 0, Math.PI*2, true); 
-		c.stroke();
-		*/
+		touchDrawn = true;
 	    }
 	}
     } else {
-	// we're are mouse, so show the co-ords
-	this.c.fillStyle	 = "white"; 
+	// we're a mouse, so show the co-ords
+	this.c.fillStyle = "white"; 
 	this.c.fillText("mouse : " + this.mouseX + ", " + this.mouseY, this.mouseX, this.mouseY);
     }
+    
+    // only draw the overlays if a touch is not being drawn
+    if(!touchDrawn) {
+	if(this.controlOverlayEnabled) {
+	    // draw the control overlay
+	    this._drawImageOverlay('left');
+	    this._drawImageOverlay('right');
+	}
+	
+	if(this.controlOverlayTextEnabled) {
+	    this._drawTextOverlay('left');
+	    this._drawTextOverlay('right');
+	}
+    }
+    
+}
+
+TouchControls.prototype._drawTextOverlay = function(side) {
+    var textBuffer = 10;
+    var x = 0;
+    var y = 0;
+    var upText = '';
+    var downText = '';
+    var leftText = '';
+    var rightText = '';
+    
+    if(side == 'left') {
+	offsetX = 0;
+	upText = this.leftUpText;
+	downText = this.leftDownText;
+	leftText = this.leftLeftText;
+	rightText = this.leftRightText;
+    
+    } else {
+	offsetX = this.canvas.width / 2;
+	upText = this.rightUpText;
+	downText = this.rightDownText;
+	leftText = this.rightLeftText;
+	rightText = this.rightRightText;
+    }
+    
+    // setup the font
+    this.c.font = this.controlFontSize + 'pt ' + this.controlFontName;
+    this.c.fillStyle = this.controlFontColor;
+    this.c.textAlign = "center";
+    
+    // draw up
+    this.c.textBaseline = 'top';
+    x = this.canvas.width / 4;
+    y = textBuffer;
+    this.c.fillText(upText, x + offsetX, y);
+    
+    // draw down
+    this.c.textBaseline = 'bottom';
+    // x is the same
+    y = this.canvas.height - textBuffer;
+    this.c.fillText(downText, x + offsetX, y);
+    
+    // draw left
+    this.c.textBaseline = 'middle';
+    x = textBuffer + this.controlFontSize / 2;
+    y = this.canvas.height / 2;
+    this._drawRotatedText(this.c, leftText, x + offsetX, y, 270);
+    
+    // draw right
+    this.c.textBaseline = 'middle';
+    x = this.canvas.width / 2 - this.controlFontSize / 2 - textBuffer;
+    // y is the same
+    this._drawRotatedText(this.c, rightText, x + offsetX, y, 90);
+}
+
+
+TouchControls.prototype._drawImageOverlay = function(side, padding) {
+    padding = ((padding != null) ? padding : 0);
+    
+    // get font metrix
+    var x = this.c.width / 2;
+    var y = this.c.height / 2 - 10;
+    
+    if(side == 'left') {
+	offsetX = 0;
+    } else {
+	offsetX = this.canvas.width / 2;
+    }
+    
+    var textBuffer = 10;
+    
+    if(this.controlIndImgElement == null) {
+	this.controlIndImgElement = document.createElement('image');
+	this.controlIndImgElement.src = this.controlIndImg;
+    }
+    
+    var x = 0;
+    var y = 0;
+
+    // draw up
+    x = this.canvas.width / 4 - this.controlIndImgWidth / 2;
+    y = this.controlFontSize + textBuffer * 2;
+    this.c.drawImage(this.controlIndImgElement, x + offsetX, y, this.controlIndImgWidth, this.controlIndImgHeight);
+    
+    // draw down
+    // x is the same
+    y = this.canvas.height - y - this.controlIndImgHeight;
+    this._drawRotatedImage(this.c, this.controlIndImgElement, x + offsetX, y, this.controlIndImgWidth, this.controlIndImgHeight, 180);
+    
+    // draw left
+    x = textBuffer + this.controlFontSize;
+    y = this.canvas.height / 2 - this.controlIndImgHeight / 2;
+    this._drawRotatedImage(this.c, this.controlIndImgElement, x + offsetX, y, this.controlIndImgWidth, this.controlIndImgHeight, 270);
+    
+    // draw right
+    // y is the same
+    x = this.canvas.width / 2 - this.controlIndImgWidth - this.controlFontSize - textBuffer;
+    this._drawRotatedImage(this.c, this.controlIndImgElement, x + offsetX, y, this.controlIndImgWidth, this.controlIndImgHeight, 90);
+}
+
+var TO_RADIANS = Math.PI/180; 
+TouchControls.prototype._drawRotatedImage = function(c, image, x, y, width, height, angle) { 
+ 
+    // save the current co-ordinate system 
+    // before we screw with it
+    c.save(); 
+
+    // move to the middle of where we want to draw our image
+    c.translate(x + width / 2, y + height / 2);
+
+    // rotate around that point, converting our 
+    // angle from degrees to radians 
+    c.rotate(angle * TO_RADIANS);
+
+    // draw it up and to the left by half the width
+    // and height of the image 
+    c.drawImage(image, - (width / 2), - (height / 2), width, height);
+
+    // and restore the co-ords to how they were when we began
+    c.restore(); 
+}
+
+TouchControls.prototype._drawRotatedText = function(c, text, x, y, angle) {
+    // this presumes that the text is aligned centre and baseline is middle, will not work with other settings as is
+ 
+    // save the current co-ordinate system 
+    c.save(); 
+
+    // translate to the appropriate place
+    c.translate(x, y);
+
+    // rotate around that point, converting from degrees to radians 
+    c.rotate(angle * TO_RADIANS);
+
+    // fill the text
+    c.fillText(text, 0, 0);
+
+    // restore the co-ord system
+    c.restore(); 
 }
 
 TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPosition, vector) {
-    // inside thicker circle for start touch position
-    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true, 20, 50, 50, 255, 0.05);
+    if(false) {
+	// inside thicker circle for start touch position
+	this._drawCircle(touchStartPosition.x, touchStartPosition.y, 40, 0, Math.PI * 2, true, 20, 50, 50, 255, 0.05);
+	
+	// outside thin circle for start touch position
+	this._drawCircle(touchStartPosition.x, touchStartPosition.y, 65, 0, Math.PI * 2, true, 10, 50, 50, 255, 0.05);
+	
+	// touch position circle for the current location of the touch
+	this._drawCircle(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true, 12, 255, 75, 75, 0.05);
+    } else {
+	if(this.initialTouchImgElement == null) {
+	    this.initialTouchImgElement = document.createElement('image');
+	    this.initialTouchImgElement.src = this.initialTouchImg;
+	}
+	if(this.dragTouchImgElement == null) {
+	    this.dragTouchImgElement = document.createElement('image');
+	    this.dragTouchImgElement.src = this.dragTouchImg;
+	}
+
+	// draw the initial touch position
+	this.c.drawImage(this.initialTouchImgElement, touchStartPosition.x - (this.initialTouchImgWidth / 2), touchStartPosition.y - (this.initialTouchImgHeight / 2), this.initialTouchImgWidth, this.initialTouchImgHeight);
+	
+	// draw the current touch position
+	this.c.drawImage(this.dragTouchImgElement, touchPosition.x - (this.dragTouchImgWidth / 2), touchPosition.y - (this.dragTouchImgHeight / 2), this.dragTouchImgWidth, this.dragTouchImgHeight);
+    }
     
-    // outside thin circle for start touch position
-    this.drawGlowCircle(touchStartPosition.x, touchStartPosition.y, 65, 0, Math.PI * 2, true, 10, 50, 50, 255, 0.05);
-    
-    // touch position circle for the current location of the touch
-    this.drawGlowCircle(touchPosition.x, touchPosition.y, 40, 0, Math.PI * 2, true, 12, 255, 75, 75, 0.05);
-    
-    if(this.debugging) {
+    if(this.debug) {
 	this.c.beginPath(); 
 	this.c.fillStyle = "red";
 	this.c.fillText("touch id : " +
@@ -199,32 +397,13 @@ TouchControls.prototype.drawTouch = function(touch, touchStartPosition, touchPos
     }
 }
 
-TouchControls.prototype.drawGlowCircle = function(x, y, radius, startAngle, endAngle, antiClockwise, lineWidth, r, g, b, a) {
-    // adjust the radius by half the line width as the method to draw the glow circle draws on the inside of the radius
-    var adj = Math.abs(lineWidth / 2);
+TouchControls.prototype._drawCircle = function(x, y, radius, startAngle, endAngle, antiClockwise, lineWidth, r, g, b, a) {
     
-    rad = radius + adj;
-
-    var stop1 = (rad - lineWidth) / rad;
-    var stop2 = 0;
-    var stop3 = stop1 + (1 - stop1) / 2;
-    var stop4 = 0;
-    var stop5 = 1;
-    
-    stop2 = stop3 - (stop3 - stop1) / 2;
-    stop4 = stop3 + (stop5 - stop3) / 2;
-    
-    var radgrad = this.c.createRadialGradient(x, y, 0, x, y, rad);
-    
-    radgrad.addColorStop(stop1, 'rgba(' + r + ',' + g + ',' + b + ', 0)');
-    radgrad.addColorStop(stop2, 'rgba(' + r + ',' + g + ',' + b + ', .4)');
-    radgrad.addColorStop(stop3, 'rgba(' + r + ',' + g + ',' + b + ', 1)');
-    radgrad.addColorStop(stop4, 'rgba(' + r + ',' + g + ',' + b + ', .4)');
-    radgrad.addColorStop(stop5, 'rgba(' + r + ',' + g + ',' + b + ', 0)');
-    
-    this.c.fillStyle = radgrad;
-    this.c.arc(x, y, rad, 0, 2 * Math.PI, true);
-    this.c.fill();
+    this.c.beginPath(); 
+    this.c.strokeStyle = 'red'; 
+    this.c.lineWidth = lineWidth; 
+    this.c.arc(x, y, radius, startAngle, endAngle, antiClockwise); 
+    this.c.stroke();
 }
 
 /*	
@@ -259,7 +438,6 @@ TouchControls.prototype.onTouchStart = function(e) {
             this.leftTouchStartPos.reset(touch.clientX - this.offsets.offsetLeft, touch.clientY - this.offsets.offsetTop);
             this.leftTouchPos.copyFrom(this.leftTouchStartPos); 
             this.leftVector.reset(0,0);
-            // continue;
         }
         if((this.rightTouchID < 0) && (touch.clientX - this.offsets.offsetLeft >= this.halfWidth)) {
             this.rightTouchID = touch.identifier; 
@@ -383,14 +561,14 @@ TouchControls.prototype.onTouchEnd = function(e) {
 	    this.leftStrengthX = 0;
 	    this.leftStrengthY = 0;
 	    
-	    this.leftReleaseListener({controlId: TouchControls.LEFT_CONTROL, strength:0});
+	    this.leftReleaseListener({controlId: TouchControls.LEFT_CONTROL, strengthX:0, strengthY:0});
 	} else if(this.rightTouchID == touch.identifier) {
 	    this.rightTouchID = -1; 
 	    this.rightVector.reset(0,0);
 	    this.rightStrengthX = 0;
 	    this.rightStrengthY = 0;
 	    
-	    this.rightReleaseListener({controlId: TouchControls.RIGHT_CONTROL, strength:0});
+	    this.rightReleaseListener({controlId: TouchControls.RIGHT_CONTROL, strengthX:0, strengthY:0});
 	}
     }
 }
@@ -402,7 +580,15 @@ TouchControls.prototype.onMouseMove = function(event) {
 
 TouchControls.prototype.onMouseDown = function(event) {
     this.c.clearRect(0, 0, this.canvas.width, this.canvas.height); 
-    this.drawGlowCircle(event.offsetX, event.offsetY, 50, 0, Math.PI * 2, true, 20, 300, 0, 0, 0.9);
+    
+    if(this.mouseClickImgElement == null) {
+	this.mouseClickImgElement = document.createElement('image');
+	this.mouseClickImgElement.src = this.dragTouchImg;
+    }
+
+    // draw the current touch position
+    this.c.drawImage(this.mouseClickImgElement, event.offsetX - (this.dragTouchImgWidth / 2), event.offsetY - (this.dragTouchImgHeight / 2), this.dragTouchImgWidth, this.dragTouchImgHeight);
+    
 }
 
 TouchControls.prototype.setupCanvas = function() {
