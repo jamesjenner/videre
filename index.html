@@ -1432,69 +1432,159 @@ function addVehicleContentUI(id, vehicle, server) {
 		    e.strengthY);
 		    */
     
-    setTelemetry(contentManager.currentVehicle.telemetry);
-    
     if(e.controlId == TouchControls.LEFT) {
-      switch(e.controlId) {
+      switch(e.direction) {
         case TouchControls.UP:
           // up
+          if(server) {
+            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+          }
           break;
         case TouchControls.UP_RIGHT:
           // up and rotate right
+          if(server) {
+            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.RIGHT:
           // rotate right
+          if(server) {
+            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.DOWN_RIGHT:
           // down and rotate right
+          if(server) {
+            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+          }
           break;
-        case TouchCOntrols.DOWN:
+        case TouchControls.DOWN:
           // down
+          if(server) {
+            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+          }
           break;
         case TouchControls.DOWN_LEFT:
           // down and rotate left
+          if(server) {
+            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.LEFT:
           // rotate left
+          if(server) {
+            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.UP_LEFT:
           // up and rotate left
+          if(server) {
+            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
       }
     } else if(e.controlId == TouchControls.RIGHT) {
-      switch(e.controlId) {
+      switch(e.direction) {
         case TouchControls.UP:
           // forward
+          if(server) {
+            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+          }
           break;
         case TouchControls.UP_RIGHT:
           // forward and right
+          if(server) {
+            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.RIGHT:
-          // right
+          // move right
+          if(server) {
+            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.DOWN_RIGHT:
           // backward and right
+          if(server) {
+            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
-        case TouchCOntrols.DOWN:
-          // backward
+        case TouchControls.DOWN:
+          // move backward
+          if(server) {
+            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+          }
           break;
         case TouchControls.DOWN_LEFT:
           // down and backward
+          if(server) {
+            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.LEFT:
-          // left
+          // move left
+          if(server) {
+            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
         case TouchControls.UP_LEFT:
           // forward and left
+          if(server) {
+            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+          }
           break;
       }
     }
   }
+  
+  var directControlReleaseListener = function(e) {
+    if(e.controlId == TouchControls.LEFT) {
+      console.log("touch release (left) x: " + e.strengthX + ', y: ' + e.strengthY);
+      if(server) {
+        server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: 0});
+        server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: 0});
+        server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: 0});
+        server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: 0});
+      }
+    } else if(e.controlId == TouchControls.RIGHT) {
+      console.log("touch release (right) x: " + e.strengthX + ', y: ' + e.strengthY);
+      if(server) {
+        server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: 0});
+        server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: 0});
+        server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: 0});
+        server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: 0});
+      }
+    }
+  }
+  
   // setup the controls
   var touchControls = new TouchControls({
       canvas: $('#' + id + REMOTECONTROL_CANVAS_ID)[0],
+      initialTouchImg: 'assets/img/initial_touch.png',
+      dragTouchImg: 'assets/img/drag_touch.png',
+      controlOverlayEnabled: true,
+      controlOverlayTextEnabled: true,
+      controlIndImg: "assets/img/touch_indicator.png",
+      leftUpText: "Up",
+      leftDownText: "Down",
+      leftLeftText: "Rotate Left",
+      leftRightText: "Rotate Right",
+      rightUpText: "Foward",
+      rightDownText: "Reverse",
+      rightLeftText: "Move Left",
+      rightRightText: "Move Right",
       leftDirectionListener: directControlListener,
-      rightDirectionListener: directControlListener});
+      rightDirectionListener: directControlListener,
+      leftReleaseListener: directControlReleaseListener,
+      rightReleaseListener: directControlReleaseListener});
   
   touchControls.initialise();
   
