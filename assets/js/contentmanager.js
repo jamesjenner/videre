@@ -43,6 +43,7 @@ var ContentManager = function (options) {
     this.focusedPaneId = '';
     this.currentContentId = '';
     this.currentVehicle = '';
+    this.currentActionBar = null;
     this.currentServer = '';
     this.vehicles = new Array();
     this.remoteVehicles = new Object();
@@ -230,6 +231,9 @@ ContentManager.prototype = {
     },
     setCurrentVehicle: function(vehicle) {
         this.currentVehicle = vehicle;
+    },
+    setCurrentActionBar: function(actionBar) {
+        this.currentActionBar = actionBar;
     }
 };
 
