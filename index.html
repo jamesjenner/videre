@@ -85,8 +85,6 @@ var verticalScrollLeftSidebar;
 var verticalScrollRightSidebar;
 var verticalScrollLeftSidebar;
 
-var currentActionBar = null;
-
 // var horizontalScroll = new Array();
 function loaded() {
   verticalScrollRightSidebar = new iScroll(RIGHT_SIDEBAR_ID, {
@@ -352,7 +350,17 @@ function configureApplication() {
     // contentManager.servers[server].rcvdUpdateVehicle = 
     contentManager.servers[server].rcvdTelemetry = receivedTelemetry;
     contentManager.servers[server].rcvdNavPathUpdated = receivedUpdateNavPath;
-    // contentManager.servers[server].rcvdPayload = 
+    // contentManager.servers[server].rcvdPayload =
+
+    contentManager.servers[server].rcvdConnecting = receivedConnecting;
+    contentManager.servers[server].rcvdConnected = receivedConnected;
+    contentManager.servers[server].rcvdDisconnecting = receivedDisconnecting;
+    contentManager.servers[server].rcvdDisconnected = receivedDisconnected;
+    contentManager.servers[server].rcvdLaunching = receivedLaunching;
+    contentManager.servers[server].rcvdLaunched = receivedLaunched;
+    contentManager.servers[server].rcvdLanding = receivedLanding;
+    contentManager.servers[server].rcvdLanded = receivedLanded;
+    
   }
 
   // add the form for creating vehicles
@@ -566,6 +574,15 @@ function createServer() {
     rcvdTelemetry: receivedTelemetry,
     rcvdNavPathUpdated: receivedUpdateNavPath,
     // rcvdPayload: ,
+    rcvdConnecting: receivedConnecting,
+    rcvdConnected: receivedConnected,
+    rcvdDisconnecting: receivedDisconnecting,
+    rcvdDisconnected: receivedDisconnected,
+    rcvdLaunching: receivedLaunching,
+    rcvdLaunched: receivedLaunched,
+    rcvdLanding: receivedLanding,
+    rcvdLanded: receivedLanded,
+    
     errorListener: serverError
   });
   
@@ -815,7 +832,7 @@ function removeVehicleFromSidebar(vehicle, server) {
   $('#' + vehicleControlId).remove();
 }
 
-function receivedUpdateNavPath(message, server) {
+function receivedUpdateNavPath(server, message) {
   // update the details of the specified vehicle for the remote server
   var vehicle = null;
   // if we're on the nav map then update the nav map as well
@@ -1155,16 +1172,20 @@ function addServerContentUI(id, server) {
     saveFunction: function() {
       updateServer(server);
     },
-    disconnect: true,
-    disconnectFunction: function () { disconnectServer(server) },
-    connect: true,
-    connectFunction:  function () { connectServer(server) },
+    connectionToggle: true,
+    connectionToggleFunction: function() {
+      if(server.isConnected) {
+        disconnectServer(server);
+      } else {
+        connectServer(server);
+      }
+    }
   }).initialise();
   
   if(server.isConnected) {
-    serverActionBar.disableAction(ActionBar.CONNECT);
+    serverActionBar.setConnectionToggle(true);
   } else {
-    serverActionBar.disableAction(ActionBar.DISCONNECT);
+    serverActionBar.setConnectionToggle(false);
   }
   
   // setup listener for the server that is being updated
@@ -1332,26 +1353,51 @@ function addVehicleContentUI(id, vehicle, server) {
   remoteControlSettings.add(new HeadingSetting('some stuff'));
   
   // setup the action bar  
-  new ActionBar({
+  var vehicleActionBar = new ActionBar({
     targetId: id,
     id: id + ACTION_BAR,
     title: vehicle.name,
-    takeoff: true,
-    takeoffFunction: function() {
-      if(server) {
-        server.sendMessage(Message.CMD_TAKEOFF, {id: vehicle.id, name: vehicle.name});
+    connectionToggle: true,
+    connectionToggleFunction: function() {
+      if(vehicle.connectionStatus == Vehicle.COMMS_CONNECTED) {
+        if(connected) {
+          server.sendMessage(Message.VEHICLE_DISCONNECT, {id: vehicle.id});
+        } else {
+          server.sendMessage(Message.VEHICLE_CONNECT, {id: vehicle.id});
+        }
       }
     },
-    land: true,
-    landFunction: function() {
+    telemetryToggle: true,
+    telemetryToggleFunction: function() {
       if(server) {
-        server.sendMessage(Message.CMD_LAND, {id: vehicle.id, name: vehicle.name});
+        if(vehicle.telemetryEnabled) {
+          server.sendMessage(Message.VEHICLE_TELEMETRY_ON, {id: vehicle.id});
+        } else {
+          server.sendMessage(Message.VEHICLE_TELEMETRY_OFF, {id: vehicle.id});
+        }
       }
     },
+    reset: true,
+    resetFunction: function() {
+      if(server) {
+        server.sendMessage(Message.VEHICLE_RESET, {id: vehicle.id});
+      }
+    },
+    takeoffLandToggle: true,
+    takeoffLandToggleFunction: function() {
+      if(server) {
+        if(vehicle.activeState == Vehicle.LANDED || vehicle.activeState == Vehicle.LANDING) {
+          server.sendMessage(Message.CMD_LAUNCH, {id: vehicle.id});
+        } else {
+          server.sendMessage(Message.CMD_LAND, {id: vehicle.id});
+        }
+      }
+    },
+    
     abort: true,
     abortFunction: function() {
       if(server) {
-        server.sendMessage(Message.CMD_EMERGENCY_STOP, {id: vehicle.id, name: vehicle.name});
+        server.sendMessage(Message.CMD_EMERGENCY_STOP, {id: vehicle.id});
       }
     },
     settings: true,
@@ -1367,26 +1413,27 @@ function addVehicleContentUI(id, vehicle, server) {
   .addDivider()
   .addTab(id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
 
-/*
-  if(server) {
-    if(server.isConnected) {
-      serverActionBar.toggleAction(ActionBar.CONNECTION, true);
-    } else {
-      serverActionBar.toggleAction(ActionBar.CONNECTION, false);
-    }
-    
-    // setup listener for the server that is being updated
-  
-    server.connectionListener = function(e) { 
-      serverConnected(e, serverActionBar);
-    };
-    
-    server.disconnectionListener = function(e, s) {
-      serverDisconnected(e, s, serverActionBar);
-    };
+  if(vehicle.connectionStatus == Vehicle.COMMS_CONNECTED) {
+    vehicleActionBar.setConnectionToggle(true);
+  } else {
+    vehicleActionBar.setConnectionToggle(false);
   }
-  */
   
+  if(vehicle.activeState == Vehicle.LANDING || vehicle.activeState == Vehicle.LANDED) {
+    vehicleActionBar.setTakeOffLandToggleToTakeoff(true);
+  } else {
+    vehicleActionBar.setTakeOffLandToggleToTakeoff(false);
+  }
+  // setup listener for the server that is being updated
+  /*
+  server.connectionListener = function(e) { 
+    serverConnected(e, serverActionBar);
+  };
+  
+  server.disconnectionListener = function(e, s) {
+    serverDisconnected(e, s, serverActionBar);
+  };
+  */
   
   contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
   contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
@@ -1400,6 +1447,7 @@ function addVehicleContentUI(id, vehicle, server) {
   contentManager.setFocusedTabId(id, id  + TELEMETRY_SUB_ID);
   contentManager.setCurrentContent(id  + TELEMETRY_SUB_ID);
   contentManager.setCurrentVehicle(vehicle);
+  contentManager.setCurrentActionBar(vehicleActionBar);
   
   /* TODO: appears removing the callback and adding slideCallback worked, but requires futher testing when
    * the issues with side bar navigation are sorted out
@@ -2708,16 +2756,14 @@ window.cancelRequestAnimFrame = ( function() {
 function serverConnected(e, actionBar) {
   // update action bar on connection
   if(actionBar) {
-    actionBar.disableAction(ActionBar.CONNECT);
-    actionBar.enableAction(ActionBar.DISCONNECT);
+    actionBar.setConnectionToggle(true);
   }
 }
 
 function serverDisconnected(e, server, actionBar) {
   // update action bar on connection
   if(actionBar) {
-    actionBar.enableAction(ActionBar.CONNECT);
-    actionBar.disableAction(ActionBar.DISCONNECT);
+    actionBar.setConnectionToggle(false);
   }
   
   // remove vehicles for that server
@@ -2748,6 +2794,69 @@ function receivedTelemetry(server, e) {
   }
 }
 
+function receivedConnecting(server, e) {
+  updateVehicleConnectionState(server, e.id, Vehicle.COMMS_CONNECTING, false);
+}
+
+function receivedConnected(server, e) {
+  updateVehicleConnectionState(server, e.id, Vehicle.COMMS_CONNECTED, true);
+}
+
+function receivedDisconnecting(server, e) {
+  updateVehicleConnectionState(server, e.id, Vehicle.COMMS_DISCONNECTING, false);
+}
+
+function receivedDisconnected(server, e) {
+  updateVehicleConnectionState(server, e.id, Vehicle.COMMS_DISCONNECTED, false);
+}
+
+function receivedLaunching(server, e) {
+  updateVehicleActiveState(server, e.id, Vehicle.LAUNCHING, false);
+}
+
+function receivedLaunched(server, e) {
+  updateVehicleActiveState(server, e.id, Vehicle.LAUNCHED, false);
+}
+
+function receivedLanding(server, e) {
+  updateVehicleActiveState(server, e.id, Vehicle.LANDING, true);
+}
+
+function receivedLanded(server, e) {
+  updateVehicleActiveState(server, e.id, Vehicle.LANDED, true);
+}
+
+function updateVehicleActiveState(server, vehicleId, newState, toggleControl) {
+  if(contentManager.currentVehicle.id === vehicleId && contentManager.currentActionBar != null) {
+    contentManager.currentActionBar.setTakeOffLandToggleToTakeoff(toggleControl);
+    contentManager.currentVehicle.activeState = newState;
+  } else {
+    var vehicles = contentManager.getVehiclesForServer(server.name);
+  
+    for(var i = 0, l = vehicles.length; i < l; i++) {
+      if(vehicles[i].id === vehicleId) {
+        vehicles[i].activeState = newState;
+        break;
+      }
+    }
+  }
+}
+
+function updateVehicleConnectionState(server, vehicleId, newState, toggleControl) {
+  if(contentManager.currentVehicle.id === vehicleId) {
+    contentManager.currentActionBar.setConnectionToggle(toggleControl);
+    currentVehicle.currentVehicle.connectionStatus = newState;
+  } else {
+    var vehicles = contentManager.getVehiclesForServer(server.name);
+    
+    for(var i = 0, l = vehicles.length; i < l; i++) {
+      if(vehicles[i].id === vehicleId) {
+        vehicles[i].connectionStatus = newState;
+      }
+    }
+  }
+}
+
 
 // TODO: add handling for errors
 function serverError(e) {
@@ -2773,8 +2882,6 @@ function setTelemetry(telemetry) {
   // setGaugeAngle('gaugeId', Gauge.NEEDLE_1, 90, '750ms');
   
   var time = 0;
-  
-  console.log("yaw: " + telemetry.attitude.yaw);
   
   // heading is atttiude.yaw?
   setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.HEADING, Gauge.NEEDLE_1, telemetry.attitude.yaw, time + 'ms');
