@@ -58,6 +58,16 @@ var Server = function (options) {
     this.rcvdPayload = options.rcvdPayload || this.rcvdUnsupportedMessage;
     this.rcvdNavPathUpdated = options.rcvdNavPathUpdated || this.rcvdUnsupportedMessage;
     
+    this.rcvdConnecting = options.rcvdConnecting || this.rcvdUnsupportedMessage;
+    this.rcvdConnected = options.rcvdConnected || this.rcvdUnsupportedMessage;
+    this.rcvdDisconnecting = options.rcvdDisconnecting || this.rcvdUnsupportedMessage;
+    this.rcvdDisconnected = options.rcvdDisconnected || this.rcvdUnsupportedMessage;
+    
+    this.rcvdLaunching = options.rcvdLaunching || this.rcvdUnsupportedMessage;
+    this.rcvdLaunched = options.rcvdLaunched || this.rcvdUnsupportedMessage;
+    this.rcvdLanding = options.rcvdLanding || this.rcvdUnsupportedMessage;
+    this.rcvdLanded = options.rcvdLanded || this.rcvdUnsupportedMessage;
+    
     this.log = options.log || false;
     
     this.unsecureConnection = {};
@@ -222,12 +232,13 @@ Server.prototype = {
     messageEvent: function (event) {
         if(event.data) {
             var msg = Message.deconstructMessage(event.data);
+
+            if(this.log && msg.id != Message.VEHICLE_TELEMETRY) {
+                console.log(this.name + " webSocket msg rcvd: " + msg.id + " : " + msg.body);
+            }
+            
         
             if(!this.authenticated) {
-                if(this.log) {
-                    console.log(this.name + " webSocket msg rcvd: " + msg.id + " : " + msg.body);
-                }
-            
                 switch(msg.id) {
                     case Message.AUTHENTICATION_ACCEPTED:
                         if(this.log) {
@@ -294,11 +305,44 @@ Server.prototype = {
                     break;
                 
                 case Message.VEHICLE_PAYLOAD:
-                    this.rcvdPayload(msg.body, this);
+                    this.rcvdPayload(this, msg.body);
                     break;
                 
                 case Message.NAV_PATH_UPDATED:
-                    this.rcvdNavPathUpdated(msg.body, this);
+                    this.rcvdNavPathUpdated(this, msg.body);
+                    break;
+
+                case Message.VEHICLE_CONNECTING:
+                    this.rcvdConnecting(this, msg.body);
+                    break;
+                
+                case Message.VEHICLE_CONNECTED:
+                    this.rcvdConnected(this, msg.body);
+                    break;
+                
+                case Message.VEHICLE_DISCONNECTING:
+                    this.rcvdDisconnecting(this, msg.body);
+                    break;
+                
+                case Message.VEHICLE_DISCONNECTED:
+                    this.rcvdDisconnected(this, msg.body);
+                    break;
+
+                case Message.VEHICLE_LAUNCHING:
+                    console.log(this.name + " webSocket msg rcvd: firing vehicle launching ");
+                    this.rcvdLaunching(this, msg.body);
+                    break;
+                
+                case Message.VEHICLE_LAUNCHED:
+                    this.rcvdLaunched(this, msg.body);
+                    break;
+                
+                case Message.VEHICLE_LANDING:
+                    this.rcvdLanding(this, msg.body);
+                    break;
+                
+                case Message.VEHICLE_LANDED:
+                    this.rcvdLanded(this, msg.body);
                     break;
             }
         }
