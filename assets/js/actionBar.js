@@ -41,9 +41,20 @@ function ActionBar(options) {
   this.takeoffFunction = options.takeoffFunction || function() {};
   this.landAction = ((options.land != null) ? options.land : false);
   this.landFunction = options.landFunction || function() {};
+
+  this.takeoffLandToggleAction = ((options.takeoffLandToggle != null) ? options.takeoffLandToggle : false);
+  this.takeoffLandToggleFunction = options.takeoffLandToggleFunction || function() {};
+  
   this.abortAction = ((options.abort != null) ? options.abort : false);
   this.abortFunction = options.abortFunction || function() {};
 
+  this.connectionToggleAction = ((options.connectionToggle != null) ? options.connectionToggle : false);
+  this.connectionToggleFunction = options.connectionToggleFunction || function() {};
+  this.telemetryToggleAction = ((options.telemetryToggle != null) ? options.telemetryToggle : false);
+  this.telemetryToggleFunction = options.telemetryToggleFunction || function() {};
+  this.resetAction = ((options.reset != null) ? options.reset : false);
+  this.resetFunction = options.resetFunction || function() {};
+  
   this.preShowSidebarFn = options.preShowSidebarFn || function() {};
   
   this.settingsFunction = options.settingsFunction || function() {
@@ -63,6 +74,13 @@ function ActionBar(options) {
   this.isEnabled[ActionBar.TAKEOFF] = this.takeoffAction;
   this.isEnabled[ActionBar.LAND] = this.landAction;
   this.isEnabled[ActionBar.ABORT] = this.abortAction;
+  
+  this.isEnabled[ActionBar.TAKEOFF_LAND_TOGGLE] = this.takeoffLandToggleAction;
+  this.isEnabled[ActionBar.CONNECTION_TOGGLE] = this.connectionToggleAction;
+  this.isEnabled[ActionBar.TELEMETRY_TOGGLE] = this.telemetryToggleAction;
+  this.isEnabled[ActionBar.RESET] = this.resetAction;
+  
+  
 }
 
 ActionBar.SAVE = 0;
@@ -70,8 +88,12 @@ ActionBar.REMOVE = 1;
 ActionBar.DISCONNECT = 2;
 ActionBar.CONNECT = 3;
 
-ActionBar.TAKEOFF = 21;
-ActionBar.LAND = 22;
+ActionBar.CONNECTION_TOGGLE = 20;
+ActionBar.TELEMETRY_TOGGLE = 21;
+ActionBar.RESET = 22;
+ActionBar.TAKEOFF = 23;
+ActionBar.LAND = 24;
+ActionBar.TAKEOFF_LAND_TOGGLE = 25;
 
 ActionBar.ABORT = 29;
 
@@ -86,7 +108,7 @@ ActionBar.prototype.initialise = function() {
       '    <div id="' + LEFT_SIDEBAR_CONTROL_TEXT + this.id + '" class="title">' + this.title + '</div>' +
       '    <div id="' + this.id + 'TabBar" class="tabBar flex boxLayout">' +
       '    </div>' +
-      
+
       // check the actions that are to be available... settings (if enabled) always goes last
       (this.takeoffAction ? 
       '    <div id="takeoffActionControl' + this.id + '" class="actionBarAction noflex centered">' +
@@ -100,6 +122,20 @@ ActionBar.prototype.initialise = function() {
       '      <span class="actionBarText">Land</span>' +
       '    </div>'
       : '') +
+      (this.resetAction ? 
+      '    <div id="resetActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '      <img src="assets/icons/drawable-hdpi-v11/ic_action_reset.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+      '      <span class="actionBarText">Reset</span>' +
+      '    </div>'
+      : '') +
+      
+      (this.takeoffLandToggleAction ?
+      '    <div id="takeoffLandToggleActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '      <img id="takeoffLandToggleActionImg' + this.id + '" src="assets/icons/drawable-hdpi-v11/ic_action_takeoff.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+      '      <span id="takeoffLandToggleActionTxt' + this.id + '" class="actionBarText">Connect</span>' +
+      '    </div>'
+      : '') +
+      
       (this.abortAction ? 
       '    <div id="abortActionControl' + this.id + '" class="actionBarAction noflex centered">' +
       '      <img src="assets/icons/drawable-hdpi-v11/ic_action_abort.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
@@ -123,6 +159,13 @@ ActionBar.prototype.initialise = function() {
       '    <div id="connectActionControl' + this.id + '" class="actionBarAction noflex centered">' +
       '      <img src="assets/icons/drawable-hdpi-v11/ic_action_connection_enable.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
       '      <span class="actionBarText">Connect</span>' +
+      '    </div>'
+      : '') +
+      
+      (this.connectionToggleAction ?
+      '    <div id="connectionToggleActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '      <img id="connectionToggleActionImg' + this.id + '" src="assets/icons/drawable-hdpi-v11/ic_action_connection_enable.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+      '      <span id="connectionToggleActionTxt' + this.id + '" class="actionBarText">Connect</span>' +
       '    </div>'
       : '') +
     
@@ -175,6 +218,20 @@ ActionBar.prototype.initialise = function() {
         }
       });
     }
+    if(this.resetAction) {
+      $('#resetActionControl' + this.id).on('click', function() {
+        if(self.isEnabled[ActionBar.RESET]) {
+          self.resetFunction();
+        }
+      });
+    }
+    if(this.takeoffLandToggleAction) {
+      $('#takeoffLandToggleActionControl' + this.id).on('click', function() {
+        if(self.isEnabled[ActionBar.TAKEOFF_LAND_TOGGLE]) {
+          self.takeoffLandToggleFunction();
+        }
+      });
+    }
     if(this.abortAction) {
       $('#abortActionControl' + this.id).on('click', function() {
         if(self.isEnabled[ActionBar.ABORT]) {
@@ -211,7 +268,13 @@ ActionBar.prototype.initialise = function() {
         }
       });
     }
-    
+    if(this.connectionToggleAction) {
+      $('#connectionToggleActionControl' + this.id).on('click', function() {
+        if(self.isEnabled[ActionBar.CONNECTION_TOGGLE]) {
+          self.connectionToggleFunction();
+        }
+      });
+    }
     if(this.settingsAction) {
       $('#rightSidebarControl' + this.id).on('click', function() {
         if(self.isEnabled[ActionBar.SETTINGS]) {
@@ -222,6 +285,27 @@ ActionBar.prototype.initialise = function() {
     
     return this;
 }
+
+ActionBar.prototype.setConnectionToggle = function(connected) {
+  if(connected) {
+    $('#connectionToggleActionImg' + this.id).attr('src', "assets/icons/drawable-hdpi-v11/ic_action_connection_enable.png");
+    $('#connectionToggleActionTxt' + this.id).text('Disconnect');
+  } else {
+    $('#connectionToggleActionImg' + this.id).attr('src', "assets/icons/drawable-hdpi-v11/ic_action_connection_disable.png");
+    $('#connectionToggleActionTxt' + this.id).text('Connect');
+  }
+}
+
+ActionBar.prototype.setTakeOffLandToggleToTakeoff = function(takeoff) {
+  if(takeoff) {
+    $('#takeoffLandToggleActionImg' + this.id).attr('src', "assets/icons/drawable-hdpi-v11/ic_action_takeoff.png");
+    $('#takeoffLandToggleActionTxt' + this.id).text('Takeoff');
+  } else {
+    $('#takeoffLandToggleActionImg' + this.id).attr('src', "assets/icons/drawable-hdpi-v11/ic_action_land.png");
+    $('#takeoffLandToggleActionTxt' + this.id).text('Land');
+  }
+}
+
 
 ActionBar.prototype.addTab = function(tabId, tabName, tabNumber, vehicleContentNbr, selected) {
     selected = (typeof selected === "undefined") ? false : selected;
