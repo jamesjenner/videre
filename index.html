@@ -1360,11 +1360,9 @@ function addVehicleContentUI(id, vehicle, server) {
     connectionToggle: true,
     connectionToggleFunction: function() {
       if(vehicle.connectionStatus == Vehicle.COMMS_CONNECTED) {
-        if(connected) {
-          server.sendMessage(Message.VEHICLE_DISCONNECT, {id: vehicle.id});
-        } else {
-          server.sendMessage(Message.VEHICLE_CONNECT, {id: vehicle.id});
-        }
+        server.sendMessage(Message.VEHICLE_DISCONNECT, {id: vehicle.id});
+      } else {
+        server.sendMessage(Message.VEHICLE_CONNECT, {id: vehicle.id});
       }
     },
     telemetryToggle: true,
@@ -2845,7 +2843,7 @@ function updateVehicleActiveState(server, vehicleId, newState, toggleControl) {
 function updateVehicleConnectionState(server, vehicleId, newState, toggleControl) {
   if(contentManager.currentVehicle.id === vehicleId) {
     contentManager.currentActionBar.setConnectionToggle(toggleControl);
-    currentVehicle.currentVehicle.connectionStatus = newState;
+    contentManager.currentVehicle.connectionStatus = newState;
   } else {
     var vehicles = contentManager.getVehiclesForServer(server.name);
     
