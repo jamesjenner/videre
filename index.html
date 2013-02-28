@@ -1636,8 +1636,8 @@ function addVehicleContentUI(id, vehicle, server) {
   
   touchControls.initialise();
   
-  window.onorientationchange = touchControls.resetCanvas;  
-  window.onresize = touchControls.resetCanvas;  
+  $(window).bind("orientationchange", function() {touchControls.resetCanvas();});
+  $(window).bind("resize", function() {touchControls.resetCanvas();});
   
   // TODO: stop using setInterval
   setInterval(touchControls.drawCanvas.bind(touchControls), 1000/touchControls.frameRate);
