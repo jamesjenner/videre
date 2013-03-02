@@ -1483,53 +1483,53 @@ function addVehicleContentUI(id, vehicle, server) {
         case TouchControls.UP:
           // up
           if(server) {
-            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
           }
           break;
         case TouchControls.UP_RIGHT:
           // up and rotate right
           if(server) {
-            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
-            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.RIGHT:
           // rotate right
           if(server) {
-            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.DOWN_RIGHT:
           // down and rotate right
           if(server) {
-            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
-            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
           }
           break;
         case TouchControls.DOWN:
           // down
           if(server) {
-            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
           }
           break;
         case TouchControls.DOWN_LEFT:
           // down and rotate left
           if(server) {
-            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
-            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_DOWN, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.LEFT:
           // rotate left
           if(server) {
-            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.UP_LEFT:
           // up and rotate left
           if(server) {
-            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
-            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
       }
@@ -1538,53 +1538,53 @@ function addVehicleContentUI(id, vehicle, server) {
         case TouchControls.UP:
           // forward
           if(server) {
-            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
           }
           break;
         case TouchControls.UP_RIGHT:
           // forward and right
           if(server) {
-            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
-            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.RIGHT:
           // move right
           if(server) {
-            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.DOWN_RIGHT:
           // backward and right
           if(server) {
-            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
-            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.DOWN:
           // move backward
           if(server) {
-            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
+            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
           }
           break;
         case TouchControls.DOWN_LEFT:
           // down and backward
           if(server) {
-            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
-            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_REVERSE, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.LEFT:
           // move left
           if(server) {
-            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
         case TouchControls.UP_LEFT:
           // forward and left
           if(server) {
-            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
-            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: e.strengthY});
+            server.sendMessage(Message.CMD_LEFT, {id: vehicle.id, name: vehicle.name, power: e.strengthX});
           }
           break;
       }
