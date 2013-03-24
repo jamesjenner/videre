@@ -16,7 +16,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/
  */
 
-function DropDown(el) {
+function DropDown(el, onClickListener) {
     this.dd = el;
     this.placeholder = this.dd.children('input');
     this.opts = this.dd.find('ul.dropdown > li');
@@ -24,6 +24,7 @@ function DropDown(el) {
     this.key = '';
     this.index = -1;
     this.initEvents();
+    this.onClickListener = (onClickListener != null) ? onClickListener : function() {};  
 }
 
 DropDown.prototype = {
@@ -41,22 +42,15 @@ DropDown.prototype = {
             obj.val = opt.find('span').text();
             obj.index = opt.index();
             obj.placeholder.val(obj.val);
+            
+            // check for listener, if set then call
+            if(obj.onClickListener) {
+                obj.onClickListener(obj);
+            }
         });
     },
-    initList : function() {
-        var obj = this;
-        
-        obj.opts = this.dd.find('ul.dropdown > li');
-        
-        obj.opts.off('click');
-        
-        obj.opts.on('click',function(){
-            var opt = $(this);
-            obj.key = opt.find('span').attr('key');
-            obj.val = opt.find('span').text();
-            obj.index = opt.index();
-            obj.placeholder.val(obj.val);
-        });
+    setOnClickListener : function (listener) {
+        this.onClickListener = (listener != null) ? listener : function() {};  
     },
     getValue : function() {
         return this.val;
