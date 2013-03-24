@@ -54,6 +54,7 @@ var Server = function (options) {
     this.rcvdAddVehicle = options.rcvdAddVehicle || this.rcvdUnsupportedMessage;
     this.rcvdDeleteVehicle = options.rcvdDeleteVehicle || this.rcvdUnsupportedMessage;
     this.rcvdUpdateVehicle = options.rcvdUpdateVehicle || this.rcvdUnsupportedMessage;
+    this.rcvdVehicleDeviceTypes = options.rcvdVehicleDeviceTypes || this.rcvdUnsupportedMessage;
     this.rcvdTelemetry = options.rcvdTelemetry || this.rcvdUnsupportedMessage;
     this.rcvdPayload = options.rcvdPayload || this.rcvdUnsupportedMessage;
     this.rcvdNavPathUpdated = options.rcvdNavPathUpdated || this.rcvdUnsupportedMessage;
@@ -287,6 +288,9 @@ Server.prototype = {
                         this.rcvdAddVehicle(this, new Vehicle(msg.body[i]));
                     }
                     break;
+                
+                case Message.VEHICLE_DEVICE_TYPES:
+                    this.rcvdVehicleDeviceTypes(this, msg.body);
                 
                 case Message.ADD_VEHICLE:
                     this.rcvdAddVehicle(this, new Vehicle(msg.body));
