@@ -224,7 +224,8 @@ var SERVER_CONTENT = 'server';
 
 var ADD_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_create.png';
 
-var SERVER_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_server.png';
+var SERVER_ICON_LIGHT = 'assets/icons/drawable-xhdpi-v11/ic_action_server.png';
+var SERVER_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_server_inverse.png';
 
 var AIRPLANE_ICON_LIGHT = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
 var SURFACE_ICON_LIGHT = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
@@ -630,7 +631,7 @@ function addServerToSidebar(server) {
   var serverContentId = SERVER_CONTENT + serverNumber;
 
   // add the control that lets the user select the server details UI before the add server control on the side bar
-  addControlToSidebarBeforeId(ADD_SERVER_CONTROL_ID, serverControlId, SERVER_ICON, server.name);
+  addControlToSidebarBeforeId(ADD_SERVER_CONTROL_ID, serverControlId, SERVER_ICON_LIGHT, server.name);
   
   // add the listener for the ui to activate the side bar 
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, serverControlId, serverContentId, function() {
@@ -939,7 +940,7 @@ function addVehicleCreateFormUI(id, title) {
   // build list for the remote server drop down
   for(var i = 0, l = contentManager.servers.length; i < l; i++) {
     // Add all servers, otherwise the dynamic issues of disconnecting and connecting servers is too problematic for the user to understand
-    remoteServerList += '              <li><a href="#"><img class="dropdownIcon" src="' + SERVER_ICON + '" /><span class="dropdownText">' +  contentManager.servers[i].name + '</span></a></li>'
+    remoteServerList += '              <li><a href="#"><img class="dropdownIcon" src="' + SERVER_ICON_DARK + '" /><span class="dropdownText">' +  contentManager.servers[i].name + '</span></a></li>'
   }
   
   $('#mainApplication').append(
