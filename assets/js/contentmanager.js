@@ -47,6 +47,7 @@ var ContentManager = function (options) {
     this.currentServer = '';
     this.vehicles = new Array();
     this.remoteVehicles = new Object();
+    this.serverVehicleDeviceTypes = new Object();
     this.servers = new Array();
     
 }
@@ -132,6 +133,20 @@ ContentManager.prototype = {
     },
     updateVehicle: function(vehicle) {
         ioStoreObject(Vehicle.KEY + '_' + vehicle.position, vehicle);
+    },
+    setVehicleDeviceTypes: function(server, deviceTypes) {
+        if(!this.serverVehicleDeviceTypes[server.name]) {
+            this.serverVehicleDeviceTypes[server.name] = new Array();
+        }
+        
+        this.serverVehicleDeviceTypes[server.name] = deviceTypes;
+    },
+    getVehicleDeviceTypes: function(serverName) {
+        if(this.serverVehicleDeviceTypes[serverName]) {
+            return this.serverVehicleDeviceTypes[serverName];
+        } else {
+            return new Array();
+        }
     },
     addServer: function(server, persist) {
         var i = this.servers.length;
