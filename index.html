@@ -355,6 +355,7 @@ function configureApplication() {
     // contentManager.servers[server].rcvdUpdateVehicle = 
     contentManager.servers[server].rcvdTelemetry = receivedTelemetry;
     contentManager.servers[server].rcvdNavPathUpdated = receivedUpdateNavPath;
+    contentManager.servers[server].rcvdVehicleDeviceTypes = receivedVehicleDeviceTypes;
     // contentManager.servers[server].rcvdPayload =
 
     contentManager.servers[server].rcvdConnecting = receivedConnecting;
@@ -577,6 +578,7 @@ function createServer() {
     rcvdDeleteVehicle: removeVehicleFromSidebar,
     // rcvdUpdateVehicle: ,
     rcvdTelemetry: receivedTelemetry,
+    rcvdVehicleDeviceTypes: receivedVehicleDeviceTypes, 
     rcvdNavPathUpdated: receivedUpdateNavPath,
     // rcvdPayload: ,
     rcvdConnecting: receivedConnecting,
@@ -959,20 +961,6 @@ function addVehicleCreateFormUI(id, title) {
     '           </li>' +
     
     '           <li class="breakTop">' +
-    '            <label for="vehicleCreateVehicleType">Type of vehicle</label>' +
-    '            <div id="vehicleCreateVehicleTypeWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleCreateVehicleType" placeholder="Tap to select">' +
-    '             <span class="triangle"></span>' +
-    '             <ul class="dropdown">' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON_DARK + '" />' + '<span class="dropdownText">Air</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SURFACE_ICON_DARK + '" />' + '<span class="dropdownText">Surface</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SUBMERSIBLE_ICON_DARK + '" />' + '<span class="dropdownText">Submersible</span></a></li>' +
-    
-    '             </ul>' +
-    '            </div>' +
-    '           </li>' +
-
-    '           <li class="breakTop">' +
     '            <label for="vehicleCreateRemoteServer">Remote Server</label>' +
     '            <div id="vehicleCreateRemoteServerWrapper" class="dropdownwrapper">' +
     '             <input type="popup" name="remoteServer" id="vehicleCreateRemoteServer" placeholder="Tap to select">' +
@@ -983,6 +971,30 @@ function addVehicleCreateFormUI(id, title) {
     '            </div>' +
     '           </li>' +
     
+    '           <li class="breakTop">' +
+    '            <label for="vehicleCreateVehicleType">Type of vehicle</label>' +
+    '            <div id="vehicleCreateVehicleTypeWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="createVehicleType" id="vehicleCreateVehicleType" placeholder="Tap to select">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON_DARK + '" />' + '<span class="dropdownText">Air</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SURFACE_ICON_DARK + '" />' + '<span class="dropdownText">Surface</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SUBMERSIBLE_ICON_DARK + '" />' + '<span class="dropdownText">Submersible</span></a></li>' +
+    
+    '             </ul>' +
+    '            </div>' +
+    '           </li>' +
+
+    '           <li>' +
+    '            <label for="vehicleCreateDeviceType">Type of device</label>' +
+    '            <div id="vehicleCreateDeviceTypeWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="createDeviceType" id="vehicleCreateDeviceType" placeholder="Tap to select">' +
+    '             <span class="triangle"></span>' +
+    '             <ul id="vehicleCreateDeviceTypeList" class="dropdown">' +
+    '             </ul>' +
+    '            </div>' +
+    '           </li>' +
+
     '           <li class="breakTop">' +
     '             <span class="checkboxLabel">Vehicle contains payload</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="payloadEnabled" id="vehicleCreatePayload"></div>' +
@@ -1020,13 +1032,38 @@ function addVehicleCreateFormUI(id, title) {
     save: true,
     saveFunction: createVehicle
   }).initialise();
+
+  var serverSelectListener = function(dropdown) {
+    // clear the device list and add as per the selected server
     
+    // remove all child elements
+      $('#vehicleCreateDeviceTypeList').empty();
+    
+    // create the new elements
+    var remoteServerList = '';
+    
+    if(contentManager && contentManager.serverVehicleDeviceTypes && contentManager.serverVehicleDeviceTypes[dropdown.val]) {
+      for(var i = 0, l = contentManager.serverVehicleDeviceTypes[dropdown.val].length; i < l; i++) {
+        remoteServerList += '<li><a href="#">' +
+                            // '<img class="dropdownIcon" src="' + SERVER_ICON_DARK + '" />' +
+                            '<span class="dropdownText">' +  contentManager.serverVehicleDeviceTypes[dropdown.val][i].name + '</span></a></li>'
+      }
+      
+      // add the new list
+      $('#vehicleCreateDeviceTypeList').append(remoteServerList);
+      
+      // create the dropdown
+      new DropDown($('#vehicleCreateDeviceTypeWrapper'));
+    }
+  };
+  
   // add the toggle switch to switch classed checkboxes  
   $('#createVehicleForm .switch').on("click", toggleSwitch);
   
   // add the drop down logic for the drop downs  
-  new DropDown( $('#vehicleCreateRemoteServerWrapper') );
-  new DropDown( $('#vehicleCreateVehicleTypeWrapper') );
+  new DropDown($('#vehicleCreateRemoteServerWrapper'), serverSelectListener);
+  
+  // new DropDown($('#vehicleCreateVehicleTypeWrapper'));
 }
 
 /**
@@ -2782,6 +2819,10 @@ function serverDisconnected(e, server, actionBar) {
   
   // remove the vehicles from the content manager
   contentManager.removeVehiclesFromServer(server.name);
+}
+
+function receivedVehicleDeviceTypes(server, vehicleDeviceTypes) {
+  contentManager.setVehicleDeviceTypes(server, vehicleDeviceTypes);
 }
 
 function receivedTelemetry(server, e) {
