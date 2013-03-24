@@ -226,9 +226,13 @@ var ADD_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_create.png';
 
 var SERVER_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_server.png';
 
-var AIRPLANE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
-var SURFACE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
-var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
+var AIRPLANE_ICON_LIGHT = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane.png';
+var SURFACE_ICON_LIGHT = 'assets/icons/drawable-xhdpi-v11/ic_action_surface.png';
+var SUBMERSIBLE_ICON_LIGHT = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
+
+var AIRPLANE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane_inverse.png';
+var SURFACE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_surface_inverse.png';
+var SUBMERSIBLE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible_inverse.png';
 
 var AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
@@ -872,21 +876,24 @@ function receivedUpdateNavPath(server, message) {
  * getVehicleIcon get the icon for the specified vehicle type
  *
  * vehicle  the vehicle of which the icon is to be determined for
+ * light    true if the icon is to be light, otherwise it will be dark
  *
  * returns the appropriate icon, defaulting to the airplane icon if the type cannot be determined
  */
-function getVehicleIcon(vehicle) {
-  var icon = AIRPLANE_ICON;
+function getVehicleIcon(vehicle, light) {
+  var icon = AIRPLANE_ICON_LIGHT;
+  
+  light = (light != null) ? light : true;
   
   switch(vehicle.type) {
     case Vehicle.TYPE_AIR:
-      icon = AIRPLANE_ICON;
+      icon = light ? AIRPLANE_ICON_LIGHT : AIRPLANE_ICON_DARK;
       break;
     case Vehicle.TYPE_SURFACE:
-      icon = SURFACE_ICON;
+      icon = light ? SURFACE_ICON_LIGHT : SURFACE_ICON_DARK;
       break;
     case Vehicle.TYPE_SUBMERSIBLE:
-      icon = SUBMERSIBLE_ICON;
+      icon = light ? SUBMERSIBLE_ICON_LIGHT : SUBMERSIBLE_ICON_DARK;
       break;
   }
   
@@ -956,9 +963,9 @@ function addVehicleCreateFormUI(id, title) {
     '             <input type="popup" name="remoteServer" id="vehicleCreateVehicleType" placeholder="Tap to select">' +
     '             <span class="triangle"></span>' +
     '             <ul class="dropdown">' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON + '" />' + '<span class="dropdownText">Air</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SURFACE_ICON + '" />' + '<span class="dropdownText">Surface</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SUBMERSIBLE_ICON + '" />' + '<span class="dropdownText">Submersible</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON_DARK + '" />' + '<span class="dropdownText">Air</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SURFACE_ICON_DARK + '" />' + '<span class="dropdownText">Surface</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SUBMERSIBLE_ICON_DARK + '" />' + '<span class="dropdownText">Submersible</span></a></li>' +
     
     '             </ul>' +
     '            </div>' +
@@ -1923,7 +1930,7 @@ function getAvailVehiclesDropDown() {
           vehicleList += 
             '              <li>' +
             '                <a href="#">' +
-            '                  <img class="dropdownIcon" src="' + getVehicleIcon(vehicle) + '" />' +
+            '                  <img class="dropdownIcon" src="' + getVehicleIcon(vehicle, false) + '" />' +
             '                  <span class="dropdownText" key="' + vehicle.id + '">' +  vehicle.name + '</span>' +
             '                </a>' +
             '              </li>';
@@ -1938,7 +1945,7 @@ function getAvailVehiclesDropDown() {
       vehicleList += 
         '              <li>' +
         '                <a href="#">' +
-        '                  <img class="dropdownIcon" src="' + getVehicleIcon(contentManager.localVehicles[i]) + '" />' +
+        '                  <img class="dropdownIcon" src="' + getVehicleIcon(contentManager.localVehicles[i], false) + '" />' +
         '                  <span class="dropdownText key="' + contentManager.localVehicles[i].id + '">' +  contentManager.localVehicles[i].name + '</span>' +
         '                </a>' +
         '              </li>';

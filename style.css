@@ -178,36 +178,42 @@ div.noflex {
 }
 
 .airplaneMapIcon {
-	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_airplane.png);
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_airplane_inverse.png);
 	height: 64px;
 	width: 64px;
+	/*
 	filter: invert(100%);
 	-webkit-filter: invert(100%);
 	-moz-filter: invert(100%);
 	-o-filter: invert(100%);
 	-ms-filter: invert(100%);
+	*/
 }
 
 .surfaceMapIcon {
-	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_surface.png);
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_surface_inverse.png);
 	height: 64px;
 	width: 64px;
+	/*
 	filter: invert(100%);
 	-webkit-filter: invert(100%);
 	-moz-filter: invert(100%);
 	-o-filter: invert(100%);
 	-ms-filter: invert(100%);
+	*/
 }
 
 .submersibleMapIcon {
-	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_submersible.png);
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_submersible_inverse.png);
 	height: 64px;
 	width: 64px;
+	/*
 	filter: invert(100%);
 	-webkit-filter: invert(100%);
 	-moz-filter: invert(100%);
 	-o-filter: invert(100%);
 	-ms-filter: invert(100%);
+	*/
 }
 
 .leaflet-control-layers-toggle {
