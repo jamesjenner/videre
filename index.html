@@ -1033,6 +1033,7 @@ function addVehicleCreateFormUI(id, title) {
     saveFunction: createVehicle
   }).initialise();
 
+  // note that the following logic means that there is no device type list until a server is selected
   var serverSelectListener = function(dropdown) {
     // clear the device list and add as per the selected server
     
@@ -1049,10 +1050,10 @@ function addVehicleCreateFormUI(id, title) {
                             '<span class="dropdownText">' +  contentManager.serverVehicleDeviceTypes[dropdown.val][i].name + '</span></a></li>'
       }
       
-      // add the new list
+      // add the new list for device types based on the selected server
       $('#vehicleCreateDeviceTypeList').append(remoteServerList);
       
-      // create the dropdown
+      // create the dropdown for the device type
       new DropDown($('#vehicleCreateDeviceTypeWrapper'));
     }
   };
@@ -1060,10 +1061,10 @@ function addVehicleCreateFormUI(id, title) {
   // add the toggle switch to switch classed checkboxes  
   $('#createVehicleForm .switch').on("click", toggleSwitch);
   
-  // add the drop down logic for the drop downs  
+  // add the drop down logic for remote servers
   new DropDown($('#vehicleCreateRemoteServerWrapper'), serverSelectListener);
-  
-  // new DropDown($('#vehicleCreateVehicleTypeWrapper'));
+  // add the drop down logic for vehicle types
+  new DropDown($('#vehicleCreateVehicleTypeWrapper'));
 }
 
 /**
