@@ -291,6 +291,7 @@ Server.prototype = {
                 
                 case Message.VEHICLE_DEVICE_TYPES:
                     this.rcvdVehicleDeviceTypes(this, msg.body);
+                    break;
                 
                 case Message.ADD_VEHICLE:
                     this.rcvdAddVehicle(this, new Vehicle(msg.body));
