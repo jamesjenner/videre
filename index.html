@@ -235,6 +235,14 @@ var AIRPLANE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_airplane_inv
 var SURFACE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_surface_inverse.png';
 var SUBMERSIBLE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible_inverse.png';
 
+var NETWORK_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_network_inverse.png';
+var SERIAL_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_serial_inverse.png';
+
+var DEVICE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_cog_inverse.png';
+
+var DISTANCE_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_measure_inverse.png';
+var TIME_ICON_DARK = 'assets/icons/drawable-xhdpi-v11/ic_action_time_inverse.png';
+
 var AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
 var SUBMERSIBLE_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_submersible.png';
@@ -744,11 +752,20 @@ function createVehicle() {
   vehicle = new Vehicle({
     'name':$('#vehicleCreateName').val(),
     'type':$('#vehicleCreateVehicleType').val(),
+    'deviceType':$('#vehicleCreateDeviceType').val(),
     'payloadEnabled':$('#vehicleCreatePayload').is(':checked'),
     'navigationEnabled':$('#vehicleCreateNavigationEnabled').is(':checked'),
     'remoteControlEnabled':$('#vehicleCreateRemoteControlEnabled').is(':checked'),
-    'vehicleAddr':$('#vehicleCreateIPAddress').val(),
-    'vehiclePort':$('#vehicleCreatePort').val(),
+    'connectionType':$('#vehicleCreateConnectionType').val(),
+    'pitchAccuracy':$('#vehicleCreatePitchAccuracy').val(),
+    'rollAccuracy':$('#vehicleCreateRollAccuracy').val(),
+    'yawAccuracy':$('#vehicleCreateYawAccuracy').val(),
+    'positionReportingMode':$('#vehicleCreatePosReportingMode').val(),
+    'positionReportingValue':$('#vehicleCreatePosReportingValue').val(),
+    'networkAddress':$('#vehicleCreateIPAddress').val(),
+    'networkPort':$('#vehicleCreatePort').val(),
+    'serialPort':$('#vehicleCreateSerialPort').val(),
+    'baudRate':$('#vehicleCreateBaudRate').val(),
     });
   
   var remoteServerName = $('#vehicleCreateRemoteServer').val();
@@ -980,7 +997,6 @@ function addVehicleCreateFormUI(id, title) {
     '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON_DARK + '" />' + '<span class="dropdownText">Air</span></a></li>' +
     '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SURFACE_ICON_DARK + '" />' + '<span class="dropdownText">Surface</span></a></li>' +
     '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SUBMERSIBLE_ICON_DARK + '" />' + '<span class="dropdownText">Submersible</span></a></li>' +
-    
     '             </ul>' +
     '            </div>' +
     '           </li>' +
@@ -995,6 +1011,50 @@ function addVehicleCreateFormUI(id, title) {
     '            </div>' +
     '           </li>' +
 
+
+    '           <li class="breakTop">' +
+    '            <label for="vehicleCreatePosReportingMode">Position Reporting Mode</label>' +
+    '            <div id="vehicleCreatePosReportingModeWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="createPosReportingMode" id="vehicleCreatePosReportingMode" placeholder="Tap to select">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + DISTANCE_ICON_DARK + '" />' + '<span class="dropdownText">Distance</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + TIME_ICON_DARK + '" />' + '<span class="dropdownText">Time</span></a></li>' +
+    '             </ul>' +
+    '            </div>' +
+    '           </li>' +
+
+    '           <li>' + 
+    '             <label for="vehicleCreatePosReportingValue">Value</label>' +
+    '             <input type="number" min="0" max="99999" name="port" id="vehicleCreatePosReportingValue" placeholder=""><br>' +
+    '           </li>' +
+    
+    
+    '           <li id="createNetworkFields" class="breakTop">' +
+    '            <label for="vehicleCreateConnectionType">Connection Type</label>' +
+    '            <div id="vehicleCreateConnectionTypeWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="createConnectionType" id="vehicleCreateConnectionType" placeholder="Tap to select">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SERIAL_ICON_DARK + '" />' + '<span class="dropdownText">Serial</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + NETWORK_ICON_DARK + '" />' + '<span class="dropdownText">Network</span></a></li>' +
+    '             </ul>' +
+    '            </div>' +
+    '           </li>' +
+
+    '           <li class="breakTop">' + 
+    '             <label for="vehicleCreatePitchAccuracy">Pitch (y) Accuracy</label>' +
+    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehicleCreatePitchAccuracy" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="vehicleCreateRollAccuracy">Roll (x) Accuracy</label>' +
+    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehicleCreateRollAccuracy" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="vehicleCreateYawAccuracy">Yaw (z) Accuracy</label>' +
+    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehicleCreateYawAccuracy" placeholder=""><br>' +
+    '           </li>' +
+    
     '           <li class="breakTop">' +
     '             <span class="checkboxLabel">Vehicle contains payload</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="payloadEnabled" id="vehicleCreatePayload"></div>' +
@@ -1006,15 +1066,8 @@ function addVehicleCreateFormUI(id, title) {
     '           <li>' +
     '             <span class="checkboxLabel">Vehicle can be controlled remotely</span> ' +
     '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControlEnabled"></div>' +
-    '           </li>' + 
-    '           <li class="breakTop">' + 
-    '             <label for="vehicleCreateIPAddress">IP Address</label>' +
-    '             <input type="text" name="address" id="vehicleCreateIPAddress" placeholder="" required ><br>' +
-    '           </li>' + 
-    '           <li>' + 
-    '             <label for="vehicleCreatePort">Port</label>' +
-    '             <input type="number" min="1" max="99999" name="port" id="vehicleCreatePort" placeholder=""><br>' +
-    '           </li>' + 
+    '           </li>' +
+    
     '         </ul>' + 
     '         </div>' +
     '         </div>' +
@@ -1023,6 +1076,28 @@ function addVehicleCreateFormUI(id, title) {
     '    </div>' +
     '</div>');
 
+  var networkConnectionFields = 
+    '           <li id="vehicleCreateIPAddressField">' + 
+    '             <label for="vehicleCreateIPAddress">IP Address</label>' +
+    '             <input type="text" name="address" id="vehicleCreateIPAddress" placeholder="" required ><br>' +
+    '           </li>' + 
+    '           <li id="vehicleCreatePortField">' + 
+    '             <label for="vehicleCreatePort">Port</label>' +
+    '             <input type="number" min="1" max="99999" name="port" id="vehicleCreatePort" placeholder=""><br>' +
+    '           </li>';
+
+  var serialConnectionFields = 
+    '           <li id="vehicleCreateSerialPortField">' + 
+    '             <label for="vehicleCreateSerialPort">Serial Port</label>' +
+    '             <input type="text" name="serialPort" id="vehicleCreateSerialPort" placeholder="" required ><br>' +
+    '           </li>' +
+    '           <li id="vehicleCreateBaudRateField">' + 
+    '             <label for="vehicleCreateBaudRate">Baud Rate</label>' +
+    '             <input type="text" name="baudRate" id="vehicleCreateBaudRate" placeholder="" required ><br>' +
+    '           </li>';
+    
+    
+    
   // setup and initialise the action bar
   new ActionBar({
     targetId: id,
@@ -1038,7 +1113,7 @@ function addVehicleCreateFormUI(id, title) {
     // clear the device list and add as per the selected server
     
     // remove all child elements
-      $('#vehicleCreateDeviceTypeList').empty();
+    $('#vehicleCreateDeviceTypeList').empty();
     
     // create the new elements
     var remoteServerList = '';
@@ -1046,7 +1121,7 @@ function addVehicleCreateFormUI(id, title) {
     if(contentManager && contentManager.serverVehicleDeviceTypes && contentManager.serverVehicleDeviceTypes[dropdown.val]) {
       for(var i = 0, l = contentManager.serverVehicleDeviceTypes[dropdown.val].length; i < l; i++) {
         remoteServerList += '<li><a href="#">' +
-                            // '<img class="dropdownIcon" src="' + SERVER_ICON_DARK + '" />' +
+                            '<img class="dropdownIcon" src="' + DEVICE_ICON_DARK + '" />' +
                             '<span class="dropdownText">' +  contentManager.serverVehicleDeviceTypes[dropdown.val][i].name + '</span></a></li>'
       }
       
@@ -1057,6 +1132,31 @@ function addVehicleCreateFormUI(id, title) {
       new DropDown($('#vehicleCreateDeviceTypeWrapper'));
     }
   };
+
+ 
+  var connectionTypeSelectListener = function(dropdown) {
+    // hide and show the fields based on the selection
+    if(dropdown.val === 'Serial') {
+      // selected serial
+      
+      // remove fields
+      $('#vehicleCreateIPAddressField').remove();
+      $('#vehicleCreatePortField').remove();
+      
+      // add fields
+      $('#createNetworkFields').after(serialConnectionFields);
+    } else {
+      // selected network
+      
+      // remove field
+      $('#vehicleCreateSerialPortField').remove();
+      $('#vehicleCreateBaudRateField').remove();
+      
+      // add fields
+      $('#createNetworkFields').after(networkConnectionFields);
+      
+    }
+  }
   
   // add the toggle switch to switch classed checkboxes  
   $('#createVehicleForm .switch').on("click", toggleSwitch);
@@ -1065,6 +1165,10 @@ function addVehicleCreateFormUI(id, title) {
   new DropDown($('#vehicleCreateRemoteServerWrapper'), serverSelectListener);
   // add the drop down logic for vehicle types
   new DropDown($('#vehicleCreateVehicleTypeWrapper'));
+  // add the drop down logic for connection type
+  new DropDown($('#vehicleCreateConnectionTypeWrapper'), connectionTypeSelectListener);
+  // add the drop down logic for the reporting mode
+  new DropDown($('#vehicleCreatePosReportingModeWrapper'));
 }
 
 /**
