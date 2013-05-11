@@ -752,7 +752,6 @@ function createVehicle() {
   vehicle = new Vehicle({
     'name':$('#vehicleCreateName').val(),
     'type':$('#vehicleCreateVehicleType').val(),
-    'deviceType':$('#vehicleCreateDeviceType').val(),
     'payloadEnabled':$('#vehicleCreatePayload').is(':checked'),
     'navigationEnabled':$('#vehicleCreateNavigationEnabled').is(':checked'),
     'remoteControlEnabled':$('#vehicleCreateRemoteControlEnabled').is(':checked'),
@@ -768,16 +767,31 @@ function createVehicle() {
     'baudRate':$('#vehicleCreateBaudRate').val(),
     });
   
+  var deviceTypeName = $('#vehicleCreateDeviceType').val();
   var remoteServerName = $('#vehicleCreateRemoteServer').val();
   var remoteServer = null;
   var duplicate = false;
   var error = false;
+  var deviceTypeId = null;
+
+  // determine the device id
+  for(var i =0, l = contentManager.serverVehicleDeviceTypes[remoteServerName].length; i < l; i++) {
+    if(contentManager.serverVehicleDeviceTypes[remoteServerName][i].name === deviceTypeName) {
+      deviceTypeId = contentManager.serverVehicleDeviceTypes[remoteServerName][i].id;
+      break;
+    }
+  }
+  
+  if(deviceTypeId != null) {
+    vehicle.deviceType = deviceTypeId;
+  }
+  
   
   if(remoteServerName == VEHICLE_LOCAL) {
     // it's a local vehicle
     
     // check that the vehicle doesn't exist first
-    for(i = 0, l = contentManager.vehicles.length; i < l; i++) {
+    for(var i = 0, l = contentManager.vehicles.length; i < l; i++) {
       if(contentManager.vehicles[i].name === vehicle.name) {
         duplicate = true;
         break;
