@@ -25,7 +25,7 @@ function MapPath(options) {
     this.vehicle = options.vehicle || null;
     
     this.markers = new Array();
-    this.vehicleMarker = options.vehicleMarker || null;
+    this.homeMarker = options.homeMarker || null;
     this.polyLine = options.polyLine || null;
 
     this.returnHomePolyLine = options.returnHomePolyLine || null;
@@ -38,8 +38,8 @@ function MapPath(options) {
     if(this.map) {
         this.layerGroup.addTo(this.map);
         
-        if(this.vehicleMarker) {
-            this.vehicleMarker.addTo(this.layerGroup);
+        if(this.homeMarker) {
+            this.homeMarker.addTo(this.layerGroup);
         }
         
         if(this.polyLine) {
