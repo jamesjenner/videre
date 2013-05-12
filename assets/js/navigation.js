@@ -21,6 +21,9 @@
 Navigation.VEHICLE_ICON_CLASS = 'vehicleIcon';
 Navigation.AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
+Navigation.HOME_ICON_CLASS = 'homeMapIcon';
+Navigation.DIRECTION_ICON_CLASS = 'directionMapIcon';
+
 Navigation.AIRPLANE_ICON_CLASS = 'airplaneMapIcon';
 Navigation.SURFACE_ICON_CLASS = 'surfaceMapIcon';
 Navigation.SUBMERSIBLE_ICON_CLASS = 'submersibleMapIcon';
@@ -93,6 +96,7 @@ function Navigation(options) {
 
     this.navMapPaths = new Object();
     this.flightMapPaths = new Object();
+    this.vehicleMarkers = new Object();
     
     this.mapTouchMode = Navigation.MODE_NO_ACTION;
     this.selectedVehicle = null;
@@ -124,7 +128,7 @@ function Navigation(options) {
     this.nightVisionLayer = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 78125, attribution: this.cloudmadeAttribution});
     this.minimalMarkersLayer = L.tileLayer(this.cloudmadeTilesUrl, {styleId: 63044, attribution: this.cloudmadeAttribution});
     
-    var that = this;
+    var self = this;
     
     L.Icon.Default.imagePath = options.imagePath || 'assets/img/';
     
@@ -156,11 +160,11 @@ function Navigation(options) {
     // add all the vehicles...
     this._addVehiclesToMap();
     
-    this.mapMenu = new RadialMenu(this.mapMenuId, {selectionListener: function(e) {that._mapMenuItemSelected(e, that); }});
-    this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: function(e) {that._vehicleMenuItemSelected(e, that); }});
-    this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {that._pointMenuItemSelected(e, that); }});
+    this.mapMenu = new RadialMenu(this.mapMenuId, {selectionListener: function(e) {self._mapMenuItemSelected(e, self); }});
+    this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: function(e) {self._vehicleMenuItemSelected(e, self); }});
+    this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {self._pointMenuItemSelected(e, self); }});
 
-    this.map.on('click', function(e) {that._onMapClick(e, that); });
+    this.map.on('click', function(e) {self._onMapClick(e, self); });
 }
 
 Navigation.prototype.hideMenus = function() {
@@ -199,6 +203,27 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replace
 
     // setup the nav path
     this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false, this.selectedNavPathStyle);
+}
+
+// TODO: look at adding a layer for vehicle positions, maybe it's not required...
+
+Navigation.prototype.setVehicleLocation = function(vehicle, position) {
+
+    latLng = new L.LatLng(position.latitude, position.longitude);
+
+    // test if the marker exists for the vehicle
+    if(this.vehicleMarkers[vehicle.id]) {
+        // it does so update the position of the marker
+        this.vehicleMarkers[vehicle.id].setLatLng(latLng);
+    } else {
+        // it doesn't so create it at the position
+        this.vehicleMarkers[vehicle.id] = L.marker(latLng, {
+            icon: L.divIcon({className: Navigation.DIRECTION_ICON_CLASS, iconAnchor: [32, 32], iconSize: [64, 64]}),
+            draggable: false,
+            opacity: self.markerOpacity})
+            .on('click', function(e) {self._onVehicleClick(e, self); });
+        this.vehicleMarkers[vehicle.id].addTo(this.map);
+    }
 }
 
 Navigation.prototype.selectVehicle = function(vehicle) {
@@ -334,34 +359,16 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
     
     var polyLine = L.polyline(points, pathStyle);
     
-    var that = this;
+    var self = this;
     
-    var vehicleMarker = L.marker([latitude, longitude], {
-        icon: L.divIcon({className: this._getVehicleIconClass(vehicle), iconAnchor: [32, 32], iconSize: [64, 64]}),
+    var homeMarker = L.marker([latitude, longitude], {
+        icon: L.divIcon({className: Navigation.HOME_ICON_CLASS, iconAnchor: [32, 32], iconSize: [64, 64]}),
+        draggable: true,
         })
-        .on('click', function(e) { that._onVehicleMarkerClick(e, that, vehicle); });
-    
-    /* rotate the vehicle icon...
-    var vehicleIconElement = $("." + Navigation.VEHICLE_ICON_CLASS);
-    
-    var currentTransform = vehicleIconElement.css("-webkit-transform");
-    
-    // vehicleIconElement.css("-webkit-transform", "rotate(30deg)");
-    
-    // get the transform matrix
-    var t = _T.fromString(vehicleIconElement.css('-webkit-transform'));
-    // create a rotate matrix
-    var r = _T.rotate(50);
-    // multiply the two matrixes together
-    var n = t.x(r);
-    
-    // apply the new matrix
-    vehicleIconElement.css({
-    '-webkit-transform': _T.toString(n)
-    });
-    */
-    
-    var mapPath = new MapPath({map: this.map, vehicleMarker: vehicleMarker, vehicle: vehicle, polyLine: polyLine});
+        .on('drag', function(e) {self._baseDragged(e, self);})
+        .on('click', function(e) { self._onHomeMarkerClick(e, self, vehicle); });
+        
+    var mapPath = new MapPath({map: this.map, homeMarker: homeMarker, vehicle: vehicle, polyLine: polyLine});
     
     if(vehicle.navigationPath.returnsHome()) {
         var lastPoint = vehicle.navigationPath.getPoint(vehicle.navigationPath.length() - 1);
@@ -372,14 +379,10 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
         mapPath.addReturnHomePolyLine(polyline);
     }
     
-    // add the current path
-    // this._addMarkers(that.navMapPaths[vehicle.id], vehicle, this);
-    
-    
     return mapPath;
 }
 
-Navigation.prototype._addMarkers = function(mapPath, vehicle, that) {
+Navigation.prototype._addMarkers = function(mapPath, vehicle, self) {
     var point = null;
     
     // start at 1 as the first point (0) is for the base/vehicle start point
@@ -387,15 +390,16 @@ Navigation.prototype._addMarkers = function(mapPath, vehicle, that) {
         point = vehicle.navigationPath.getPoint(i);
         
         var marker = L.marker(new L.LatLng(point.position.latitude, point.position.longitude), {
-            icon: that._getIconForPoint(point, this),
+            icon: self._getIconForPoint(point, this),
             draggable: true,
-            opacity: that.markerOpacity})
-            .on('drag', function(e) {that._markerDragged(e, that);})
-            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+            opacity: self.markerOpacity})
+            .on('drag', function(e) {self._markerDragged(e, self);})
+            .on('click', function(e) {self._onNavigationPointClick(e, self); });
     
         mapPath.addMarker(marker);
     }
 }
+
 
 Navigation.prototype._getVehicleIconClass = function(vehicle) {
   var icon = Navigation.AIRPLANE_ICON_CLASS;
@@ -424,7 +428,7 @@ Navigation.prototype._markerDragged = function (e, that) {
         }
     }
     
-    // need to add 1 as the first point is the vehicle, while the mapPath doesn't include the vehicle
+    // need to add 1 as the first point is the vehicle base, while the mapPath doesn't include the vehicle base
     pos++;
     
     // retreive the point on the path for the current position and the home point
@@ -441,6 +445,32 @@ Navigation.prototype._markerDragged = function (e, that) {
         that.currentMapPath.returnHomePolyLine.setLatLngs(
             [[point.position.latitude, point.position.longitude],
              [homePoint.position.latitude, homePoint.position.longitude]]);
+    }
+    
+    // update the whole poly line, we could use splice to replace the point in question. TODO: test which is more efficient, suspect they are the same
+    that.currentMapPath.polyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
+}
+
+
+Navigation.prototype._baseDragged = function (e, that) {
+    var newPoint = e.target.getLatLng();
+    
+    // retreive the point on the path for the home point
+    var point = that.selectedVehicle.navigationPath.getPoint(0);
+    
+    point.position.latitude = newPoint.lat;
+    point.position.longitude = newPoint.lng;
+    
+    // get the last point and check if it is a return to home point
+    
+    lastPoint = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+    
+    // presume that only the last point can return home
+    if(lastPoint.returnHome) {
+        // need to update the return home path as well
+        that.currentMapPath.returnHomePolyLine.setLatLngs(
+            [[lastPoint.position.latitude, lastPoint.position.longitude],
+             [point.position.latitude, point.position.longitude]]);
     }
     
     // update the whole poly line, we could use splice to replace the point in question. TODO: test which is more efficient, suspect they are the same
@@ -618,7 +648,7 @@ Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, 
     }
 }
 
-Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
+Navigation.prototype._onHomeMarkerClick = function(e, that, vehicle) {
     // if a menu is open, treat the click on the map as a request to close the menu
     if(that.hideMenus.bind(that)()) {
         // menu was hidden, so just return
