@@ -365,7 +365,10 @@ function configureApplication() {
     contentManager.servers[server].rcvdNavPathUpdated = receivedUpdateNavPath;
     contentManager.servers[server].rcvdVehicleDeviceTypes = receivedVehicleDeviceTypes;
     // contentManager.servers[server].rcvdPayload =
-
+    contentManager.servers[server].rcvdNavPathWaypointAchieved = receivedWaypointAchieved;
+    contentManager.servers[server].rcvdCurrentPosition = receivedCurrentPosition;
+    
+    
     contentManager.servers[server].rcvdConnecting = receivedConnecting;
     contentManager.servers[server].rcvdConnected = receivedConnected;
     contentManager.servers[server].rcvdDisconnecting = receivedDisconnecting;
@@ -588,6 +591,8 @@ function createServer() {
     rcvdTelemetry: receivedTelemetry,
     rcvdVehicleDeviceTypes: receivedVehicleDeviceTypes, 
     rcvdNavPathUpdated: receivedUpdateNavPath,
+    rcvdNavPathWaypointAchieved: receivedWaypointAchieved,
+    rcvdCurrentPosition: receivedCurrentPosition,
     // rcvdPayload: ,
     rcvdConnecting: receivedConnecting,
     rcvdConnected: receivedConnected,
@@ -870,12 +875,52 @@ function removeVehicleFromSidebar(vehicle, server) {
   $('#' + vehicleControlId).remove();
 }
 
+
+function receivedWaypointAchieved(server, message) {
+  // update the details of the specified vehicle for the remote server
+  var vehicle = null;
+  // if we're on the nav map then update the nav map as well
+  for(var i = 0, l = contentManager.remoteVehicles[server.name].length; i < l; i++) {
+    if(contentManager.remoteVehicles[server.name][0].id === message.id) {
+      vehicle = contentManager.remoteVehicles[server.name];
+      break;
+    }
+  }
+  
+  if(!vehicle) {
+    return;
+  }
+  
+  // update the waypoint info
+  // vehicle.navigationPath = message.navPath;
+}
+
+function receivedCurrentPosition(server, message) {
+  // update the details of the specified vehicle for the remote server
+  var vehicle = null;
+  // if we're on the nav map then update the nav map as well
+  for(var i = 0, l = contentManager.remoteVehicles[server.name].length; i < l; i++) {
+    if(contentManager.remoteVehicles[server.name][0].id === message.id) {
+      vehicle = contentManager.remoteVehicles[server.name];
+      break;
+    }
+  }
+  
+  if(!vehicle) {
+    return;
+  }
+  
+  // update the current position of the vehicle
+  // vehicle.navigationPath = message.navPath;
+  navigationManager.setVehicleLocation(vehicle, message.position);  
+}
+
 function receivedUpdateNavPath(server, message) {
   // update the details of the specified vehicle for the remote server
   var vehicle = null;
   // if we're on the nav map then update the nav map as well
   for(var i = 0, l = contentManager.remoteVehicles[server.name].length; i < l; i++) {
-    if(contentManager.remoteVehicles[server.name].id == message.id) {
+    if(contentManager.remoteVehicles[server.name][0].id === message.id) {
       vehicle = contentManager.remoteVehicles[server.name];
       break;
     }
@@ -887,6 +932,8 @@ function receivedUpdateNavPath(server, message) {
   
   // update the path
   vehicle.navigationPath = message.navPath;
+
+  // TODO: complete this logic, used when someone else is removing/adding vehicles on the map
   
   if(vehicle.onMap && message.onMap) {
     // update the path on the nav map
@@ -2126,14 +2173,12 @@ function addVehicleToMapForm(parentId, id) {
     '         <ul>' +
 
     '           <li>' +
-    '            <label for="vehicleAddToMapVehicle">Type of vehicle</label>' +
+    '            <label for="vehicleAddToMapVehicle">Vehicle</label>' +
     '            <div id="vehicleAddToMapVehicleWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleAddToMapVehicle" placeholder="Tap to select">' +
+    '             <input type="popup" name="vehicle" id="vehicleAddToMapVehicle" placeholder="Tap to select">' +
     '             <span class="triangle"></span>' +
     '             <ul id="' + ADD_TO_MAP_VEHICLES_DROPDOWN_ID + '" class="dropdown">' +
-    
     vehicleList +
-    
     '             </ul>' +
     '            </div>' +
     '           </li>' +
@@ -2187,7 +2232,7 @@ function showAddVehicleToMapForm(latLng) {
   // setup the drop down to only the currently available vehicles (ie. not already on the map)
   populateAvailVehiclesDropDown(ADD_TO_MAP_VEHICLES_DROPDOWN_ID);
   // reset the map drop down
-  vehicleAddToMapDropDown.initList();
+  vehicleAddToMapDropDown.reInitialise.call(vehicleAddToMapDropDown, $('#vehicleAddToMapVehicleWrapper'));
   
   // TODO: in preferences or in vehicle setup default values for adding a vehicle to the map
   
