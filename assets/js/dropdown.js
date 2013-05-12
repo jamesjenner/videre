@@ -28,14 +28,24 @@ function DropDown(el, onClickListener) {
 }
 
 DropDown.prototype = {
+    reInitialise : function(el) {
+        this.opts = this.dd.find('ul.dropdown > li');
+        
+        this.initEvents();
+    },
     initEvents : function() {
         var obj = this;
+ 
+        // as this can be called more than once, turn off any existing click listeners
+        obj.dd.off('click');
  
         obj.dd.on('click', function(event){
             $(this).toggleClass('active');
             return false;
         });
  
+        // as this can be called more than once, turn off any existing click listeners
+        obj.opts.off('click');
         obj.opts.on('click', function(){
             var opt = $(this);
             obj.key = opt.find('span').attr('key');
