@@ -177,6 +177,32 @@ div.noflex {
 	box-flex:0.0;
 }
 
+.homeMapIcon {
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_home_inverse.png);
+	height: 64px;
+	width: 64px;
+	/*
+	filter: invert(100%);
+	-webkit-filter: invert(100%);
+	-moz-filter: invert(100%);
+	-o-filter: invert(100%);
+	-ms-filter: invert(100%);
+	*/
+}
+
+.directionMapIcon {
+	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_direction_inverse.png);
+	height: 64px;
+	width: 64px;
+	/*
+	filter: invert(100%);
+	-webkit-filter: invert(100%);
+	-moz-filter: invert(100%);
+	-o-filter: invert(100%);
+	-ms-filter: invert(100%);
+	*/
+}
+
 .airplaneMapIcon {
 	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_airplane_inverse.png);
 	height: 64px;
