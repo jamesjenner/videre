@@ -23,6 +23,7 @@
     <script src="assets/js/swipe.js" type="text/javascript"></script>
     <script src="assets/js/iscroll.js" type="text/javascript"></script>
     <script src="assets/js/gauge.js" type="text/javascript"></script>
+    <script src="assets/js/preferences.js" type="text/javascript"></script>
     <script src="assets/js/server.js" type="text/javascript"></script>
     <script src="assets/js/contentmanager.js" type="text/javascript"></script>
     <script src="assets/js/leaflet-src.js" type="text/javascript"></script>
@@ -333,9 +334,11 @@ function configureApplication() {
   
   // add the preferences content
   // TODO: make this content that is only added as required
-  addContentUI('preferences', 'Preferences', "Here be dragons");
+  // addContentUI('preferences', 'Preferences', "Here be dragons");
+  addPreferencesFormUI('preferences', 'Preferences');
+  
   // add listeners to the control for the preferences
-  addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'preferencesControl', 'preferences');
+  addListenerToSidebarControl(LEFT_SIDEBAR_ID, 'preferencesControl', 'preferences', undefined, setPreferencesFormValues);
   
   // set the initial focus to the home control
   setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
@@ -1249,6 +1252,135 @@ function toggleSwitch() {
     checkbox.checked = !checkbox.checked;
 }
 
+function addPreferencesFormUI(id, title) {
+  
+  $('#mainApplication').append(
+    '<div id="' + id + '" class="applicationContents">' +
+    '  <div id="' + id + 'Form" class="formContainer">' +
+    '    <div class="formContents">' +
+    '       <form id="preferencesForm">' +
+    
+    '         <div id="preferencesFormScroller" class="formScroller">' +
+    '         <div class="scroller">' +
+    
+    '         <ul>' + 
+    '           <li>' + 
+    '             <label for="preferencesDefaultAltitude">Default Altitude (meters)</label>' +
+    '             <input type="number" min="0" max="99999" name="defaultAltitude" id="preferencesDefaultAltitude" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="preferencesDefaultSpeed">Default Speed (m/s)</label>' +
+    '             <input type="number" min="0" max="99999" name="defaultSpeed" id="preferencesDefaultSpeed" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="preferencesDefaultAccuracy">Default Accuracy (m)</label>' +
+    '             <input type="number" min="0" max="99999" name="defaultAccuracy" id="preferencesDefaultAccuracy" placeholder=""><br>' +
+    '           </li>' +
+    
+    '           <li class="breakTop">' + 
+    '             <label for="preferencesDefaultLoiterRadius">Default Loiter Radius (meters)</label>' +
+    '             <input type="number" min="0" max="99999" name="defaultLoiterRadius" id="preferencesDefaultLoiterRadius" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="preferencesDefaultLoiterTime">Default Loiter Time (seconds)</label>' +
+    '             <input type="number" min="0" max="99999" name="defaultLoiterTime" id="preferencesDefaultLoiterTime" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="preferencesDefaultLoiterLaps">Default Loiter Laps</label>' +
+    '             <input type="number" min="0" max="99999" name="defaultLoiterLaps" id="preferencesDefaultLoiterLaps" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' +
+    '             <span class="checkboxLabel">Default Auto Continue</span> ' +
+    '             <div id="preferencesDefaultAutoContinueSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="DefaultAutoContinue" id="preferencesDefaultAutoContinue"></div>' +
+    '           </li>' +
+    
+    '           <li class="breakTop">' +
+    '             <span class="checkboxLabel">Debug Enabled</span> ' +
+    '             <div id="debugEnabledSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="debugEnabled" id="debugEnabled"></div>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="debugLevel">Debug Level </label>' +
+    '             <input type="number" min="1" max="99" name="debugLevel" id="debugLevel" placeholder=""><br>' +
+    '           </li>' +
+    
+    '         </ul>' + 
+    '         </div>' +
+    '         </div>' +
+    '       </form>' +
+    '      </div>' +
+    '    </div>' +
+    '</div>');
+
+  // set values
+  /*
+  
+  $('#serverUpdateRememberPassword').prop('checked', server.rememberPassword);
+  if(server.rememberPassword) {
+    $('#serverUpdateRememberPasswordSwitch').toggleClass('on');
+  }
+  */
+
+  // setup and initialise the action bar
+  new ActionBar({
+    targetId: id,
+    id: id + ACTION_BAR,
+    title: title,
+    settingsAction: false,
+    save: true,
+    saveFunction: savePreferences
+  }).initialise();
+
+  // add the toggle switch to switch classed checkboxes  
+  $('#preferencesForm .switch').on("click", toggleSwitch);
+}
+
+function setPreferencesFormValues() {
+  var preferences = contentManager.getPreferences();
+  
+  $('#preferencesDefaultAltitude').val(preferences.defaultAltitude);
+  $('#preferencesDefaultSpeed').val(preferences.defaultSpeed);
+  $('#preferencesDefaultAccuracy').val(preferences.defaultAccuracy);
+  
+  $('#preferencesDefaultLoiterRadius').val(preferences.defaultLoiterRadius);
+  $('#preferencesDefaultLoiterTime').val(preferences.defaultLoiterTime);
+  $('#preferencesDefaultLoiterLaps').val(preferences.defaultLoiterLaps);
+  
+  $('#preferencesDefaultAutoContinue').prop('checked', preferences.defaultAutoContinue);
+  if(preferences.defaultAutoContinue) {
+    $('#preferencesDefaultAutoContinueSwitch').toggleClass('on');
+  }
+  
+  $('#debugLevel').val(preferences.debugLevel);
+  
+  $('#debugEnabled').prop('checked', preferences.debugEnabled);
+  if(preferences.debugEnabled) {
+    $('#debugEnabledSwitch').toggleClass('on');
+  }
+}
+
+function savePreferences() {
+  // get the values
+  var preferences = new Preferences();
+  
+  preferences.defaultAltitude = $('#preferencesDefaultAltitude').val();
+  preferences.defaultSpeed = $('#preferencesDefaultSpeed').val();
+  preferences.defaultAccuracy = $('#preferencesDefaultAccuracy').val();
+  
+  preferences.defaultLoiterRadius = $('#preferencesDefaultLoiterRadius').val();
+  preferences.defaultLoiterTime = $('#preferencesDefaultLoiterTime').val();
+  preferences.defaultLoiterLaps = $('#preferencesDefaultLoiterLaps').val();
+  preferences.defaultAutoContinue = $('#preferencesDefaultAutoContinue').is(':checked');
+  
+  preferences.debugLevel = $('#debugLevel').val();
+  preferences.debugEnabled = $('#debugEnabled').is(':checked');
+  
+  // persist the changes
+  contentManager.updatePreferences(preferences);
+  
+  return false;
+}
+
+
 function addContentUI(id, title, subTitle) {
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
@@ -1966,7 +2098,8 @@ function addNavigationContentUI(id) {
     pointMenuId: 'navPointMenu',
     remoteVehicles: contentManager.remoteVehicles,
     servers: contentManager.servers,
-    localVehicles: contentManager.vehicles
+    localVehicles: contentManager.vehicles,
+    preferences: contentManager.getPreferences(),
     });
   
   var navContentSettings = null;
@@ -2345,7 +2478,6 @@ function addNavPointForm(parentId, id) {
 var navPointModalBar = null;
 
 function showNavPointForm(navPoint) {
-  
   // disable/enable the loiter fields, as appropriate
   $('#navPointUpdateLoiterRadius').prop('disabled', !navPoint.loiter);
   $('#navPointUpdateLoiterSpeed').prop('disabled', !navPoint.loiter);
@@ -2429,7 +2561,7 @@ var deletePreviousContent = false;
 var previousContentId;
 var previousControlId;
 
-function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFunction) {
+function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFunction, contentInitFunction) {
   $('#' + controlId).click(function() {
     // if reselecting the same then nothing to do other than hide the sidebar
     // note that using control id as the content id for vehicles is always the same
@@ -2450,9 +2582,13 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFu
         contentLoadFunction();
         deletePreviousContent = true;
       }
-  
       // set the focus, which switches the view to the content
       setFocus(controlId, paneId, true);
+      
+      // if the contentInitFunction is defined then execute it to initialise the form
+      if(typeof contentInitFunction !== 'undefined') {
+        contentInitFunction();
+      }
     }
     
     // hide the sidebar as it is hidden when a content selection is made
