@@ -626,8 +626,8 @@ function createServer() {
  * unloads the ui elements that are used for a server
  */
 function removeServerFromSidebar(server) {
-  var serverControlId = SERVER_CONTROL + server.position;
-  var serverContentId = SERVER_CONTENT + server.position;
+  var serverControlId = SERVER_CONTROL + server.index;
+  var serverContentId = SERVER_CONTENT + server.index;
 
   // remove the control for accessing the server
   $('#' + serverControlId).remove();
@@ -640,8 +640,8 @@ function removeServerFromSidebar(server) {
  * 
  */
 function addServerToSidebar(server) {
-  // adding the server to the content manager sets it's position
-  var serverNumber = server.position;
+  // adding the server to the content manager sets it's index
+  var serverNumber = server.index;
   var serverControlId = SERVER_CONTROL + serverNumber;
   var serverContentId = SERVER_CONTENT + serverNumber;
 
@@ -860,10 +860,10 @@ function createVehicle() {
  * unloads the ui elements that are used for a vehicle
  */
 function removeVehicleFromSidebar(vehicle, server) {
-  var vehicleControlId = VEHICLE_CONTROL + vehicle.position;
+  var vehicleControlId = VEHICLE_CONTROL + vehicle.id;
 
   if(server) {
-    vehicleControlId += 's' + server.position;
+    vehicleControlId += 's' + server.index;
   }
   
   if(contentManager.focusedPaneId === VEHICLE_CONTENT) {
@@ -912,7 +912,10 @@ function receivedCurrentPosition(server, message) {
   
   // update the current position of the vehicle
   // vehicle.navigationPath = message.navPath;
-  navigationManager.setVehicleLocation(vehicle, message.position);  
+  if(navigationManager != null) {
+    vehicle.position = message.position;
+    navigationManager.setVehicleLocation(vehicle, message.position);
+  }
 }
 
 function receivedUpdateNavPath(server, message) {
@@ -991,12 +994,11 @@ function addVehicleToSidebar(vehicle, server) {
   // determine the icon for the vehicle
   var icon = getVehicleIcon(vehicle);
   
-  // adding the vehicle to the content manager sets it's position
-  var vehicleNumber = vehicle.position;
-  var vehicleControlId = VEHICLE_CONTROL + vehicleNumber;
+  // adding the vehicle to the content manager sets it's id
+  var vehicleControlId = VEHICLE_CONTROL + vehicle.id;
 
   if(server) {
-    vehicleControlId += 's' + server.position;
+    vehicleControlId += 's' + server.index;
   }
 
   // add the control that lets the user select the vehicle content UI on the side bar
@@ -1481,13 +1483,13 @@ function updateServer(server) {
   
   // update the ui if the name changes
   if(nameModified) {
-    var serverControlId = SERVER_CONTROL + server.position;
+    var serverControlId = SERVER_CONTROL + server.index;
     
     // update the control's text to the new name
     updateControlOnSidebar(serverControlId, server.name);
     
     // update the on screen label to the new name
-    $('#' + LEFT_SIDEBAR_CONTROL_TEXT + SERVER_CONTENT + server.position + ACTION_BAR).text(server.name);
+    $('#' + LEFT_SIDEBAR_CONTROL_TEXT + SERVER_CONTENT + server.index + ACTION_BAR).text(server.name);
   }
   
   // disconnect and reconnect if connected and the host details have been modified
@@ -1509,18 +1511,19 @@ function connectServer(server) {
  * addVehicleContentUI('vehicle1', 'Thunderbird 1');
  */
 function addVehicleContentUI(id, vehicle, server) {
-  vehicleContentNbr = vehicle.position;
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
     '    <div class="sliderWrapper">' +
     '      <div id="' + id + TELEMETRY_SUB_ID + '" class="content sliderContent">' +
+    /*
     '        <div class="message">' +
     '          <div class="messageContents">' +
     '            <span>NO TELEMETRY FOUND</span><br/>' +
     '            <span>You can add telemetry gauges via settings</span>' +
     '          </div>' +
     '        </div>' +
+    */
     '      </div>' +
     '      <div id="' + id + REMOTECONTROL_SUB_ID + '" class="content sliderContent">' +
     '        <canvas id="' + id + REMOTECONTROL_CANVAS_ID  + '" class="controlCanvas">' +
@@ -1562,6 +1565,8 @@ function addVehicleContentUI(id, vehicle, server) {
   // setup the remote control settings
   var remoteControlSettings = new ContentSettings();
   remoteControlSettings.add(new HeadingSetting('some stuff'));
+  
+  var vehicleIdx = contentManager.getVehicleIndex(vehicle.id);
   
   // setup the action bar  
   var vehicleActionBar = new ActionBar({
@@ -1618,9 +1623,9 @@ function addVehicleContentUI(id, vehicle, server) {
     }
   })
   .initialise()
-  .addTab(id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicle.position, true)
+  .addTab(id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleIdx, true)
   .addDivider()
-  .addTab(id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicle.position);
+  .addTab(id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicleIdx);
 
   if(vehicle.connectionStatus == Vehicle.COMMS_CONNECTED) {
     vehicleActionBar.setConnectionToggle(true);
@@ -1663,11 +1668,11 @@ function addVehicleContentUI(id, vehicle, server) {
    */
   // setup the swipe using Slider for the vehicle content
   
-  vehicleContentSlider[vehicle.position] = new Swipe(document.getElementById(id + 'ContentSlider'), {
+  vehicleContentSlider[vehicleIdx] = new Swipe(document.getElementById(id + 'ContentSlider'), {
 // TODO: how do we get e? do not need it now but is annoying...
-      slideCallback: function(position) { contentTabChanged('', position, id, vehicle.position); },
+      slideCallback: function(index) { contentTabChanged('', index, id, vehicle.id); },
       slideEffect: 'android'
-    });
+  });
   
   var directControlListener = function(e) {
     /*
@@ -2455,7 +2460,7 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFu
   });
 }
 
-function contentTabChanged(e, position, id, contentNbr) {
+function contentTabChanged(e, index, id, contentNbr) {
   // turn off the currently selected tab
   switch(contentManager.getFocusedTabNbr(id)) {
     case TELEMETY_TAB:
@@ -2467,11 +2472,11 @@ function contentTabChanged(e, position, id, contentNbr) {
   }
   
   // todo: remove following as replaced by contentManager
-  // vehicleTabSelection[contentNbr] = position;
-  contentManager.setFocusedTabNbr(id, position);
+  // vehicleTabSelection[contentNbr] = index;
+  contentManager.setFocusedTabNbr(id, index);
   
   // turn on the new tab
-  switch (position) {
+  switch (index) {
     case TELEMETY_TAB:
       $('#' + id + TELEMETRY_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + TELEMETRY_SUB_ID);
