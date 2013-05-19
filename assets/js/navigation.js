@@ -75,6 +75,8 @@ function Navigation(options) {
     this.vehicleMenuItemListener = options.vehicleMenuItemListener || function() {};
     this.pointMenuItemListener = options.pointMenuItemListener || function() {};
     
+    this.preferences = ((options.preferences != undefined) ? options.preferences : new Preferences());
+    
     this.pathOpacity = options.pathOpacity || 0.75;
     
     this.remoteVehicles = options.remoteVehicles;
@@ -165,6 +167,10 @@ function Navigation(options) {
     this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {self._pointMenuItemSelected(e, self); }});
 
     this.map.on('click', function(e) {self._onMapClick(e, self); });
+}
+
+Navigation.prototype.setPreferences = function(preferences) {
+    this.preferences = preferences;
 }
 
 Navigation.prototype.hideMenus = function() {
@@ -576,7 +582,15 @@ Navigation.prototype._appendPoint = function(e, that, selected) {
     }
     
     // TODO: add options for default settings on append
-    that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng);
+    that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng, {
+        altitude: preferences.defaultAltitude,
+        speed: preferences.defaultSpeed,
+        accuracy: preferences.defaultAccuracy,
+        loiterRadius: preferences.defaultLoiterRadius,
+        loiterTime: preferences.defaultLoiterTime,
+        loiterLaps: preferences.defaultLoiterLaps,
+        autoContinue: preferences.defaultAutoContinue,
+    });
     
     // add the point to the map
     that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
