@@ -84,20 +84,28 @@ ContentManager.prototype = {
     },
     addVehicle: function(vehicle, persist) {
         var i = this.vehicles.length;
-        this.vehicles[i] = vehicle;
-        this.vehicles[i].position = i;
         
+        // this is a local vehicle, so just use an incremental number based on the array
+        vehicle.id = i;
+        
+        this.vehicles.push(vehicle);
+
         // persist the data
         if(persist) {
-            ioStoreObject(Vehicle.KEY + '_' + this.vehicles[i].position, vehicle);
+            ioStoreObject(Vehicle.KEY + '_' + this.vehicles[i].id, vehicle);
         }
     },
     removeVehicle: function(vehicle) {
         // remove the persisted vehicle
-        ioDelete(Vehicle.KEY + '_' + vehicle.position);
+        ioDelete(Vehicle.KEY + '_' + vehicle.id);
+        
+        // find the vehicle in the list
+        idx = findObjectById(vehicles, vehicle.id);
         
         // remove from the array
-        this.vehicles.splice(vehicle.position, 1);
+        if(idx > -1) {
+            this.vehicles.splice(idx, 1);
+        }
     },
     addRemoteVehicle: function(server, vehicle) {
         var exists = false;
@@ -105,7 +113,7 @@ ContentManager.prototype = {
         if(!this.remoteVehicles[server.name]) {
             this.remoteVehicles[server.name] = new Array();
         } else {
-            // check that the vehicle doesn't exist
+            // check that the vehicle doesn't exist based on name
             for(var i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
                 if(this.remoteVehicles[server.name][i].name === vehicle.name) {
                     exists = true;
@@ -125,14 +133,14 @@ ContentManager.prototype = {
     },
     removeRemoteVehicle: function(server, vehicle) {
         for(var i = 0, l = this.remoteVehicles[server.name].length; i < l; i++) {
-            if(this.remoteVehicles[server.name][i].name === vehicle.name) {
+            if(this.remoteVehicles[server.name][i].id === vehicle.id) {
                 this.remoteVehicles[server.name].splice(i, 1);
                 break;
             }
         }
     },
     updateVehicle: function(vehicle) {
-        ioStoreObject(Vehicle.KEY + '_' + vehicle.position, vehicle);
+        ioStoreObject(Vehicle.KEY + '_' + vehicle.id, vehicle);
     },
     setVehicleDeviceTypes: function(server, deviceTypes) {
         if(!this.serverVehicleDeviceTypes[server.name]) {
@@ -151,11 +159,11 @@ ContentManager.prototype = {
     addServer: function(server, persist) {
         var i = this.servers.length;
         this.servers[i] = server;
-        this.servers[i].position = i;
+        this.servers[i].index = i;
         
         // persist the data
         if(persist) {
-            ioStoreObject(SERVER_KEY + '_' + this.servers[i].position, server);
+            ioStoreObject(SERVER_KEY + '_' + this.servers[i].index, server);
         }
 
         // create the array for vehicles managed by this server        
@@ -165,10 +173,10 @@ ContentManager.prototype = {
     },
     removeServer: function(server) {
         // remove the persisted server
-        ioDelete(SERVER_KEY + '_' + server.position);
+        ioDelete(SERVER_KEY + '_' + server.index);
         
         // remove from the array
-        this.servers.splice(server.position, 1);
+        this.servers.splice(server.index, 1);
         
         // remove the array of vehicles as well
         if(this.remoteVehicles[server.name]) {
@@ -196,7 +204,7 @@ ContentManager.prototype = {
         }
     },
     updateServer: function(server) {
-        ioStoreObject(SERVER_KEY + '_' + server.position, server);
+        ioStoreObject(SERVER_KEY + '_' + server.index, server);
     },
     addPane: function(id) {
         this.panes[id] = new Pane();
@@ -249,7 +257,25 @@ ContentManager.prototype = {
     },
     setCurrentActionBar: function(actionBar) {
         this.currentActionBar = actionBar;
+    },
+    /** 
+     * find index of vehicle based on id, taking into account local and remote vehicles
+     * 
+     * returns -1 if not found, otherwise the overall index
+     */
+    getVehicleIndex: function(id) {
+        // vehicles
+        // remoteVehicles
+    
+        var index = findObjectById(this.vehicles, id);
+        
+        if(index === -1) {
+            index = findObjectById(this.remoteVehicles, id);
+        }
+        
+        return index;
     }
+    
 };
 
 var MAP_DEFAULT_LAYER = '';
@@ -331,4 +357,27 @@ var TextSetting = function (id, label, value) {
     this.id = id;
     this.value = value || '';
     this.label = label || 'undefined';
+}
+
+/** 
+ * find object by id - finds an object based on it's id
+ * 
+ * returns -1 if not found, otherwise the index in the array
+ */
+function findObjectById(object, id) {
+    var index = -1;
+
+    // if name isn't set then return
+    if(!id) {
+        return index;
+    }
+
+    for(var i = 0, l = object.length; i < l; i++) {
+        if(object[i].id === id) {
+            index = i;
+            break;
+        }
+    }
+
+    return index;
 }
