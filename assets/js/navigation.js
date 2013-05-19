@@ -196,7 +196,15 @@ Navigation.prototype.hideMenus = function() {
 Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replaceFirstPos) {
     // add the start point
     if(vehicle.navigationPath.isEmpty()) {
-        vehicle.navigationPath.append(latitude, longitude);
+        vehicle.navigationPath.append(latitude, longitude, {
+            altitude: this.preferences.defaultAltitude,
+            speed: this.preferences.defaultSpeed,
+            accuracy: this.preferences.defaultAccuracy,
+            loiterRadius: this.preferences.defaultLoiterRadius,
+            loiterTime: this.preferences.defaultLoiterTime,
+            loiterLaps: this.preferences.defaultLoiterLaps,
+            autoContinue: this.preferences.defaultAutoContinue,
+        });
     } else if(replaceFirstPos) {
         // replace the first position on the navigation path with the specified lat/lng
         var point = vehicle.navigationPath.getPoint(0);
@@ -583,13 +591,13 @@ Navigation.prototype._appendPoint = function(e, that, selected) {
     
     // TODO: add options for default settings on append
     that.selectedVehicle.navigationPath.append(e.latlng.lat, e.latlng.lng, {
-        altitude: preferences.defaultAltitude,
-        speed: preferences.defaultSpeed,
-        accuracy: preferences.defaultAccuracy,
-        loiterRadius: preferences.defaultLoiterRadius,
-        loiterTime: preferences.defaultLoiterTime,
-        loiterLaps: preferences.defaultLoiterLaps,
-        autoContinue: preferences.defaultAutoContinue,
+        altitude: this.preferences.defaultAltitude,
+        speed: this.preferences.defaultSpeed,
+        accuracy: this.preferences.defaultAccuracy,
+        loiterRadius: this.preferences.defaultLoiterRadius,
+        loiterTime: this.preferences.defaultLoiterTime,
+        loiterLaps: this.preferences.defaultLoiterLaps,
+        autoContinue: this.preferences.defaultAutoContinue,
     });
     
     // add the point to the map
@@ -602,7 +610,15 @@ Navigation.prototype._insertPoint = function(e, that, position, selected) {
     console.log("inserting point at " + e.latlng.toString());
 
     // TODO: add options for default settings on insert
-    that.selectedVehicle.navigationPath.insert(position + 1, e.latlng.lat, e.latlng.lng);
+    that.selectedVehicle.navigationPath.insert(position + 1, e.latlng.lat, e.latlng.lng, {
+        altitude: this.preferences.defaultAltitude,
+        speed: this.preferences.defaultSpeed,
+        accuracy: this.preferences.defaultAccuracy,
+        loiterRadius: this.preferences.defaultLoiterRadius,
+        loiterTime: this.preferences.defaultLoiterTime,
+        loiterLaps: this.preferences.defaultLoiterLaps,
+        autoContinue: this.preferences.defaultAutoContinue,
+    });
     
     // insert the point to the map
     that._insertNavPoint(that, that.currentMapPath, e.latlng, position + 1, selected);
