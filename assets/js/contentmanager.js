@@ -49,6 +49,7 @@ var ContentManager = function (options) {
     this.remoteVehicles = new Object();
     this.serverVehicleDeviceTypes = new Object();
     this.servers = new Array();
+    this.preferences = new Preferences();
     
 }
     
@@ -64,21 +65,26 @@ ContentManager.prototype = {
             i = prop.indexOf('_');
             if(i > -1) {
                 key = prop.substring(0, i);
-                
-                switch(key) {
-                    case Vehicle.KEY:
-                        // we have a vehicle object
-                        obj = ioRetreiveObject(prop);
-                        this.addVehicle(new Vehicle(obj), false);
-                        break;
-                    case SERVER_KEY:
-                        // we have a server object
-                        obj = ioRetreiveObject(prop);
-                        temp = new Server();
-                        temp.load(obj);
-                        this.addServer(temp, false);
-                        break;
-                }
+            } else {
+                key = prop;
+            }
+            switch(key) {
+                case Vehicle.KEY:
+                    // we have a vehicle object
+                    obj = ioRetreiveObject(prop);
+                    this.addVehicle(new Vehicle(obj), false);
+                    break;
+                case SERVER_KEY:
+                    // we have a server object
+                    obj = ioRetreiveObject(prop);
+                    temp = new Server();
+                    temp.load(obj);
+                    this.addServer(temp, false);
+                    break;
+                case Preferences.PREFERENCES_KEY:
+                    // we have preferences
+                    obj = ioRetreiveObject(prop);
+                    this.preferences = new Preferences(obj);
             }
         }
     },
@@ -205,6 +211,13 @@ ContentManager.prototype = {
     },
     updateServer: function(server) {
         ioStoreObject(SERVER_KEY + '_' + server.index, server);
+    },
+    updatePreferences: function(preferences) {
+        this.preferences = preferences;
+        ioStoreObject(Preferences.PREFERENCES_KEY, preferences);
+    },
+    getPreferences: function() {
+        return this.preferences;
     },
     addPane: function(id) {
         this.panes[id] = new Pane();
