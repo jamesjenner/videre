@@ -1377,6 +1377,11 @@ function savePreferences() {
   // persist the changes
   contentManager.updatePreferences(preferences);
   
+  if(navigationManager != null) {
+    navigationManager.setPreferences(preferences);
+  }
+  
+  
   return false;
 }
 
