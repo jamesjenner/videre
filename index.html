@@ -199,12 +199,14 @@ var connected = false;
 var halEnabled = false;
 
 var TELEMETY_TAB = 0;
-var REMOTE_CONTROL_TAB = 1;
+var VEHICLE_UPDATE_PROPERTY_TAB = 1;
+var REMOTE_CONTROL_TAB = 2;
 
 // var PAYLOAD_TAB_CONTROL = 'PayloadTabControl';
 var TELEMETRY_TAB_CONTROL = 'TelemetryTabControl';
 // var FLIGHTPLAN_TAB_CONTROL = 'FlightPlanTabControl';
 var REMOTECONTROL_TAB_CONTROL = 'RemoteControlTabControl';
+var VEHICLE_UPDATE_PROPERTY_TAB_CONTROL = 'VehiclePropertyTabControl';
 
 var PROPERTIES_TAB = 0;
 var COMS_TAB = 1;
@@ -220,6 +222,7 @@ var TELEMETRY_SUB_ID = 'TelemetryContentArea';
 var FLIGHTPLAN_SUB_ID = 'FlightPlanContentArea';
 var REMOTECONTROL_SUB_ID = 'RemoteControlContentArea';
 var REMOTECONTROL_CANVAS_ID = 'RemoteControlCanvas';
+var VEHICLE_UPDATE_PROPERTIES_SUB_ID = 'VehiclePropertiesUpdateContentArea';
 
 var SERVER_PROPERTIES_SUB_ID = 'ServerPropertiesContentArea';
 var SERVER_COMMS_SUB_ID = 'ServerCommsContentArea';
@@ -375,7 +378,7 @@ function configureApplication() {
     
     contentManager.servers[server].rcvdAddVehicle = createVehicleFromServer;
     contentManager.servers[server].rcvdDeleteVehicle = removeVehicleFromSidebar;
-    // contentManager.servers[server].rcvdUpdateVehicle = 
+    contentManager.servers[server].rcvdUpdateVehicle = updateVehicleOnSidebar;
     contentManager.servers[server].rcvdTelemetry = receivedTelemetry;
     contentManager.servers[server].rcvdNavPathUpdated = receivedUpdateNavPath;
     contentManager.servers[server].rcvdVehicleDeviceTypes = receivedVehicleDeviceTypes;
@@ -602,7 +605,7 @@ function createServer() {
     disconnectionListener: serverDisconnected,
     rcvdAddVehicle: createVehicleFromServer,
     rcvdDeleteVehicle: removeVehicleFromSidebar,
-    // rcvdUpdateVehicle: ,
+    rcvdUpdateVehicle: updateVehicleOnSidebar,
     rcvdTelemetry: receivedTelemetry,
     rcvdVehicleDeviceTypes: receivedVehicleDeviceTypes, 
     rcvdNavPathUpdated: receivedUpdateNavPath,
@@ -890,6 +893,23 @@ function removeVehicleFromSidebar(vehicle, server) {
   $('#' + vehicleControlId).remove();
 }
 
+
+function updateVehicleOnSidebar(server, vehicle) {
+  var vehicleControlId = VEHICLE_CONTROL + vehicle.id;
+
+  if(server) {
+    vehicleControlId += 's' + server.index;
+  }
+  
+  // update the control's text to the new name
+  updateTextOnSidebar(vehicleControlId, vehicle.name);
+  updateIconOnSidebar(vehicleControlId, getVehicleIcon(vehicle));
+
+  // update the UI if the user has the vehicle selected...  
+  if(contentManager.focusedPaneId === VEHICLE_CONTENT && contentManager.currentVehicle.id == vehicle.id) {
+    $('#' + LEFT_SIDEBAR_CONTROL_TEXT + VEHICLE_CONTENT + ACTION_BAR).text(vehicle.name);
+  }
+}
 
 function receivedWaypointAchieved(server, message) {
   // update the details of the specified vehicle for the remote server
@@ -1421,12 +1441,9 @@ function addContentUI(id, title, subTitle) {
 
 function addServerContentUI(id, server) {
 
-
   var serverIdx = contentManager.getServerIndex(server.name);
 
-
-    // TODO: figure out the ip address pattern for front end validation
-
+  // TODO: figure out the ip address pattern for front end validation
 
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
@@ -1671,7 +1688,7 @@ function updateServer(server) {
     var serverControlId = SERVER_CONTROL + server.index;
     
     // update the control's text to the new name
-    updateControlOnSidebar(serverControlId, server.name);
+    updateTextOnSidebar(serverControlId, server.name);
     
     // update the on screen label to the new name
     $('#' + LEFT_SIDEBAR_CONTROL_TEXT + SERVER_CONTENT + server.index + ACTION_BAR).text(server.name);
@@ -1701,14 +1718,87 @@ function addVehicleContentUI(id, vehicle, server) {
     '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
     '    <div class="sliderWrapper">' +
     '      <div id="' + id + TELEMETRY_SUB_ID + '" class="content sliderContent">' +
-    /*
-    '        <div class="message">' +
-    '          <div class="messageContents">' +
-    '            <span>NO TELEMETRY FOUND</span><br/>' +
-    '            <span>You can add telemetry gauges via settings</span>' +
-    '          </div>' +
-    '        </div>' +
-    */
+    '      </div>' +
+    '      <div id="' + id + VEHICLE_UPDATE_PROPERTIES_SUB_ID + '" class="content sliderContent">' +
+    
+    '  <div id="' + id + 'Form" class="formInTabContainer">' +
+    '    <div class="formContents">' +
+    '       <form id="createVehicleForm">' +
+    
+    '         <div id="createVehicleFormScroller" class="formScroller">' +
+    '         <div class="scroller">' +
+    
+    '         <ul>' + 
+    '           <li>' + 
+    '             <label for="vehiclePropertiesName">Name</label>' +
+    '             <input type="text" name="name" id="vehiclePropertiesName" placeholder="" required><br>' +
+    '           </li>' +
+    
+    '           <li class="breakTop">' +
+    '             <label for="vehiclePropertiesRemoteServer">Remote Server</label>' +
+    '             <input type="popup" name="remoteServer" id="vehiclePropertiesRemoteServer" placeholder="" disabled readonly="readonly">' +
+    '           </li>' +
+    '           <li>' +
+    '             <label for="vehiclePropertiesProtocolId">Protocol Id</label>' +
+    '             <input type="text" name="remoteId" id="vehiclePropertiesProtocolId" placeholder="" disabled readonly="readonly">' +
+    '           </li>' +
+    
+    '           <li class="breakTop">' +
+    '            <label for="vehiclePropertiesVehicleType">Type of vehicle</label>' +
+    '            <div id="vehiclePropertiesVehicleTypeWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="propertiesVehicleType" id="vehiclePropertiesVehicleType" placeholder="Tap to select">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON_DARK + '" />' + '<span class="dropdownText">Air</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SURFACE_ICON_DARK + '" />' + '<span class="dropdownText">Surface</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SUBMERSIBLE_ICON_DARK + '" />' + '<span class="dropdownText">Submersible</span></a></li>' +
+    '             </ul>' +
+    '            </div>' +
+    '           </li>' +
+
+    '           <li class="breakTop">' +
+    '            <label for="vehiclePropertiesPosReportingMode">Position Reporting Mode</label>' +
+    '            <div id="vehiclePropertiesPosReportingModeWrapper" class="dropdownwrapper">' +
+    '             <input type="popup" name="createPosReportingMode" id="vehiclePropertiesPosReportingMode" placeholder="Tap to select">' +
+    '             <span class="triangle"></span>' +
+    '             <ul class="dropdown">' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + DISTANCE_ICON_DARK + '" />' + '<span class="dropdownText">Distance</span></a></li>' +
+    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + TIME_ICON_DARK + '" />' + '<span class="dropdownText">Time</span></a></li>' +
+    '             </ul>' +
+    '            </div>' +
+    '           </li>' +
+
+    '           <li>' + 
+    '             <label for="vehiclePropertiesPosReportingValue">Value</label>' +
+    '             <input type="number" min="0" max="99999" name="port" id="vehiclePropertiesPosReportingValue" placeholder=""><br>' +
+    '           </li>' +
+    
+    
+    '           <li id="createNetworkFields" class="breakTop">' +
+    '             <label for="vehiclePropertiesConnectionType">Connection Type</label>' +
+    '             <input type="popup" name="remoteServer" id="vehiclePropertiesConnectionType" placeholder="" disabled readonly="readonly">' +
+    '           </li>' +
+
+    '           <li class="breakTop">' + 
+    '             <label for="vehiclePropertiesPitchAccuracy">Pitch (y) Accuracy</label>' +
+    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehiclePropertiesPitchAccuracy" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="vehiclePropertiesRollAccuracy">Roll (x) Accuracy</label>' +
+    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehiclePropertiesRollAccuracy" placeholder=""><br>' +
+    '           </li>' +
+    '           <li>' + 
+    '             <label for="vehiclePropertiesYawAccuracy">Yaw (z) Accuracy</label>' +
+    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehiclePropertiesYawAccuracy" placeholder=""><br>' +
+    '           </li>' +
+    
+    '         </ul>' + 
+    '         </div>' +
+    '         </div>' +
+    '       </form>' +
+    '      </div>' +
+    '    </div>' +
+    
     '      </div>' +
     '      <div id="' + id + REMOTECONTROL_SUB_ID + '" class="content sliderContent">' +
     '        <canvas id="' + id + REMOTECONTROL_CANVAS_ID  + '" class="controlCanvas">' +
@@ -1723,6 +1813,39 @@ function addVehicleContentUI(id, vehicle, server) {
   
   // setup the telemetry settings  
   var telemetrySettings = new ContentSettings();
+
+  // setup the properties
+  $('#vehiclePropertiesName').val(vehicle.name);
+  $('#vehiclePropertiesVehicleType').val(vehicle.type);
+  
+  $('#vehiclePropertiesRemoteServer').val(server.name);
+  $('#vehiclePropertiesProtocolId').val(vehicle.commProtocolId);
+  
+  $('#vehiclePropertiesConnectionType').val(vehicle.connectionType);
+  $('#vehiclePropertiesPitchAccuracy').val(vehicle.pitchAccuracy);
+  $('#vehiclePropertiesRollAccuracy').val(vehicle.rollAccuracy);
+  $('#vehiclePropertiesYawAccuracy').val(vehicle.yawAccuracy);
+  $('#vehiclePropertiesPosReportingMode').val(vehicle.positionReportingMode);
+  $('#vehiclePropertiesPosReportingValue').val(vehicle.positionReportingValue);
+  $('#vehiclePropertiesIPAddress').val(vehicle.networkAddress);
+  $('#vehiclePropertiesPort').val(vehicle.networkPort);
+  $('#vehiclePropertiesSerialPort').val(vehicle.serialPort);
+  $('#vehiclePropertiesBaudRate').val(vehicle.baudRate);
+
+  /*
+  'payloadEnabled':$('#vehiclePropertiesPayload').is(':checked'),
+  'navigationEnabled':$('#vehiclePropertiesNavigationEnabled').is(':checked'),
+  'remoteControlEnabled':$('#vehiclePropertiesRemoteControlEnabled').is(':checked'),
+  if(server.log) {
+    $('#serverUpdateLoggingEnabledSwitch').toggleClass('on');
+  }
+  */
+  
+  // add the drop down logic for vehicle types
+  new DropDown($('#vehiclePropertiesVehicleTypeWrapper'));
+  // add the drop down logic for the reporting mode
+  new DropDown($('#vehiclePropertiesPosReportingModeWrapper'));
+
   
   // TODO: should be populated 
   telemetrySettings.add(new HeadingSetting('some stuff'));
@@ -1751,7 +1874,7 @@ function addVehicleContentUI(id, vehicle, server) {
   var remoteControlSettings = new ContentSettings();
   remoteControlSettings.add(new HeadingSetting('some stuff'));
   
-  var vehicleIdx = contentManager.getVehicleIndex(vehicle.id);
+  var vehicleIdx = contentManager.getVehicleIndex(server, vehicle.id);
   
   // setup the action bar  
   var vehicleActionBar = new ActionBar({
@@ -1759,7 +1882,7 @@ function addVehicleContentUI(id, vehicle, server) {
     contentSlider: vehicleContentSlider,
     id: id + ACTION_BAR,
     title: vehicle.name,
-    connectionToggle: true,
+    connectionToggle: false,
     connectionToggleFunction: function() {
       if(vehicle.connectionStatus == Vehicle.COMMS_CONNECTED) {
         server.sendMessage(Message.VEHICLE_DISCONNECT, {id: vehicle.id});
@@ -1777,7 +1900,11 @@ function addVehicleContentUI(id, vehicle, server) {
         }
       }
     },
-    reset: true,
+    save: true,
+    saveFunction: function() {
+      updateVehicle(vehicle, server);
+    },
+    reset: false,
     resetFunction: function() {
       if(server) {
         server.sendMessage(Message.VEHICLE_RESET, {id: vehicle.id});
@@ -1811,7 +1938,13 @@ function addVehicleContentUI(id, vehicle, server) {
   .initialise()
   .addTab(id + TELEMETRY_TAB_CONTROL, 'Telemetry', TELEMETY_TAB, vehicleIdx, true)
   .addDivider()
-  .addTab(id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicleIdx);
+  .addTab(id + VEHICLE_UPDATE_PROPERTY_TAB_CONTROL, 'Properties', VEHICLE_UPDATE_PROPERTY_TAB, vehicleIdx)
+  /*
+  .addDivider()
+  .addTab(id + REMOTECONTROL_TAB_CONTROL, 'Remote Control', REMOTE_CONTROL_TAB, vehicleIdx)
+  */
+  ;
+  
 
   if(vehicle.connectionStatus == Vehicle.COMMS_CONNECTED) {
     vehicleActionBar.setConnectionToggle(true);
@@ -1837,6 +1970,7 @@ function addVehicleContentUI(id, vehicle, server) {
   
   contentManager.addTab(id, id  + TELEMETRY_SUB_ID);
   contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID);
+  contentManager.addTab(id, id  + VEHICLE_UPDATE_PROPERTIES_SUB_ID);
   
   contentManager.addSettings(id + TELEMETRY_SUB_ID, telemetrySettings);
   contentManager.addSettings(id + REMOTECONTROL_SUB_ID, remoteControlSettings);
@@ -2041,6 +2175,51 @@ function addVehicleContentUI(id, vehicle, server) {
   
   // TODO: stop using setInterval
   setInterval(touchControls.drawCanvas.bind(touchControls), 1000/touchControls.frameRate);
+}
+
+function updateVehicle(vehicle, server) {
+  
+  // retrieve the values from the form and set to the server instance
+  var newName = $('#vehiclePropertiesName').val();
+  var newType = $('#vehiclePropertiesVehicleType').val();
+  
+  // var newConnectionType = $('#vehiclePropertiesConnectionType').val();
+  var newPitchAccuracy = $('#vehiclePropertiesPitchAccuracy').val();
+  var newRollAccuracy = $('#vehiclePropertiesRollAccuracy').val();
+  var newYawAccuracy = $('#vehiclePropertiesYawAccuracy').val();
+  var newPositionReportingMode = $('#vehiclePropertiesPosReportingMode').val();
+  var newPositionReportingValue = $('#vehiclePropertiesPosReportingValue').val();
+  // var newCommId = $('#vehiclePropertiesComm').val();
+  var newCommProtocolId =  $('#vehiclePropertiesProtocolId').val();
+
+  
+
+  var modifed =
+    newName !== vehicle.name ||
+    newType !== vehicle.type ||
+    vehicle.commProtocolId !== newCommProtocolId ||
+    newPitchAccuracy !== vehicle.pitchAccuracy ||
+    newRollAccuracy !== vehicle.rollAccuracy ||
+    newYawAccuracy !== vehicle.yawAccuracy ||
+    newPositionReportingMode !== vehicle.positionReportingMode ||
+    newPositionReportingValue !== vehicle.positionReportingValue;
+    
+  var nameModified = newName !== vehicle.name;
+    
+  if(modifed) {
+    vehicle.name = newName;
+    vehicle.type = newType;
+    // vehicle.connectionType = newConnectionType;
+    vehicle.commProtocolId = newCommProtocolId;
+    vehicle.pitchAccuracy = newPitchAccuracy;
+    vehicle.rollAccuracy = newRollAccuracy;
+    vehicle.yawAccuracy = newYawAccuracy;
+    vehicle.positionReportingMode = newPositionReportingMode;
+    vehicle.positionReportingValue = newPositionReportingValue;
+  
+    // send an update...
+    server.sendMessage(Message.UPDATE_VEHICLE, vehicle);
+  }
 }
 
 function addPayloadContentUI(id) {
@@ -2594,20 +2773,24 @@ function removeVehicle(vehicle) {
 function addControlToSidebarBeforeId(beforeId, id, icon, name) {
   $('#' + beforeId).before(
     '<div id="' + id + '" class="sidebarControlBar">' +
-    '  <div class="sidebarControlIcon"><img src="' + icon + '" class="sidebarControlIcon"/></div>' +
+    '  <div class="sidebarControlIcon"><img id="' + id + 'Icon" src="' + icon + '" class="sidebarControlIcon"/></div>' +
     '  <div id="' + id + 'Name" class="sidebarControlText centered">' + name + '</div>' +
     '</div>');
 }
 
-function updateControlOnSidebar(id, name) {
+function updateTextOnSidebar(id, name) {
   $('#' + id + 'Name').text(name);
+}
+
+function updateIconOnSidebar(id, icon) {
+  $('#' + id + 'Icon').attr("src", icon);
 }
 
 function appendControlToSidebar(groupId, id, icon, name) {
   $('#' + groupId).append(
     '<div id="' + id + '" class="sidebarControlBar">' +
-    '  <div class="sidebarControlIcon"><img src="' + icon + '" class="sidebarControlIcon"/></div>' +
-    '  <div class="sidebarControlText centered">' + name + '</div>' +
+    '  <div class="sidebarControlIcon"><img id="' + id + 'Icon" src="' + icon + '" class="sidebarControlIcon"/></div>' +
+    '  <div id="' + id + 'Name" class="sidebarControlText centered">' + name + '</div>' +
     '</div>');
 }
 
@@ -2659,6 +2842,9 @@ function vehicleContentTabChanged(e, index, id, contentNbr) {
     case REMOTE_CONTROL_TAB:
       $('#' + id + REMOTECONTROL_TAB_CONTROL).toggleClass('tabSelected');
       break;
+    case VEHICLE_UPDATE_PROPERTY_TAB:
+      $('#' + id + VEHICLE_UPDATE_PROPERTY_TAB_CONTROL).toggleClass('tabSelected');
+      break;
   }
   
   // todo: remove following as replaced by contentManager
@@ -2677,6 +2863,12 @@ function vehicleContentTabChanged(e, index, id, contentNbr) {
       contentManager.setFocusedTabId(id, id + REMOTECONTROL_SUB_ID);
       contentManager.setCurrentContent(id + REMOTECONTROL_SUB_ID);
       break;
+    case VEHICLE_UPDATE_PROPERTY_TAB:
+      $('#' + id + VEHICLE_UPDATE_PROPERTY_TAB_CONTROL).toggleClass('tabSelected');
+      contentManager.setFocusedTabId(id, id + VEHICLE_UPDATE_PROPERTIES_SUB_ID);
+      contentManager.setCurrentContent(id + VEHICLE_UPDATE_PROPERTIES_SUB_ID);
+      break;
+      
   }
 }
 
