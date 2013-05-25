@@ -150,6 +150,15 @@ div.formContainer {
 	bottom: 0;
 }
 
+div.formInTabContainer {
+	width:100%;
+	position: absolute;
+	/* top is to be the height of the task bar, refer taskBar */
+	top: 0px;
+	left: 0;
+	bottom: 0;
+}
+
 div.sliderWrapper {
 	width:100%;
 	height: 100%;
