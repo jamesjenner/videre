@@ -19,6 +19,8 @@
 function ActionBar(options) {
   options = options || {};
 
+  this.contentSlider = options.contentSlider;
+  
   this.title = options.title || 'Unknown';
   this.id = options.id || 'Unknown';
   this.targetId = options.targetId || 'Unknown';
@@ -307,7 +309,7 @@ ActionBar.prototype.setTakeOffLandToggleToTakeoff = function(takeoff) {
 }
 
 
-ActionBar.prototype.addTab = function(tabId, tabName, tabNumber, vehicleContentNbr, selected) {
+ActionBar.prototype.addTab = function(tabId, tabName, tabNumber, contentNbr, selected) {
     selected = (typeof selected === "undefined") ? false : selected;
     
     $('#' + this.id + 'TabBar').append(
@@ -315,12 +317,19 @@ ActionBar.prototype.addTab = function(tabId, tabName, tabNumber, vehicleContentN
         );
     
     // add a listener to each tab for navigating to the correct div
-    $('#' + tabId).click(function() {
-        vehicleContentSlider[vehicleContentNbr].slide(tabNumber, 0);
-    });
+    $('#' + tabId).click(this._createClickListener(contentNbr, tabNumber));
     
     return this;
 }
+
+ActionBar.prototype._createClickListener = function(contentNbr, tabNumber) {
+  var self = this;
+    
+  return function () {
+    self.contentSlider[contentNbr].slide(tabNumber, 0);
+  }
+}
+
 
 ActionBar.prototype.addDivider = function () {
     $('#' + this.id + 'TabBar').append(
