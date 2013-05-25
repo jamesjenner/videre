@@ -287,6 +287,9 @@ ContentManager.prototype = {
         }
         
         return index;
+    },
+    getServerIndex: function(name) {
+        return findObjectByName(this.servers, name);
     }
     
 };
@@ -387,6 +390,29 @@ function findObjectById(object, id) {
 
     for(var i = 0, l = object.length; i < l; i++) {
         if(object[i].id === id) {
+            index = i;
+            break;
+        }
+    }
+
+    return index;
+}
+
+/** 
+ * find object by name - finds an object based on it's name
+ * 
+ * returns -1 if not found, otherwise the index in the array
+ */
+function findObjectByName(object, name) {
+    var index = -1;
+
+    // if name isn't set then return
+    if(!name) {
+        return index;
+    }
+
+    for(var i = 0, l = object.length; i < l; i++) {
+        if(object[i].name === name) {
             index = i;
             break;
         }
