@@ -276,14 +276,14 @@ ContentManager.prototype = {
      * 
      * returns -1 if not found, otherwise the overall index
      */
-    getVehicleIndex: function(id) {
+    getVehicleIndex: function(server, id) {
         // vehicles
         // remoteVehicles
     
         var index = findObjectById(this.vehicles, id);
         
         if(index === -1) {
-            index = findObjectById(this.remoteVehicles, id);
+            index = findObjectById(this.remoteVehicles[server.name], id);
         }
         
         return index;
