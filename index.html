@@ -206,6 +206,12 @@ var TELEMETRY_TAB_CONTROL = 'TelemetryTabControl';
 // var FLIGHTPLAN_TAB_CONTROL = 'FlightPlanTabControl';
 var REMOTECONTROL_TAB_CONTROL = 'RemoteControlTabControl';
 
+var PROPERTIES_TAB = 0;
+var COMS_TAB = 1;
+
+var VEHICLE_PROPERTIES_TAB_CONTROL = 'VehiclePropertiesTabControl';
+var VEHICLE_COMMS_TAB_CONTROL = 'VehicleCommsTabControl';
+
 var ADD_VEHICLE_CONTROL_ID = 'addVehicleControl';
 var ADD_SERVER_CONTROL_ID = 'addServerControl';
 
@@ -214,6 +220,10 @@ var TELEMETRY_SUB_ID = 'TelemetryContentArea';
 var FLIGHTPLAN_SUB_ID = 'FlightPlanContentArea';
 var REMOTECONTROL_SUB_ID = 'RemoteControlContentArea';
 var REMOTECONTROL_CANVAS_ID = 'RemoteControlCanvas';
+
+var SERVER_PROPERTIES_SUB_ID = 'ServerPropertiesContentArea';
+var SERVER_COMMS_SUB_ID = 'ServerCommsContentArea';
+
 
 var VEHICLE_GROUP = 'vehicleGroup';
 var VEHICLE_CONTROL = 'vehicleControl';
@@ -273,6 +283,8 @@ var currentFocusContentId = '';
 var vehicleTabSelection = new Array();
 // the content slider for each vehicle tab
 var vehicleContentSlider = new Array();
+// the content slider for each server tab
+var serverContentSlider = new Array();
 
 var contentManager = new ContentManager();
 
@@ -1409,84 +1421,95 @@ function addContentUI(id, title, subTitle) {
 
 function addServerContentUI(id, server) {
 
+
+  var serverIdx = contentManager.getServerIndex(server.name);
+
+
+    // TODO: figure out the ip address pattern for front end validation
+
+
   $('#mainApplication').append(
     '<div id="' + id + '" class="applicationContents">' +
-    '  <div id="' + id + 'Form" class="formContainer">' +
-    '      <div class="formContents">' +
-    '       <form id="updateServerForm">' +
-    
-    '         <div id="updateServerFormScroller" class="formScroller">' +
-    '         <div class="scroller">' +
-    
-    '         <ul>' + 
-    '           <li>' +
-    '               <label>Status</label>' +
-    '               <span>' + (server.isConnected ? 'Connected' : 'Disconnected') + '</span>' +
-    '           </li>' + 
-    '           <li>' +
-    '               <label>Available vehicles</label>' +
-    '               <span>' + server.nbrVehicles + '</span>' +
-    '           </li>' + 
-    '           <li class="breakTop">' + 
-    '             <label for="serverUpdateName">Name</label>' +
-    '             <input type="text" name="name" id="serverUpdateName" placeholder="" required><br>' +
-    '           </li>' + 
-    '           <li class="breakTop">' + 
-    '             <label for="serverUpdateIPAddress">IP Address</label>' +
-    //'             <input type="text" name="address" id="serverUpdateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
-    // TODO: figure out the ip address pattern for front end validation
-    '             <input type="text" name="address" id="serverUpdateIPAddress" placeholder="" required><br>' +
-    '           </li>' + 
-    '           <li>' + 
-    '             <label for="serverUpdatePort">Port</label>' +
-    '             <input type="number" min="1" max="99999" name="port" id="serverUpdatePort" placeholder=""><br>' +
-    '           </li>' + 
-    '           <li>' + 
-    '             <label for="serverUpdateSecurePort">Secure Port</label>' +
-    '             <input type="number" min="1" max="99999" name="securePort" id="serverUpdateSecurePort" placeholder=""><br>' +
-    '           </li>' + 
-    '           <li>' + 
-    '             <label for="serverUpdateProtocol">Protocol</label>' +
-    '             <input type="text" name="protocol" id="serverUpdateProtocol" placeholder=""><br>' +
-    '           </li>' +
-    '           <li class="breakTop">' + 
-    '             <label for="serverUpdateUserId">User Id</label>' +
-    '             <input type="text" name="userId" id="serverUpdateUserId" placeholder="" required><br>' +
-    '           </li>' + 
-    '           <li>' + 
-    '             <label for="serverUpdatePassword">Password</label>' +
-    '             <input type="text" name="password" id="serverUpdatePassword" placeholder="" required><br>' +
-    '           </li>' + 
-    '           <li>' + 
-    '             <span class="checkboxLabel">Remember password</span> ' +
-    '             <div id="serverUpdateRememberPasswordSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="RememberPassword" id="serverUpdateRememberPassword"></div>' +
-    '           </li>' + 
-    '           <li>' + 
-    '            <label for="serverUpdateCommsSecurity">Communications security</label>' +
-    '            <div id="serverUpdateCommsSecurityWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="commsSecurity" id="serverUpdateCommsSecurity" placeholder="Tap to select">' +
-    '             <span class="triangle"></span>' +
-    '             <ul class="dropdown">' +
-    '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Secure and Unsecure</span></a></li>' +
-    '              <li><a href="#"><img class="dropdownIcon" src="' + SECURE_ICON + '" /><span class="dropdownText">Secure Only</span></a></li>' +
-    '              <li><a href="#"><img class="dropdownIcon" src="' + UNSECURE_ICON + '" /><span class="dropdownText">Unsecure Only</span></a></li>' +
-    '             </ul>' +
-    '            </div>' +
-
-    '           </li>' +
-    
-    '           <li class="breakTop">' + 
-    '             <span class="checkboxLabel">Communication events are logged</span> ' +
-    '             <div id="serverUpdateLoggingEnabledSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverUpdateLoggingEnabled"></div>' +
-    '           </li>' +
-    '         </ul>' +
-    '         </div>' +
-    '         </div>' +
-    '       </form>' +
-    '    </div>' +
-    '  </div>' +
-    '</div>');
-
+    '  <div id="' + id + 'ContentSlider" class="contentSlider">' +
+    '    <div class="sliderWrapper">' +
+    '      <div id="' + id + SERVER_PROPERTIES_SUB_ID + '" class="content sliderContent">' +
+    '        <div id="' + id + 'Form" class="formInTabContainer">' +
+    '          <div class="formContents">' +
+    '            <form id="updateServerForm">' +
+    '              <div id="updateServerFormScroller" class="formScroller">' +
+    '                <div class="scroller">' +
+    '                  <ul>' + 
+    '                    <li>' +
+    '                      <label>Status</label>' +
+    '                      <span>' + (server.isConnected ? 'Connected' : 'Disconnected') + '</span>' +
+    '                    </li>' + 
+    '                    <li>' +
+    '                      <label>Available vehicles</label>' +
+    '                      <span>' + server.nbrVehicles + '</span>' +
+    '                    </li>' + 
+    '                    <li class="breakTop">' + 
+    '                      <label for="serverUpdateName">Name</label>' +
+    '                      <input type="text" name="name" id="serverUpdateName" placeholder="" required><br>' +
+    '                    </li>' + 
+    '                    <li class="breakTop">' + 
+    '                      <label for="serverUpdateIPAddress">IP Address</label>' +
+    '                      <input type="text" name="address" id="serverUpdateIPAddress" placeholder="" required><br>' +
+    '                    </li>' + 
+    '                    <li>' + 
+    '                      <label for="serverUpdatePort">Port</label>' +
+    '                      <input type="number" min="1" max="99999" name="port" id="serverUpdatePort" placeholder=""><br>' +
+    '                    </li>' + 
+    '                    <li>' + 
+    '                      <label for="serverUpdateSecurePort">Secure Port</label>' +
+    '                      <input type="number" min="1" max="99999" name="securePort" id="serverUpdateSecurePort" placeholder=""><br>' +
+    '                    </li>' + 
+    '                    <li>' + 
+    '                      <label for="serverUpdateProtocol">Protocol</label>' +
+    '                      <input type="text" name="protocol" id="serverUpdateProtocol" placeholder=""><br>' +
+    '                    </li>' +
+    '                    <li class="breakTop">' + 
+    '                      <label for="serverUpdateUserId">User Id</label>' +
+    '                      <input type="text" name="userId" id="serverUpdateUserId" placeholder="" required><br>' +
+    '                    </li>' + 
+    '                    <li>' + 
+    '                      <label for="serverUpdatePassword">Password</label>' +
+    '                      <input type="text" name="password" id="serverUpdatePassword" placeholder="" required><br>' +
+    '                    </li>' + 
+    '                    <li>' + 
+    '                      <span class="checkboxLabel">Remember password</span> ' +
+    '                      <div id="serverUpdateRememberPasswordSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="RememberPassword" id="serverUpdateRememberPassword"></div>' +
+    '                    </li>' + 
+    '                    <li>' + 
+    '                      <label for="serverUpdateCommsSecurity">Communications security</label>' +
+    '                      <div id="serverUpdateCommsSecurityWrapper" class="dropdownwrapper">' +
+    '                        <input type="popup" name="commsSecurity" id="serverUpdateCommsSecurity" placeholder="Tap to select">' +
+    '                        <span class="triangle"></span>' +
+    '                        <ul class="dropdown">' +
+    '                          <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Secure and Unsecure</span></a></li>' +
+    '                          <li><a href="#"><img class="dropdownIcon" src="' + SECURE_ICON + '" /><span class="dropdownText">Secure Only</span></a></li>' +
+    '                          <li><a href="#"><img class="dropdownIcon" src="' + UNSECURE_ICON + '" /><span class="dropdownText">Unsecure Only</span></a></li>' +
+    '                        </ul>' +
+    '                      </div>' +
+    '                    </li>' +
+    '                    <li class="breakTop">' + 
+    '                      <span class="checkboxLabel">Communication events are logged</span> ' +
+    '                      <div id="serverUpdateLoggingEnabledSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="Logging" id="serverUpdateLoggingEnabled"></div>' +
+    '                    </li>' +
+    '                  </ul>' +
+    '                </div>' +  // scroller
+    '              </div>' + // updateServerFormScroller
+    '            </form>' +
+    '          </div>' + // formContents
+    '        </div>' + // id + 'Form'
+    '      </div>' + // id + SERVER_PROPERTIES_SUB_ID, class = sliderContent
+    /* currently do not need the comms tab, but leaving here in case needed later
+    '      <div id="' + id + SERVER_COMMS_SUB_ID + '" class="content sliderContent">' +
+    '      </div>' + // id + SERVER_COMMS_SUB_ID
+    */
+    '    </div>' + // sliderWrapper
+    '  </div>' + // id + 'Contentslider'
+    '</div>'); // id
+  
   // set values
   $('#serverUpdateName').val(server.name);
   $('#serverUpdateIPAddress').val(server.ipAddress);
@@ -1508,8 +1531,12 @@ function addServerContentUI(id, server) {
     $('#serverUpdateLoggingEnabledSwitch').toggleClass('on');
   }
 
+  // add the pane to the tab manager
+  contentManager.addPane(id);
+  
   // setup and initialise the action bar
   var serverActionBar = new ActionBar({
+    contentSlider: serverContentSlider,
     targetId: id,
     id: id + ACTION_BAR,
     title: server.name,
@@ -1530,13 +1557,34 @@ function addServerContentUI(id, server) {
         connectServer(server);
       }
     }
-  }).initialise();
+  })
+  .initialise();
+  
+  // currently do not need the communication option, however will leave here in case needed later
+  /*
+  .addTab(id + VEHICLE_PROPERTIES_TAB_CONTROL, 'Properties', PROPERTIES_TAB, serverIdx, true)
+  .addDivider()
+  .addTab(id + VEHICLE_COMMS_TAB_CONTROL, 'Communication', COMS_TAB, serverIdx);
+
+  contentManager.addTab(id, id  + SERVER_PROPERTIES_SUB_ID);
+  contentManager.addTab(id, id  + SERVER_COMMS_SUB_ID);
+
+  contentManager.setCurrentActionBar(serverActionBar);
+  contentManager.setFocusedTabNbr(id, 0);
+  contentManager.setFocusedTabId(id, id + SERVER_PROPERTIES_SUB_ID);
+  contentManager.setCurrentContent(id + SERVER_PROPERTIES_SUB_ID);
+  */
   
   if(server.isConnected) {
     serverActionBar.setConnectionToggle(true);
   } else {
     serverActionBar.setConnectionToggle(false);
   }
+
+  serverContentSlider[serverIdx] = new Swipe(document.getElementById(id + 'ContentSlider'), {
+      slideCallback: function(index) { serverContentTabChanged('', index, id, server.id); },
+      slideEffect: 'android'
+  });
   
   // setup listener for the server that is being updated
 
@@ -1708,6 +1756,7 @@ function addVehicleContentUI(id, vehicle, server) {
   // setup the action bar  
   var vehicleActionBar = new ActionBar({
     targetId: id,
+    contentSlider: vehicleContentSlider,
     id: id + ACTION_BAR,
     title: vehicle.name,
     connectionToggle: true,
@@ -1786,8 +1835,8 @@ function addVehicleContentUI(id, vehicle, server) {
   };
   */
   
-  contentManager.addTab(id, id  + TELEMETRY_SUB_ID, telemetrySettings);
-  contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID, remoteControlSettings);
+  contentManager.addTab(id, id  + TELEMETRY_SUB_ID);
+  contentManager.addTab(id, id  + REMOTECONTROL_SUB_ID);
   
   contentManager.addSettings(id + TELEMETRY_SUB_ID, telemetrySettings);
   contentManager.addSettings(id + REMOTECONTROL_SUB_ID, remoteControlSettings);
@@ -1807,7 +1856,7 @@ function addVehicleContentUI(id, vehicle, server) {
   
   vehicleContentSlider[vehicleIdx] = new Swipe(document.getElementById(id + 'ContentSlider'), {
 // TODO: how do we get e? do not need it now but is annoying...
-      slideCallback: function(index) { contentTabChanged('', index, id, vehicle.id); },
+      slideCallback: function(index) { vehicleContentTabChanged('', index, id, vehicle.id); },
       slideEffect: 'android'
   });
   
@@ -2601,7 +2650,7 @@ function addListenerToSidebarControl(sidebarId, controlId, paneId, contentLoadFu
   });
 }
 
-function contentTabChanged(e, index, id, contentNbr) {
+function vehicleContentTabChanged(e, index, id, contentNbr) {
   // turn off the currently selected tab
   switch(contentManager.getFocusedTabNbr(id)) {
     case TELEMETY_TAB:
@@ -2627,6 +2676,34 @@ function contentTabChanged(e, index, id, contentNbr) {
       $('#' + id + REMOTECONTROL_TAB_CONTROL).toggleClass('tabSelected');
       contentManager.setFocusedTabId(id, id + REMOTECONTROL_SUB_ID);
       contentManager.setCurrentContent(id + REMOTECONTROL_SUB_ID);
+      break;
+  }
+}
+
+function serverContentTabChanged(e, index, id, contentNbr) {
+  // turn off the currently selected tab
+  switch(contentManager.getFocusedTabNbr(id)) {
+    case PROPERTIES_TAB:
+      $('#' + id + VEHICLE_PROPERTIES_TAB_CONTROL).toggleClass('tabSelected');
+      break;
+    case COMS_TAB:
+      $('#' + id + VEHICLE_COMMS_TAB_CONTROL).toggleClass('tabSelected');
+      break;
+  }
+
+  contentManager.setFocusedTabNbr(id, index);
+  
+  // turn on the new tab
+  switch (index) {
+    case PROPERTIES_TAB:
+      $('#' + id + VEHICLE_PROPERTIES_TAB_CONTROL).toggleClass('tabSelected');
+      contentManager.setFocusedTabId(id, id + SERVER_PROPERTIES_SUB_ID);
+      contentManager.setCurrentContent(id + SERVER_PROPERTIES_SUB_ID);
+      break;
+    case COMS_TAB:
+      $('#' + id + VEHICLE_COMMS_TAB_CONTROL).toggleClass('tabSelected');
+      contentManager.setFocusedTabId(id, id + SERVER_COMMS_SUB_ID);
+      contentManager.setCurrentContent(id + SERVER_COMMS_SUB_ID);
       break;
   }
 }
