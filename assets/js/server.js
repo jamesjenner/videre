@@ -301,11 +301,11 @@ Server.prototype = {
                     break;
           
                 case Message.DELETE_VEHICLE:
-                    this.rcvdDeleteVehicle(new Vehicle(msg.body));
+                    this.rcvdDeleteVehicle(this, new Vehicle(msg.body));
                     break;
           
                 case Message.UPDATE_VEHICLE:
-                    this.rcvdUpdateVehicle(new Vehicle(msg.body));
+                    this.rcvdUpdateVehicle(this, new Vehicle(msg.body));
                     break;
                 
                 case Message.VEHICLE_TELEMETRY:
