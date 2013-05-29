@@ -287,8 +287,10 @@ Server.prototype = {
 
                 case Message.VEHICLES:
                     var data = msg.body;
-                    for(var i = 0, l = msg.body.length; i < l; i++) {
-                        this.rcvdAddVehicle(this, new Vehicle(msg.body[i]));
+                    for(var i in msg.body) {
+                        for(var j = 0, l = msg.body[i].length; j < l; j++) {
+                            this.rcvdAddVehicle(this, new Vehicle(msg.body[i][j]));
+                        }
                     }
                     break;
                 
