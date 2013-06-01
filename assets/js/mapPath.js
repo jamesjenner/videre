@@ -20,10 +20,6 @@
 function MapPath(options) {
     options = options || {};
     
-    this.vehicleId = options.vehicleId || '';
-    this.vehicleName = options.vehicelName || '';
-    this.vehicle = options.vehicle || null;
-    
     this.markers = new Array();
     this.homeMarker = options.homeMarker || null;
     this.polyLine = options.polyLine || null;
