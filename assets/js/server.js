@@ -58,6 +58,7 @@ var Server = function (options) {
     this.rcvdTelemetry = options.rcvdTelemetry || this.rcvdUnsupportedMessage;
     this.rcvdPayload = options.rcvdPayload || this.rcvdUnsupportedMessage;
     this.rcvdNavPathUpdated = options.rcvdNavPathUpdated || this.rcvdUnsupportedMessage;
+    this.rcvdUpdateNavPath = options.rcvdUpdateNavPath || this.rcvdUnsupportedMessage;
     
     this.rcvdNavPathWaypointAchieved = options.rcvdNavPathWaypointAchieved || this.rcvdUnsupportedMessage;
     this.rcvdCurrentPosition = options.rcvdCurrentPosition || this.rcvdUnsupportedMessage;
@@ -320,6 +321,10 @@ Server.prototype = {
                 
                 case Message.NAV_PATH_UPDATED:
                     this.rcvdNavPathUpdated(this, msg.body);
+                    break;
+                
+                case Message.UPDATE_NAV_PATH:
+                    this.rcvdUpdateNavPath(this, msg.body);
                     break;
                 
                 case Message.NAV_PATH_WAYPOINT_ACHIEVED:
