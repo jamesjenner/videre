@@ -41,11 +41,10 @@ Navigation.VEHICLE_EDIT_DEFAULTS = "menuVehicleEditDefaults";
 Navigation.VEHICLE_SELECT_VEHICLE = "menuVehicleSelectVehicle";
 Navigation.VEHICLE_DESELECT_VEHICLE = "menuVehicleDeselectVehicle";
 Navigation.VEHICLE_REVERSE_DIRECTION = "menuVehicleReverseDirection";
-Navigation.VEHICLE_REMOVE_VEHICLE = "menuVehicleRemoveVehicle";
 
-Navigation.MAP_ADD_VEHICLE = "menuMapAddVehicle";
-Navigation.MAP_REMOVE_ALL_VEHICLES = "menuMapRemoveAllVehicles";
-Navigation.MAP_ZOOM_TO_VEHICLES = "menuMapZoomToVehicles";
+Navigation.MAP_ZOOM_TO_ALL_VEHICLES = "menuMapZoomToVehicles";
+Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE = "menuMapZoomSelectedVehicle";
+Navigation.MAP_DESELECT_VEHICLE = "menuMapDeselectVehicle";
 
 Navigation.MODE_NO_ACTION = 0;
 Navigation.MODE_APPEND = 1;
@@ -79,7 +78,7 @@ function Navigation(options) {
     
     this.pathOpacity = options.pathOpacity || 0.75;
     
-    this.remoteVehicles = options.remoteVehicles;
+    this.remoteVehicles = new Array();
     this.servers = options.servers || new Array();
     this.localVehicles = options.localVehicles || new Array();
     
@@ -96,7 +95,7 @@ function Navigation(options) {
     this.deselectedNavPathStyle = {color: this.navPathColor, opacity: this.navPathOpacity, clickable: false};
     this.selectedNavPathStyle = {color: this.navPathSelectedColor, opacity: this.navPathSelectedOpacity, clickable: false};
 
-    this.navMapPaths = new Object();
+    this.navigationMapPaths = new Object();
     this.flightMapPaths = new Object();
     this.vehicleMarkers = new Object();
     
@@ -159,9 +158,6 @@ function Navigation(options) {
     
     L.control.scale().addTo(this.map);
     
-    // add all the vehicles...
-    this._addVehiclesToMap();
-    
     this.mapMenu = new RadialMenu(this.mapMenuId, {selectionListener: function(e) {self._mapMenuItemSelected(e, self); }});
     this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: function(e) {self._vehicleMenuItemSelected(e, self); }});
     this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {self._pointMenuItemSelected(e, self); }});
@@ -171,6 +167,10 @@ function Navigation(options) {
 
 Navigation.prototype.setPreferences = function(preferences) {
     this.preferences = preferences;
+}
+
+Navigation.prototype.getModifiedVehicles = function(preferences) {
+    
 }
 
 Navigation.prototype.hideMenus = function() {
@@ -213,11 +213,19 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replace
         point.position.longitude = longitude;
     }
     
-    vehicle.onMap = true;
-
     // setup the nav path
-    this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false, this.selectedNavPathStyle);
+    this.navigationMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false, this.selectedNavPathStyle);
 }
+
+Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
+    var point = navigationPath.getPoint(0);
+    vehicle.navigationPath = navigationPath;
+    
+    // TODO: should be supporting different servers... this will not
+    this.remoteVehicles.push(vehicle);
+    this.navigationMapPaths[vehicle.id] = this._setupMapPath(navigationPath, vehicle, point.position.latitude, point.position.longitude, false, this.deselectedNavPathStyle);
+}
+
 
 // TODO: look at adding a layer for vehicle positions, maybe it's not required...
 
@@ -251,14 +259,14 @@ Navigation.prototype.selectVehicle = function(vehicle) {
     this.selectedVehicle = vehicle;
     
     // allocate the current map path
-    this.currentMapPath = this.navMapPaths[this.selectedVehicle.id];
+    this.currentMapPath = this.navigationMapPaths[this.selectedVehicle.id];
     
     if(this.currentMapPath) {
         // change the colour of the path to selected
         this.currentMapPath.setPathStyle(this.selectedNavPathStyle);
         
         // draw the points for the path
-        this._addMarkers(this.navMapPaths[this.selectedVehicle.id], this.selectedVehicle, this);
+        this._addMarkers(this.navigationMapPaths[this.selectedVehicle.id], this.selectedVehicle, this);
     }
     
     if(this.selectedVehicle.navigationPath.isEmpty() || !this.selectedVehicle.navigationPath.complete()) {
@@ -298,35 +306,13 @@ Navigation.prototype.removeVehicle = function(vehicle) {
         this.deselectVehicle();
     }
 
-    // update the vehicle status    
-    vehicle.onMap = false;
-
     // remove the nav path for the vehicle
-    this.navMapPaths[vehicle.id].remove();
+    this.navigationMapPaths[vehicle.id].remove();
     
     // delete the map paths for the vehicle
-    delete this.navMapPaths[vehicle.id];
+    delete this.navigationMapPaths[vehicle.id];
     
-}
-
-Navigation.prototype.removeAllVehicles = function() {
-    // remove all vehicles from the map
-    if(this.selectedVehicle) {
-        this.deselectVehicle();
-    }
-    
-    // iterate through all map paths and remove them
-    for(var id in this.navMapPaths) {
-        this.navMapPaths[id].vehicle.onMap = false;
-        this.navMapPaths[id].remove();
-    }
-    
-    this.navMapPaths = new Object()
-}
-
-Navigation.prototype.setVehicles = function(vehicles) {
-    // set the vehicles to the passed vehicle list, this removes existing vehicles
-    this.vehicles = vehicles;
+    // TODO: remove the current point for the vehicle
 }
 
 Navigation.prototype.selectMapStyle = function(styleIndex) {
@@ -334,37 +320,6 @@ Navigation.prototype.selectMapStyle = function(styleIndex) {
         this.map.addLayer(this.mapLayers[styleIndex].tileSet, true);
         this.map.removeLayer(this.currentTileSet);
         this.currentTileSet = this.mapLayers[styleIndex].tileSet;
-    }
-}
-
-Navigation.prototype._addVehiclesToMap = function() {
-    var vehicle = null;
-    var point = null;
-    
-    // iterate through the servers and then the vehicles for each server
-    for(var i = 0, l = this.servers.length; i < l; i++) {
-        for(var i2 = 0, l2 = this.remoteVehicles[this.servers[i].name].length; i2 < l2; i2++) {
-            vehicle = this.remoteVehicles[this.servers[i].name][i2];
-            
-            // if the vehicle is on the map then add it
-            if(vehicle.onMap) {
-                point = vehicle.navigationPath.getPoint(0);
-                this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, point.position.latitude, point.position.longitude, false, this.deselectedNavPathStyle);
-                
-                // TODO: add the actual path?
-            }
-        }
-    }
-
-    // iterate through the local vehicles    
-    for(var i = 0, l = this.localVehicles.length; i < l; i++) {
-        // add the vehicle icon
-        point = navigationPath.getPoint(0);
-        // TODO: add the navigation path
-        // this.navMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle.id, point.position.latitude, point.position.longitude, false, this.deselectedNavPathStyle);
-        
-        // TODO: add the actual path?
-        // this._addActualPath();
     }
 }
 
@@ -382,11 +337,11 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
         .on('drag', function(e) {self._baseDragged(e, self);})
         .on('click', function(e) { self._onHomeMarkerClick(e, self, vehicle); });
         
-    var mapPath = new MapPath({map: this.map, homeMarker: homeMarker, vehicle: vehicle, polyLine: polyLine});
+    var mapPath = new MapPath({map: this.map, homeMarker: homeMarker, polyLine: polyLine});
     
-    if(vehicle.navigationPath.returnsHome()) {
-        var lastPoint = vehicle.navigationPath.getPoint(vehicle.navigationPath.length() - 1);
-        var homePoint = vehicle.navigationPath.getPoint(0);
+    if(path.returnsHome()) {
+        var lastPoint = path.getPoint(path.length() - 1);
+        var homePoint = path.getPoint(0);
         var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
                                    [homePoint.position.latitude, homePoint.position.longitude]],
                                   pathStyle);
@@ -450,6 +405,7 @@ Navigation.prototype._markerDragged = function (e, that) {
     
     point.position.latitude = newPoint.lat;
     point.position.longitude = newPoint.lng;
+    that.selectedVehicle.navigationPath.dirty = true;
     
     // presume that only the last point can return home
     if(point.returnHome) {
@@ -474,6 +430,8 @@ Navigation.prototype._baseDragged = function (e, that) {
     
     point.position.latitude = newPoint.lat;
     point.position.longitude = newPoint.lng;
+    
+    that.selectedVehicle.navigationPath.dirty = true;
     
     // get the last point and check if it is a return to home point
     
@@ -536,37 +494,16 @@ Navigation.prototype._displayMapMenu = function(e, that) {
     var allAllocated = true;
     var vehiclesOnMap = false;
     
-    for(var i = 0, l = that.servers.length; i < l; i++) {
-        for(var i2 = 0, l2 = this.remoteVehicles[that.servers[i].name].length; i2 < l2; i2++) {
-            if(this.remoteVehicles[that.servers[i].name][i2].onMap) {
-                vehiclesOnMap = true;
-            } else {
-                allAllocated = false;
-            }
-        }
-    }
-    for(var i = 0, l = that.localVehicles.length; i < l; i++) {
-        if(that.localVehicles[i].onMap) {
-            vehiclesOnMap = true;
-        } else {
-            allAllocated = false;
-        }
-    }
-    
-    // if all the vehicles are on the map then do not allow addition of a vehicle
-    if(allAllocated) {
-        that.mapMenu.disableMenuItem(Navigation.MAP_ADD_VEHICLE);
-    } else {
-        that.mapMenu.enableMenuItem(Navigation.MAP_ADD_VEHICLE);
-    }
-
     // if there are vehicles on the map then enable removal of vehicles and zoom to vehicles
-    if(vehiclesOnMap) {
-        that.mapMenu.enableMenuItem(Navigation.MAP_REMOVE_ALL_VEHICLES);
-        that.mapMenu.enableMenuItem(Navigation.MAP_ZOOM_TO_VEHICLES);
+    that.mapMenu.enableMenuItem(Navigation.MAP_ZOOM_TO_ALL_VEHICLES);
+
+    if(that.selectedVehicle) {    
+        that.mapMenu.enableMenuItem(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE);
+        that.mapMenu.enableMenuItem(Navigation.MAP_DESELECT_VEHICLE);
     } else {
-        that.mapMenu.disableMenuItem(Navigation.MAP_REMOVE_ALL_VEHICLES);
-        that.mapMenu.disableMenuItem(Navigation.MAP_ZOOM_TO_VEHICLES);
+        that.mapMenu.disableMenuItem(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE);
+        that.mapMenu.disableMenuItem(Navigation.MAP_DESELECT_VEHICLE);
+        
     }
     
     that.currentLatLng = e.latlng;
@@ -599,6 +536,7 @@ Navigation.prototype._appendPoint = function(e, that, selected) {
         loiterLaps: this.preferences.defaultLoiterLaps,
         autoContinue: this.preferences.defaultAutoContinue,
     });
+    that.selectedVehicle.navigationPath.dirty = true;
     
     // add the point to the map
     that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
@@ -619,6 +557,7 @@ Navigation.prototype._insertPoint = function(e, that, position, selected) {
         loiterLaps: this.preferences.defaultLoiterLaps,
         autoContinue: this.preferences.defaultAutoContinue,
     });
+    that.selectedVehicle.navigationPath.dirty = true;
     
     // insert the point to the map
     that._insertNavPoint(that, that.currentMapPath, e.latlng, position + 1, selected);
@@ -763,25 +702,31 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
     that.mapMenu.hideMenu();
 
     switch(e.originalEvent.currentTarget.id) {
-        case(Navigation.MAP_ADD_VEHICLE):
-            showAddVehicleToMapForm.bind(that)(that.currentLatLng);
-            break;
-        
-        case(Navigation.MAP_REMOVE_ALL_VEHICLES):
-            that.removeAllVehicles.bind(that)();
-            break;
-        
-        case(Navigation.MAP_ZOOM_TO_VEHICLES):
+        case(Navigation.MAP_ZOOM_TO_ALL_VEHICLES):
             that.map.fitBounds(that._getVehicleBounds());
+            break;
+        
+        case(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE):
+            that.map.fitBounds(that._getVehicleBounds());
+            break;
+        
+        case(Navigation.MAP_DESELECT_VEHICLE):
+            that.deselectVehicle.bind(that)();
             break;
     }
 }
 
-Navigation.prototype._getVehicleBounds = function() {
+Navigation.prototype._getVehicleBounds = function(vehicle) {
     var latlngs = new Array();
     
-    for(var id in this.navMapPaths) {
-        latlngs.push(this.navMapPaths[id].getLatLngs());
+    var mapPath = null;
+    
+    if(this.selectedVehicle) {
+        latlngs.push(this.navigationMapPaths[this.selectedVehicle.id].getLatLngs());
+    } else {
+        for(var id in this.navigationMapPaths) {
+            latlngs.push(this.navigationMapPaths[id].getLatLngs());
+        }
     }
     
     return latlngs;
@@ -813,7 +758,7 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
                 that.prevLatLng = null;
                 
                 // remove the current nav path from the map
-                that.navMapPaths[that.clickedVehicle.id].removePaths();
+                that.navigationMapPaths[that.clickedVehicle.id].removePaths();
             }
             break;
         
@@ -854,14 +799,8 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
                 }
                 
                 // add the current path
-                that._addMarkers(that.navMapPaths[that.selectedVehicle.id], that.selectedVehicle, that);
+                that._addMarkers(that.navigationMapPaths[that.selectedVehicle.id], that.selectedVehicle, that);
             }
-            break;
-        
-        case(Navigation.VEHICLE_REMOVE_VEHICLE):
-            // TODO: add logic to remove the vehicle
-            that.removeVehicle.bind(that)(that.clickedVehicle);
-            that.mapTouchMode = Navigation.MODE_NO_ACTION;            
             break;
     }
 
@@ -958,13 +897,14 @@ Navigation.prototype._deletePoint = function(that, position) {
 
     // remove the point from the vehicle nav path
     that.selectedVehicle.navigationPath.delete(position);
+    that.selectedVehicle.navigationPath.dirty = true;
 
     // remove the marker
     that.currentMapPath.removeMarker(position);
     
     // remove the point from the polyline
     that.currentMapPath.polyLine.spliceLatLngs(position, 1);
-
+    
     // renumber the markers, reducing the count by 1
     that._renumberMarkers(position + 1, that, Navigation.RENUMBER_TO_END, -1);
     
@@ -1012,6 +952,7 @@ Navigation.prototype._toggleTerminus = function(that, position) {
     
     // update the flag for the nav path point
     p.terminus = !p.terminus;
+    that.selectedVehicle.navigationPath.dirty = true;
     
     // update the touch mode for the point
     that.mapTouchMode = that._getTouchModeForPoint(p);
@@ -1026,6 +967,7 @@ Navigation.prototype._loiterToggle = function(that, position) {
     
     // update the flag for the nav path point
     p.loiter = !p.loiter;
+    that.selectedVehicle.navigationPath.dirty = true;
 
     // update the icon for the marker
     that.currentMapPath.setIcon(position, that._getIconForPoint(p, that));
@@ -1048,6 +990,7 @@ Navigation.prototype._returnHomeToggle = function(that, position) {
     
     // update the flag for the nav path point
     lastPoint.returnHome = !lastPoint.returnHome;
+    that.selectedVehicle.navigationPath.dirty = true;
 
     if(lastPoint.returnHome) {
         var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
