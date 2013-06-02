@@ -4,7 +4,7 @@
     border: none;
 }
 
-.leaflet-marker-icon .number{
+.leaflet-marker-icon .number {
     position: relative;
     top: -44px;
     font-size: 15px;
@@ -12,4 +12,18 @@
     text-align: center;
     font-weight: bold;
     opacity: 1;
+    color: black;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+}
+
+.leaflet-marker-icon .numberTarget {
+    position: relative;
+    top: -44px;
+    font-size: 15px;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    opacity: 1;
+    color: red;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
