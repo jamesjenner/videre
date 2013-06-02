@@ -222,7 +222,30 @@ Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
     vehicle.navigationPath = navigationPath;
     
     // TODO: should be supporting different servers... this will not
-    this.remoteVehicles.push(vehicle);
+    var existingVehicle = null;
+    
+    // check if the remote vehicle exists
+    for(var i = 0, l = this.remoteVehicles.length; i < l; i++) {
+        if(this.remoteVehicles[i].id === vehicle.id) {
+            existingVehicle = this.remoteVehicles[i];
+            break;
+        }
+    }
+    
+    if(existingVehicle === null) {
+        this.remoteVehicles.push(vehicle);
+    } else {
+        if(this.selectedVehicle && this.selectedVehicle.id == existingVehicle.id) {
+            this.deselectVehicle();
+        }
+    
+        // remove the nav path for the vehicle
+        this.navigationMapPaths[vehicle.id].remove();
+        
+        // delete the map paths for the vehicle
+        delete this.navigationMapPaths[vehicle.id];
+    }
+    
     this.navigationMapPaths[vehicle.id] = this._setupMapPath(navigationPath, vehicle, point.position.latitude, point.position.longitude, false, this.deselectedNavPathStyle);
 }
 
