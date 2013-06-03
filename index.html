@@ -6,9 +6,9 @@
          http://developer.android.com/guide/webapps/targeting.html
          http://developer.android.com/guide/webapps/best-practices.html
          
-    <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0' />
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1' />
     -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimum-scale=1">
 
     <title>Videre</title>
     
@@ -104,6 +104,8 @@ function loaded() {
     zIndex: 0
   });
   
+  /*
+   * NOTE: the iScroll is causing problems with field selection
   new iScroll('createServerFormScroller', {
     hScroll: false,
     vScroll: true,
@@ -111,14 +113,7 @@ function loaded() {
     hScrollbar: false,
     zIndex: 0
   });
-
-  new iScroll('createVehicleFormScroller', {
-    hScroll: false,
-    vScroll: true,
-    momentum: false,
-    hScrollbar: false,
-    zIndex: 0
-  });
+  */
 }
 
 document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
@@ -214,7 +209,6 @@ var COMS_TAB = 1;
 var VEHICLE_PROPERTIES_TAB_CONTROL = 'VehiclePropertiesTabControl';
 var VEHICLE_COMMS_TAB_CONTROL = 'VehicleCommsTabControl';
 
-var ADD_VEHICLE_CONTROL_ID = 'addVehicleControl';
 var ADD_SERVER_CONTROL_ID = 'addServerControl';
 
 var PAYLOAD_SUB_ID = 'PayloadContentArea';
@@ -337,11 +331,6 @@ function configureApplication() {
   // add the ui content for the navigation, also adds the navigation manager, note this cannot be done on the fly
   addNavigationContentUI(NAVIGATION_CONTENT_ID);
 
-  // add the add vehicle to the sidebar
-  appendControlToSidebar(VEHICLE_GROUP, ADD_VEHICLE_CONTROL_ID, ADD_ICON, 'Add Vehicle');
-  // add listeners to the controls that adds a vehicle
-  addListenerToSidebarControl(LEFT_SIDEBAR_ID, ADD_VEHICLE_CONTROL_ID, 'addVehicle');
-  
   // add the add server to the sidebar
   appendControlToSidebar(SERVER_GROUP, 'addServerControl', ADD_ICON, 'Add Server');
   // add listeners to the controls that adds a server
@@ -399,12 +388,8 @@ function configureApplication() {
     
   }
 
-  // add the form for creating vehicles
-  // TODO: make this content that is only added as required
-  addVehicleCreateFormUI('addVehicle', 'Add Vehicle');
-  
   // add the form for creating servers
-  // TODO: make this content that is only added as required
+  // TODO: make this content that is only added as required, possibly...
   addServerCreateFormUI('addServer', 'Add Server');
 }
 
@@ -688,33 +673,33 @@ function addServerCreateFormUI(id, title) {
     '         <ul>' + 
     '           <li>' + 
     '             <label for="serverCreateName">Name</label>' +
-    '             <input type="text" name="name" id="serverCreateName" placeholder="" required><br>' +
+    '             <input type="text" name="name" id="serverCreateName"><br>' +
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <label for="serverCreateIPAddress">IP Address</label>' +
     //'             <input type="text" name="address" id="serverCreateIPAddress" placeholder="IP Address" required pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"><br>' +
     // TODO: figure out the ip address pattern for front end validation
-    '             <input type="text" name="address" id="serverCreateIPAddress" placeholder="" required ><br>' +
+    '             <input type="text" name="address" id="serverCreateIPAddress"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreatePort">Port</label>' +
-    '             <input type="number" min="1" max="99999" name="port" id="serverCreatePort" placeholder=""><br>' +
+    '             <input type="number" min="1" max="99999" name="port" id="serverCreatePort"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreateSecurePort">Secure Port</label>' +
-    '             <input type="number" min="1" max="99999" name="securePort" id="serverCreateSecurePort" placeholder=""><br>' +
+    '             <input type="number" min="1" max="99999" name="securePort" id="serverCreateSecurePort"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreateProtocol">Protocol</label>' +
-    '             <input type="text" name="protocol" id="serverCreateProtocol" placeholder=""><br>' +
+    '             <input type="text" name="protocol" id="serverCreateProtocol"><br>' +
     '           </li>' +
     '           <li class="breakTop">' + 
     '             <label for="serverCreateUserId">User Id</label>' +
-    '             <input type="text" name="userId" id="serverCreateUserId" placeholder="" required><br>' +
+    '             <input type="text" name="userId" id="serverCreateUserId"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="serverCreatePassword">Password</label>' +
-    '             <input type="text" name="password" id="serverCreatePassword" placeholder="" required><br>' +
+    '             <input type="text" name="password" id="serverCreatePassword"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <span class="checkboxLabel">Remember password</span> ' +
@@ -768,110 +753,6 @@ function createVehicleFromServer(server, vehicle) {
     // load the ui for the vehicle
     addVehicleToSidebar(vehicle, server);
   }
-}
-
-var VEHICLE_LOCAL = 'Local';
-
-function createVehicle() {
-  // create a new vehicle from the form
-  vehicle = new Vehicle({
-    'name':$('#vehicleCreateName').val(),
-    'type':$('#vehicleCreateVehicleType').val(),
-    'payloadEnabled':$('#vehicleCreatePayload').is(':checked'),
-    'navigationEnabled':$('#vehicleCreateNavigationEnabled').is(':checked'),
-    'remoteControlEnabled':$('#vehicleCreateRemoteControlEnabled').is(':checked'),
-    'connectionType':$('#vehicleCreateConnectionType').val(),
-    'pitchAccuracy':$('#vehicleCreatePitchAccuracy').val(),
-    'rollAccuracy':$('#vehicleCreateRollAccuracy').val(),
-    'yawAccuracy':$('#vehicleCreateYawAccuracy').val(),
-    'positionReportingMode':$('#vehicleCreatePosReportingMode').val(),
-    'positionReportingValue':$('#vehicleCreatePosReportingValue').val(),
-    'networkAddress':$('#vehicleCreateIPAddress').val(),
-    'networkPort':$('#vehicleCreatePort').val(),
-    'serialPort':$('#vehicleCreateSerialPort').val(),
-    'baudRate':$('#vehicleCreateBaudRate').val(),
-    });
-  
-  var deviceTypeName = $('#vehicleCreateDeviceType').val();
-  var remoteServerName = $('#vehicleCreateRemoteServer').val();
-  var remoteServer = null;
-  var duplicate = false;
-  var error = false;
-  var deviceTypeId = null;
-
-  // determine the device id
-  for(var i =0, l = contentManager.serverVehicleDeviceTypes[remoteServerName].length; i < l; i++) {
-    if(contentManager.serverVehicleDeviceTypes[remoteServerName][i].name === deviceTypeName) {
-      deviceTypeId = contentManager.serverVehicleDeviceTypes[remoteServerName][i].id;
-      break;
-    }
-  }
-  
-  if(deviceTypeId != null) {
-    vehicle.deviceType = deviceTypeId;
-  }
-  
-  
-  if(remoteServerName == VEHICLE_LOCAL) {
-    // it's a local vehicle
-    
-    // check that the vehicle doesn't exist first
-    for(var i = 0, l = contentManager.vehicles.length; i < l; i++) {
-      if(contentManager.vehicles[i].name === vehicle.name) {
-        duplicate = true;
-        break;
-      }
-    }
-    
-    // TODO: add error handling to display 'vehicle exists' 
-    if(duplicate) {
-      error = true;
-    } else {
-      // add the vehicle to the content manager
-      contentManager.addVehicle(vehicle, true);
-      
-      // load the ui for the vehicle
-      addVehicleToSidebar(vehicle);
-    }
-  } else {
-    // it's a server vehicle, find the server selected
-    for(i = 0, l = contentManager.servers.length; i < l; i++) {
-      if(contentManager.servers[i].name == remoteServerName) {
-        remoteServer = contentManager.servers[i];
-        break;
-      }
-    }
-    
-    // send a messsage to add it
-    if(remoteServer) {
-      // check that the vehicle doesn't exist
-      for(i = 0, l = contentManager.remoteVehicles[remoteServer.name].length; i < l; i++) {
-        if(contentManager.remoteVehicles[remoteServer.name][i].name === vehicle.name) {
-          duplicate = true;
-          break;
-        }
-      }
-      
-      if(remoteServer.isConnected && !duplicate) {
-        remoteServer.sendMessage(Message.ADD_VEHICLE, vehicle);
-      } else {
-        error = true;
-      }
-    } else {
-      error = true;
-    }
-    // TODO: generate error if the selected server is not connected
-    
-  }
-  
-  // TODO: add a message to state that the action has been performed
-  
-  // reset the form
-  if(!error) {
-    resetForm('#createVehicleForm');
-  }
-  
-  return false;
 }
 
 /**
@@ -1027,7 +908,7 @@ function addVehicleToSidebar(vehicle, server) {
   }
 
   // add the control that lets the user select the vehicle content UI on the side bar
-  addControlToSidebarBeforeId(ADD_VEHICLE_CONTROL_ID, vehicleControlId, icon, vehicle.name);
+  addControlToSidebarInsideId(VEHICLE_GROUP, vehicleControlId, icon, vehicle.name);
   
   // add the listener for the ui to activate the side bar 
   addListenerToSidebarControl(LEFT_SIDEBAR_ID, vehicleControlId, VEHICLE_CONTENT, function() {
@@ -1037,226 +918,6 @@ function addVehicleToSidebar(vehicle, server) {
   
   // TODO: we have no UI to maintain the settings for the vehicle, need to add an option to provide this
   // add the ui to maintain the information for the vehicle
-}
-
-function addVehicleCreateFormUI(id, title) {
-  var remoteServerList = '';
-  
-  // TODO: this is called at the start, so doesn't show servers added after initially loaded, change this ui to only add when required
-  
-  // build list for the remote server drop down
-  for(var i = 0, l = contentManager.servers.length; i < l; i++) {
-    // Add all servers, otherwise the dynamic issues of disconnecting and connecting servers is too problematic for the user to understand
-    remoteServerList += '              <li><a href="#"><img class="dropdownIcon" src="' + SERVER_ICON_DARK + '" /><span class="dropdownText">' +  contentManager.servers[i].name + '</span></a></li>'
-  }
-  
-  $('#mainApplication').append(
-    '<div id="' + id + '" class="applicationContents">' +
-    '  <div id="' + id + 'Form" class="formContainer">' +
-    '    <div class="formContents">' +
-    '       <form id="createVehicleForm">' +
-    
-    '         <div id="createVehicleFormScroller" class="formScroller">' +
-    '         <div class="scroller">' +
-    
-    '         <ul>' + 
-    '           <li>' + 
-    '             <label for="vehicleCreateName">Name</label>' +
-    '             <input type="text" name="name" id="vehicleCreateName" placeholder="" required><br>' +
-    '           </li>' +
-    
-    '           <li class="breakTop">' +
-    '            <label for="vehicleCreateRemoteServer">Remote Server</label>' +
-    '            <div id="vehicleCreateRemoteServerWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="remoteServer" id="vehicleCreateRemoteServer" placeholder="Tap to select">' +
-    '             <span class="triangle"></span>' +
-    '             <ul class="dropdown">' +
-    '              <li><a href="#"><div class="dropdownIcon"></div><span class="dropdownText">Local</span></a></li>' + remoteServerList +
-    '             </ul>' +
-    '            </div>' +
-    '           </li>' +
-    
-    '           <li class="breakTop">' +
-    '            <label for="vehicleCreateVehicleType">Type of vehicle</label>' +
-    '            <div id="vehicleCreateVehicleTypeWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="createVehicleType" id="vehicleCreateVehicleType" placeholder="Tap to select">' +
-    '             <span class="triangle"></span>' +
-    '             <ul class="dropdown">' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + AIRPLANE_ICON_DARK + '" />' + '<span class="dropdownText">Air</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SURFACE_ICON_DARK + '" />' + '<span class="dropdownText">Surface</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SUBMERSIBLE_ICON_DARK + '" />' + '<span class="dropdownText">Submersible</span></a></li>' +
-    '             </ul>' +
-    '            </div>' +
-    '           </li>' +
-
-    '           <li>' +
-    '            <label for="vehicleCreateDeviceType">Type of device</label>' +
-    '            <div id="vehicleCreateDeviceTypeWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="createDeviceType" id="vehicleCreateDeviceType" placeholder="Tap to select">' +
-    '             <span class="triangle"></span>' +
-    '             <ul id="vehicleCreateDeviceTypeList" class="dropdown">' +
-    '             </ul>' +
-    '            </div>' +
-    '           </li>' +
-
-
-    '           <li class="breakTop">' +
-    '            <label for="vehicleCreatePosReportingMode">Position Reporting Mode</label>' +
-    '            <div id="vehicleCreatePosReportingModeWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="createPosReportingMode" id="vehicleCreatePosReportingMode" placeholder="Tap to select">' +
-    '             <span class="triangle"></span>' +
-    '             <ul class="dropdown">' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + DISTANCE_ICON_DARK + '" />' + '<span class="dropdownText">Distance</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + TIME_ICON_DARK + '" />' + '<span class="dropdownText">Time</span></a></li>' +
-    '             </ul>' +
-    '            </div>' +
-    '           </li>' +
-
-    '           <li>' + 
-    '             <label for="vehicleCreatePosReportingValue">Value</label>' +
-    '             <input type="number" min="0" max="99999" name="port" id="vehicleCreatePosReportingValue" placeholder=""><br>' +
-    '           </li>' +
-    
-    
-    '           <li id="createNetworkFields" class="breakTop">' +
-    '            <label for="vehicleCreateConnectionType">Connection Type</label>' +
-    '            <div id="vehicleCreateConnectionTypeWrapper" class="dropdownwrapper">' +
-    '             <input type="popup" name="createConnectionType" id="vehicleCreateConnectionType" placeholder="Tap to select">' +
-    '             <span class="triangle"></span>' +
-    '             <ul class="dropdown">' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + SERIAL_ICON_DARK + '" />' + '<span class="dropdownText">Serial</span></a></li>' +
-    '              <li><a href="#">' + '<img class="dropdownIcon" src="' + NETWORK_ICON_DARK + '" />' + '<span class="dropdownText">Network</span></a></li>' +
-    '             </ul>' +
-    '            </div>' +
-    '           </li>' +
-
-    '           <li class="breakTop">' + 
-    '             <label for="vehicleCreatePitchAccuracy">Pitch (y) Accuracy</label>' +
-    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehicleCreatePitchAccuracy" placeholder=""><br>' +
-    '           </li>' +
-    '           <li>' + 
-    '             <label for="vehicleCreateRollAccuracy">Roll (x) Accuracy</label>' +
-    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehicleCreateRollAccuracy" placeholder=""><br>' +
-    '           </li>' +
-    '           <li>' + 
-    '             <label for="vehicleCreateYawAccuracy">Yaw (z) Accuracy</label>' +
-    '             <input type="number" min="0" max="1" step="0.0001" name="port" id="vehicleCreateYawAccuracy" placeholder=""><br>' +
-    '           </li>' +
-    
-    '           <li class="breakTop">' +
-    '             <span class="checkboxLabel">Vehicle contains payload</span> ' +
-    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="payloadEnabled" id="vehicleCreatePayload"></div>' +
-    '           </li>' +
-    '           <li>' +
-    '             <span class="checkboxLabel">Vehicle supports navigation</span> ' +
-    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="navigationEnabled" id="vehicleCreateNavigationEnabled"></div>' +
-    '           </li>' + 
-    '           <li>' +
-    '             <span class="checkboxLabel">Vehicle can be controlled remotely</span> ' +
-    '             <div class="switch"><span class="thumb"></span><input type="checkbox" name="remoteControlEnabled" id="vehicleCreateRemoteControlEnabled"></div>' +
-    '           </li>' +
-    
-    '         </ul>' + 
-    '         </div>' +
-    '         </div>' +
-    '       </form>' +
-    '      </div>' +
-    '    </div>' +
-    '</div>');
-
-  var networkConnectionFields = 
-    '           <li id="vehicleCreateIPAddressField">' + 
-    '             <label for="vehicleCreateIPAddress">IP Address</label>' +
-    '             <input type="text" name="address" id="vehicleCreateIPAddress" placeholder="" required ><br>' +
-    '           </li>' + 
-    '           <li id="vehicleCreatePortField">' + 
-    '             <label for="vehicleCreatePort">Port</label>' +
-    '             <input type="number" min="1" max="99999" name="port" id="vehicleCreatePort" placeholder=""><br>' +
-    '           </li>';
-
-  var serialConnectionFields = 
-    '           <li id="vehicleCreateSerialPortField">' + 
-    '             <label for="vehicleCreateSerialPort">Serial Port</label>' +
-    '             <input type="text" name="serialPort" id="vehicleCreateSerialPort" placeholder="" required ><br>' +
-    '           </li>' +
-    '           <li id="vehicleCreateBaudRateField">' + 
-    '             <label for="vehicleCreateBaudRate">Baud Rate</label>' +
-    '             <input type="text" name="baudRate" id="vehicleCreateBaudRate" placeholder="" required ><br>' +
-    '           </li>';
-    
-    
-    
-  // setup and initialise the action bar
-  new ActionBar({
-    targetId: id,
-    id: id + ACTION_BAR,
-    title: title,
-    settingsAction: false,
-    save: true,
-    saveFunction: createVehicle
-  }).initialise();
-
-  // note that the following logic means that there is no device type list until a server is selected
-  var serverSelectListener = function(dropdown) {
-    // clear the device list and add as per the selected server
-    
-    // remove all child elements
-    $('#vehicleCreateDeviceTypeList').empty();
-    
-    // create the new elements
-    var remoteServerList = '';
-    
-    if(contentManager && contentManager.serverVehicleDeviceTypes && contentManager.serverVehicleDeviceTypes[dropdown.val]) {
-      for(var i = 0, l = contentManager.serverVehicleDeviceTypes[dropdown.val].length; i < l; i++) {
-        remoteServerList += '<li><a href="#">' +
-                            '<img class="dropdownIcon" src="' + DEVICE_ICON_DARK + '" />' +
-                            '<span class="dropdownText">' +  contentManager.serverVehicleDeviceTypes[dropdown.val][i].name + '</span></a></li>'
-      }
-      
-      // add the new list for device types based on the selected server
-      $('#vehicleCreateDeviceTypeList').append(remoteServerList);
-      
-      // create the dropdown for the device type
-      new DropDown($('#vehicleCreateDeviceTypeWrapper'));
-    }
-  };
-
- 
-  var connectionTypeSelectListener = function(dropdown) {
-    // hide and show the fields based on the selection
-    if(dropdown.val === 'Serial') {
-      // selected serial
-      
-      // remove fields
-      $('#vehicleCreateIPAddressField').remove();
-      $('#vehicleCreatePortField').remove();
-      
-      // add fields
-      $('#createNetworkFields').after(serialConnectionFields);
-    } else {
-      // selected network
-      
-      // remove field
-      $('#vehicleCreateSerialPortField').remove();
-      $('#vehicleCreateBaudRateField').remove();
-      
-      // add fields
-      $('#createNetworkFields').after(networkConnectionFields);
-      
-    }
-  }
-  
-  // add the toggle switch to switch classed checkboxes  
-  $('#createVehicleForm .switch').on("click", toggleSwitch);
-  
-  // add the drop down logic for remote servers
-  new DropDown($('#vehicleCreateRemoteServerWrapper'), serverSelectListener);
-  // add the drop down logic for vehicle types
-  new DropDown($('#vehicleCreateVehicleTypeWrapper'));
-  // add the drop down logic for connection type
-  new DropDown($('#vehicleCreateConnectionTypeWrapper'), connectionTypeSelectListener);
-  // add the drop down logic for the reporting mode
-  new DropDown($('#vehicleCreatePosReportingModeWrapper'));
 }
 
 /**
@@ -1280,10 +941,9 @@ function addPreferencesFormUI(id, title) {
     '<div id="' + id + '" class="applicationContents">' +
     '  <div id="' + id + 'Form" class="formContainer">' +
     '    <div class="formContents">' +
-    '       <form id="preferencesForm">' +
-    
-    '         <div id="preferencesFormScroller" class="formScroller">' +
-    '         <div class="scroller">' +
+    '      <form id="preferencesForm">' +
+    '        <div id="preferencesFormScroller" class="formScroller">' +
+    '          <div class="scroller">' +
     
     '         <ul>' + 
     '           <li>' + 
@@ -1324,13 +984,13 @@ function addPreferencesFormUI(id, title) {
     '             <label for="debugLevel">Debug Level </label>' +
     '             <input type="number" min="1" max="99" name="debugLevel" id="debugLevel" placeholder=""><br>' +
     '           </li>' +
+    '         </ul>' +
     
-    '         </ul>' + 
-    '         </div>' +
-    '         </div>' +
-    '       </form>' +
-    '      </div>' +
+    '          </div>' +
+    '        </div>' +
+    '      </form>' +
     '    </div>' +
+    '  </div>' +
     '</div>');
 
   // set values
@@ -1456,11 +1116,11 @@ function addServerContentUI(id, server) {
     '                    </li>' + 
     '                    <li class="breakTop">' + 
     '                      <label for="serverUpdateName">Name</label>' +
-    '                      <input type="text" name="name" id="serverUpdateName" placeholder="" required><br>' +
+    '                      <input type="text" name="name" id="serverUpdateName"><br>' +
     '                    </li>' + 
     '                    <li class="breakTop">' + 
     '                      <label for="serverUpdateIPAddress">IP Address</label>' +
-    '                      <input type="text" name="address" id="serverUpdateIPAddress" placeholder="" required><br>' +
+    '                      <input type="text" name="address" id="serverUpdateIPAddress"><br>' +
     '                    </li>' + 
     '                    <li>' + 
     '                      <label for="serverUpdatePort">Port</label>' +
@@ -1476,11 +1136,11 @@ function addServerContentUI(id, server) {
     '                    </li>' +
     '                    <li class="breakTop">' + 
     '                      <label for="serverUpdateUserId">User Id</label>' +
-    '                      <input type="text" name="userId" id="serverUpdateUserId" placeholder="" required><br>' +
+    '                      <input type="text" name="userId" id="serverUpdateUserId"><br>' +
     '                    </li>' + 
     '                    <li>' + 
     '                      <label for="serverUpdatePassword">Password</label>' +
-    '                      <input type="text" name="password" id="serverUpdatePassword" placeholder="" required><br>' +
+    '                      <input type="text" name="password" id="serverUpdatePassword"><br>' +
     '                    </li>' + 
     '                    <li>' + 
     '                      <span class="checkboxLabel">Remember password</span> ' +
@@ -1611,6 +1271,7 @@ function addServerContentUI(id, server) {
   // add the drop down logic for the drop downs  
   new DropDown( $('#serverUpdateCommsSecurityWrapper') );
 
+  /* TODO: sort out why this doesn't allow input of forms. Suspect it may be a zlayer issue for android...
   // setup scrolling  
   new iScroll('updateServerFormScroller', {
     hScroll: false,
@@ -1619,6 +1280,7 @@ function addServerContentUI(id, server) {
     hScrollbar: false,
     zIndex: 0
   });
+  */
   
 
 }
@@ -1713,24 +1375,24 @@ function addVehicleContentUI(id, vehicle, server) {
     
     '  <div id="' + id + 'Form" class="formInTabContainer">' +
     '    <div class="formContents">' +
-    '       <form id="createVehicleForm">' +
+    '       <form id="vehicleForm">' +
     
-    '         <div id="createVehicleFormScroller" class="formScroller">' +
+    '         <div id="vehicleFormScroller" class="formScroller">' +
     '         <div class="scroller">' +
     
     '         <ul>' + 
     '           <li>' + 
     '             <label for="vehiclePropertiesName">Name</label>' +
-    '             <input type="text" name="name" id="vehiclePropertiesName" placeholder="" required><br>' +
+    '             <input type="text" name="name" id="vehiclePropertiesName"><br>' +
     '           </li>' +
     
     '           <li class="breakTop">' +
     '             <label for="vehiclePropertiesRemoteServer">Remote Server</label>' +
-    '             <input type="popup" name="remoteServer" id="vehiclePropertiesRemoteServer" placeholder="" disabled readonly="readonly">' +
+    '             <input type="popup" name="remoteServer" id="vehiclePropertiesRemoteServer" disabled readonly="readonly">' +
     '           </li>' +
     '           <li>' +
     '             <label for="vehiclePropertiesProtocolId">Protocol Id</label>' +
-    '             <input type="text" name="remoteId" id="vehiclePropertiesProtocolId" placeholder="" disabled readonly="readonly">' +
+    '             <input type="text" name="remoteId" id="vehiclePropertiesProtocolId" disabled readonly="readonly">' +
     '           </li>' +
     
     '           <li class="breakTop">' +
@@ -1766,7 +1428,7 @@ function addVehicleContentUI(id, vehicle, server) {
     
     '           <li id="createNetworkFields" class="breakTop">' +
     '             <label for="vehiclePropertiesConnectionType">Connection Type</label>' +
-    '             <input type="popup" name="remoteServer" id="vehiclePropertiesConnectionType" placeholder="" disabled readonly="readonly">' +
+    '             <input type="popup" name="remoteServer" id="vehiclePropertiesConnectionType" disabled readonly="readonly">' +
     '           </li>' +
 
     '           <li class="breakTop">' + 
@@ -2477,15 +2139,15 @@ function addNavPointForm(parentId, id) {
     '           </li>' + 
     '           <li class="breakTop">' + 
     '             <label for="navPointUpdateLabel">Label</label>' +
-    '             <input type="text" name="label" id="navPointUpdateLabel" placeholder="" ><br>' +
+    '             <input type="text" name="label" id="navPointUpdateLabel"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="navPointUpdateAltitude">Altitude</label>' +
-    '             <input type="text" name="altitude" id="navPointUpdateAltitude" placeholder="" required><br>' +
+    '             <input type="text" name="altitude" id="navPointUpdateAltitude"><br>' +
     '           </li>' + 
     '           <li>' + 
     '             <label for="navPointUpdateSpeed">Speed</label>' +
-    '             <input type="text" name="address" id="navPointUpdateSpeed" placeholder="" required><br>' +
+    '             <input type="text" name="address" id="navPointUpdateSpeed"><br>' +
     '           </li>' + 
     '           <li class="breakTop">' + 
     '           <li>' +
@@ -2577,6 +2239,14 @@ function removeVehicle(vehicle) {
 /*
  * add a control to the sidebar, before the specified id
  */
+function addControlToSidebarInsideId(beforeId, id, icon, name) {
+  $('#' + beforeId).append(
+    '<div id="' + id + '" class="sidebarControlBar">' +
+    '  <div class="sidebarControlIcon"><img id="' + id + 'Icon" src="' + icon + '" class="sidebarControlIcon"/></div>' +
+    '  <div id="' + id + 'Name" class="sidebarControlText centered">' + name + '</div>' +
+    '</div>');
+}
+
 function addControlToSidebarBeforeId(beforeId, id, icon, name) {
   $('#' + beforeId).before(
     '<div id="' + id + '" class="sidebarControlBar">' +
