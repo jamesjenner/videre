@@ -36,11 +36,15 @@ Navigation.POINT_LOITER_TOGGLE = "menuPointLoiterToggle";
 Navigation.POINT_RETURN_TO_BASE = "menuPointReturnToBase";
 Navigation.POINT_TERMINUS_TOGGLE = "menuPointTerminusToggle";
 
+Navigation.VEHICLE_PROPERTIES = "menuVehicleProperties";
+Navigation.VEHICLE_EDIT_PATH = "menuVehicleEditPath";
+Navigation.VEHICLE_SAVE_PATH = "menuVehicleSavePath";
 Navigation.VEHICLE_DELETE_PATH = "menuVehicleDeletePath";
-Navigation.VEHICLE_EDIT_DEFAULTS = "menuVehicleEditDefaults";
-Navigation.VEHICLE_SELECT_VEHICLE = "menuVehicleSelectVehicle";
-Navigation.VEHICLE_DESELECT_VEHICLE = "menuVehicleDeselectVehicle";
 Navigation.VEHICLE_REVERSE_DIRECTION = "menuVehicleReverseDirection";
+
+
+Navigation.HOME_DELETE_PATH = "menuHomeDeletePath";
+Navigation.HOME_REVERSE_DIRECTION = "menuHomeReverseDirection";
 
 Navigation.MAP_ZOOM_TO_ALL_VEHICLES = "menuMapZoomToVehicles";
 Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE = "menuMapZoomSelectedVehicle";
@@ -70,6 +74,7 @@ function Navigation(options) {
     
     this.mapMenuId = options.mapMenuId || 'navigationMapMenu';
     this.vehicleMenuId = options.vehicleMenuId || 'navigationVehicleMenu';
+    this.homeMenuId = options.homeMenuId || 'navigationHomeMenu';
     this.pointMenuId = options.pointMenuId || 'navigationPointMenu';
     this.vehicleMenuItemListener = options.vehicleMenuItemListener || function() {};
     this.pointMenuItemListener = options.pointMenuItemListener || function() {};
@@ -160,6 +165,7 @@ function Navigation(options) {
     
     this.mapMenu = new RadialMenu(this.mapMenuId, {selectionListener: function(e) {self._mapMenuItemSelected(e, self); }});
     this.vehicleMenu = new RadialMenu(this.vehicleMenuId, {selectionListener: function(e) {self._vehicleMenuItemSelected(e, self); }});
+    this.homeMenu = new RadialMenu(this.homeMenuId, {selectionListener: function(e) {self._homeMenuItemSelected(e, self); }});
     this.pointMenu = new RadialMenu(this.pointMenuId, {selectionListener: function(e) {self._pointMenuItemSelected(e, self); }});
 
     this.map.on('click', function(e) {self._onMapClick(e, self); });
@@ -256,6 +262,7 @@ Navigation.prototype.setVehicleLocation = function(vehicle, position) {
 
     latLng = new L.LatLng(position.latitude, position.longitude);
 
+    var self = this;
     // test if the marker exists for the vehicle
     if(this.vehicleMarkers[vehicle.id]) {
         // it does so update the position of the marker
@@ -266,7 +273,7 @@ Navigation.prototype.setVehicleLocation = function(vehicle, position) {
             icon: L.divIcon({className: Navigation.DIRECTION_ICON_CLASS, iconAnchor: [32, 32], iconSize: [64, 64]}),
             draggable: false,
             opacity: self.markerOpacity})
-            .on('click', function(e) {self._onVehicleClick(e, self); });
+            .on('click', function(e) {self._onVehicleMarkerClick(e, self, vehicle); });
         this.vehicleMarkers[vehicle.id].addTo(this.map);
     }
 }
@@ -640,6 +647,32 @@ Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, 
     }
 }
 
+Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
+    // if a menu is open, treat the click on the map as a request to close the menu
+    if(that.hideMenus.bind(that)()) {
+        // menu was hidden, so just return
+        return;
+    }
+    
+    that.clickedVehicle = vehicle;
+
+    // if the vehicle has a path then allow delete
+    if(vehicle.navigationPath) {
+        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_DELETE_PATH);
+        
+        // if more than 1 point and last point is return home then allow revserse
+        if(vehicle.navigationPath.length() > 1 && vehicle.navigationPath.returnsHome()) {
+            that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+        } else {
+            that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+        }
+    }
+    
+    
+    // show the menu
+    that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
+}
+  
 Navigation.prototype._onHomeMarkerClick = function(e, that, vehicle) {
     // if a menu is open, treat the click on the map as a request to close the menu
     if(that.hideMenus.bind(that)()) {
@@ -649,30 +682,15 @@ Navigation.prototype._onHomeMarkerClick = function(e, that, vehicle) {
     
     that.clickedVehicle = vehicle;
 
-    // if the path is selected then disable select
-    if(that.selectedVehicle == that.clickedVehicle) {
-        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
-        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
-    } else {
-        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_SELECT_VEHICLE);
-        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_DESELECT_VEHICLE);
-    }
-    
-    // if the vehicle has a path then allow delete
-    if(vehicle.navigationPath.isEmpty()) {
-        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_DELETE_PATH);
-    } else {
-        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_DELETE_PATH);
-    }
     // if the vehicle has a path and the last point is return to home then allow revserse
     if(vehicle.navigationPath.returnsHome()) {
-        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+        that.homeMenu.enableMenuItem(Navigation.HOME_REVERSE_DIRECTION);
     } else {
-        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_REVERSE_DIRECTION);
+        that.homeMenu.disableMenuItem(Navigation.HOME_REVERSE_DIRECTION);
     }
     
     // show the menu
-    that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
+    that.homeMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
 }
   
 Navigation.prototype._onNavigationPointClick = function(e, that) {
@@ -760,6 +778,7 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
     that.vehicleMenu.hideMenu();
 
     switch(e.originalEvent.currentTarget.id) {
+        
         case(Navigation.VEHICLE_DELETE_PATH):
             if(!that.clickedVehicle.navigationPath.isEmpty()) {
                 // remove the current markers if selected and change to append mode
@@ -785,19 +804,85 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
             }
             break;
         
-        case(Navigation.VEHICLE_EDIT_DEFAULTS):
+        case(Navigation.VEHICLE_PROPERTIES):
             break;
 //    that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
         
-        case(Navigation.VEHICLE_SELECT_VEHICLE):
+        case(Navigation.VEHICLE_EDIT_PATH):
             that.selectVehicle.bind(that)(that.clickedVehicle);
             break;
         
-        case(Navigation.VEHICLE_DESELECT_VEHICLE):
+        case(Navigation.VEHICLE_SAVE_PATH):
             that.deselectVehicle.bind(that)();
             break;
         
         case(Navigation.VEHICLE_REVERSE_DIRECTION):
+            if(!that.clickedVehicle.navigationPath.isEmpty() && that.selectedVehicle.navigationPath.returnsHome()) {
+                // reverse the path
+                that.clickedVehicle.navigationPath.reverse();
+                
+                // remove the current markers
+                that.currentMapPath.removeMarkers();
+                
+                // remove the return home polyline
+                that.currentMapPath.removeReturnHomePolyLine();
+
+                // set the new polyline
+                that.currentMapPath.setPolyLine(L.polyline(that.clickedVehicle.navigationPath.toArray(), that.selectedNavPathStyle));
+
+                // add the return home polyline (if required)
+                if(that.selectedVehicle.navigationPath.returnsHome()) {
+                    var lastPoint = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+                    var homePoint = that.selectedVehicle.navigationPath.getPoint(0);
+                    var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
+                                               [homePoint.position.latitude, homePoint.position.longitude]],
+                                              that.selectedNavPathStyle);
+                    that.currentMapPath.addReturnHomePolyLine(polyline);
+                }
+                
+                // add the current path
+                that._addMarkers(that.navigationMapPaths[that.selectedVehicle.id], that.selectedVehicle, that);
+            }
+            break;
+    }
+
+    // clear the clicked vehicle
+    that.clickedVehicle = null;
+  
+    return false;
+}
+
+Navigation.prototype._homeMenuItemSelected = function(e, that) {
+    // selected an option on the menu, so lets hide the menu
+    that.homeMenu.hideMenu();
+
+    switch(e.originalEvent.currentTarget.id) {
+        case(Navigation.HOME_DELETE_PATH):
+            if(!that.clickedVehicle.navigationPath.isEmpty()) {
+                // remove the current markers if selected and change to append mode
+                if(that.selectedVehicle) {
+                    that.currentMapPath.removeMarkers();
+                    that.mapTouchMode = Navigation.MODE_APPEND;            
+                }
+            
+                // save first point (which is the vehicle)
+                var p = that.clickedVehicle.navigationPath.getPoint(0);
+                
+                // remove the path from the vehicle
+                that.clickedVehicle.navigationPath.clear();
+                
+                // add back the first point
+                that.clickedVehicle.navigationPath.append(p.position.latitude, p.position.longitude, p);
+
+                // clear out the prevLatLng
+                that.prevLatLng = null;
+                
+                // remove the current nav path from the map
+                that.navigationMapPaths[that.clickedVehicle.id].removePaths();
+            }
+            break;
+        
+        case(Navigation.HOME_REVERSE_DIRECTION):
             if(!that.clickedVehicle.navigationPath.isEmpty() && that.selectedVehicle.navigationPath.returnsHome()) {
                 // reverse the path
                 that.clickedVehicle.navigationPath.reverse();
