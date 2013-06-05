@@ -50,6 +50,9 @@ function ActionBar(options) {
   this.abortAction = ((options.abort != null) ? options.abort : false);
   this.abortFunction = options.abortFunction || function() {};
 
+  this.clearAction = ((options.clear != null) ? options.clear : false);
+  this.clearFunction = options.clearFunction || function() {};
+
   this.connectionToggleAction = ((options.connectionToggle != null) ? options.connectionToggle : false);
   this.connectionToggleFunction = options.connectionToggleFunction || function() {};
   this.telemetryToggleAction = ((options.telemetryToggle != null) ? options.telemetryToggle : false);
@@ -76,6 +79,7 @@ function ActionBar(options) {
   this.isEnabled[ActionBar.TAKEOFF] = this.takeoffAction;
   this.isEnabled[ActionBar.LAND] = this.landAction;
   this.isEnabled[ActionBar.ABORT] = this.abortAction;
+  this.isEnabled[ActionBar.CLEAR] = this.clearAction;
   
   this.isEnabled[ActionBar.TAKEOFF_LAND_TOGGLE] = this.takeoffLandToggleAction;
   this.isEnabled[ActionBar.CONNECTION_TOGGLE] = this.connectionToggleAction;
@@ -98,6 +102,7 @@ ActionBar.LAND = 24;
 ActionBar.TAKEOFF_LAND_TOGGLE = 25;
 
 ActionBar.ABORT = 29;
+ActionBar.CLEAR = 30;
 
 ActionBar.SETTINGS = 99;
 
@@ -142,6 +147,13 @@ ActionBar.prototype.initialise = function() {
       '    <div id="abortActionControl' + this.id + '" class="actionBarAction noflex centered">' +
       '      <img src="assets/icons/drawable-hdpi-v11/ic_action_abort.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
       '      <span class="actionBarText">Abort</span>' +
+      '    </div>'
+      : '') +
+      
+      (this.clearAction ? 
+      '    <div id="clearActionControl' + this.id + '" class="actionBarAction noflex centered">' +
+      '      <img src="assets/icons/drawable-hdpi-v11/ic_action_cancel.png" class="actionBarImage" height="34px" width="34px" alt="icon">' +
+      '      <span class="actionBarText">Clear</span>' +
       '    </div>'
       : '') +
       
@@ -238,6 +250,14 @@ ActionBar.prototype.initialise = function() {
       $('#abortActionControl' + this.id).on('click', function() {
         if(self.isEnabled[ActionBar.ABORT]) {
           self.abortFunction();
+        }
+      });
+    }
+
+    if(this.clearAction) {
+      $('#clearActionControl' + this.id).on('click', function() {
+        if(self.isEnabled[ActionBar.CLEAR]) {
+          self.clearFunction();
         }
       });
     }
