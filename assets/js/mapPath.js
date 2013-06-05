@@ -93,6 +93,20 @@ MapPath.prototype.removePaths = function() {
 }
 
 /*
+ * clear the paths
+ */
+MapPath.prototype.clearPaths = function() {
+    if(this.layerGroup) {
+        if(this.polyLine) {
+            this.polyLine = L.Polyline([]);
+        }
+        if(this.returnHomePolyLine) {
+            this.returnHomePolyLine = L.Polyline([]);
+        }
+    }
+}
+
+/*
  * remove the group from the map
  */
 MapPath.prototype.add = function(map) {
