@@ -96,11 +96,15 @@ function Navigation(options) {
     this.navPathOpacity = options.navPathOpacity || 0.75;
     this.navPathSelectedColor = options.navPathSelectedColor || '#4a95d1';
     this.navPathSelectedOpacity = options.navPathSelectedOpacity || 0.75;
+    this.actualPathSelectedColor = options.actualPathSelectedColor || '#ff0066';
+    this.actualPathSelectedOpacity = options.actualPathSelectedOpacity || 0.75;
 
     this.deselectedNavPathStyle = {color: this.navPathColor, opacity: this.navPathOpacity, clickable: false};
     this.selectedNavPathStyle = {color: this.navPathSelectedColor, opacity: this.navPathSelectedOpacity, clickable: false};
+    this.actualPathStyle = {color: this.actualPathSelectedColor, opacity: this.navPathSelectedOpacity, clickable: false};
 
     this.navigationMapPaths = new Object();
+    this.actualMapPaths = new Object();
     this.flightMapPaths = new Object();
     this.vehicleMarkers = new Object();
     
@@ -199,6 +203,7 @@ Navigation.prototype.hideMenus = function() {
     return menuHidden;
 }
 
+// TODO: addVehicle does not appear to be used
 Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replaceFirstPos) {
     // add the start point
     if(vehicle.navigationPath.isEmpty()) {
@@ -221,7 +226,12 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replace
     
     // setup the nav path
     this.navigationMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false, this.selectedNavPathStyle);
+
+    // setup the actual path    
+    this.actualMapPaths[vehicle.id] = this._setupActualPath(vehicle);
 }
+
+
 
 Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
     var point = navigationPath.getPoint(0);
@@ -239,7 +249,11 @@ Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
     }
     
     if(existingVehicle === null) {
+        // we don't have it recorded so add it
         this.remoteVehicles.push(vehicle);
+        
+        // setup the actual path
+        this.actualMapPaths[vehicle.id] = this._setupActualPath(vehicle);
     } else {
         if(this.selectedVehicle && this.selectedVehicle.id == existingVehicle.id) {
             this.deselectVehicle();
@@ -254,7 +268,6 @@ Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
     
     this.navigationMapPaths[vehicle.id] = this._setupMapPath(navigationPath, vehicle, point.position.latitude, point.position.longitude, false, this.deselectedNavPathStyle);
 }
-
 
 // TODO: look at adding a layer for vehicle positions, maybe it's not required...
 
@@ -276,6 +289,14 @@ Navigation.prototype.setVehicleLocation = function(vehicle, position) {
             .on('click', function(e) {self._onVehicleMarkerClick(e, self, vehicle); });
         this.vehicleMarkers[vehicle.id].addTo(this.map);
     }
+    
+    // add the new location to the actual map path
+    this.actualMapPaths[vehicle.id].polyLine.addLatLng(latLng);
+
+/*    
+    this.actualMapPaths[vehicle.id].polyLine.spliceLatLngs(position, 0, toPoint);
+    that.selectedVehicle.navigationPath.length() - 1
+    */
 }
 
 Navigation.prototype.selectVehicle = function(vehicle) {
@@ -351,6 +372,32 @@ Navigation.prototype.selectMapStyle = function(styleIndex) {
         this.map.removeLayer(this.currentTileSet);
         this.currentTileSet = this.mapLayers[styleIndex].tileSet;
     }
+}
+
+Navigation.prototype.clearActualPaths = function() {
+    for(var i = 0, l = this.remoteVehicles.length; i < l; i++) {
+        
+        // remove the nav path for the vehicle
+        this.actualMapPaths[this.remoteVehicles[i].id].remove();
+        
+        // delete the map paths for the vehicle
+        delete this.actualMapPaths[this.remoteVehicles[i].id];
+
+        // setup the path again        
+        this.actualMapPaths[this.remoteVehicles[i].id] = this._setupActualPath(this.remoteVehicles[i])
+    }
+}
+
+Navigation.prototype._setupActualPath = function(vehicle) {
+    // setup the actual path    
+    var actualPath = new Path();
+    
+    if(vehicle.position !== null && vehicle.position.latitude !== 0 && vehicle.position.longitude !== 0) {
+        actualPath.append(vehicle.position.latitude, vehicle.position.longitude);
+    }
+    
+    var polyLine = L.polyline(actualPath.toArray(), this.actualPathStyle);    
+    return new MapPath({map: this.map, polyLine: polyLine, weight: 2});
 }
 
 Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude, vehicleSelected, pathStyle) {
