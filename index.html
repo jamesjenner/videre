@@ -1994,7 +1994,9 @@ function addNavigationContentUI(id) {
     title: "Navigation",
     settings: true,
     save: true,
+    clear: true,
     saveFunction: updateNavPathsForVehicles,
+    clearFunction: removeActualPathsForVehicles,
     preShowSidebarFn: function() {
       // hide pie menus if any visible
       navigationManager.hideMenus();
@@ -2107,6 +2109,10 @@ function updateNavPathsForVehicles() {
       }
     }
   }
+}
+
+function removeActualPathsForVehicles() {
+  navigationManager.clearActualPaths();
 }
 
 function getServerForVehicleId(vehicleId) {
@@ -2466,7 +2472,7 @@ function showSidebar(sidebarId, location, mainPanelId, overlayPanelId, overlayPa
     mainPanel.bind("webkitTransitionEnd oTransitionEnd transitionend msTransitionEnd", function(){
       // at the end of the transformation, change the z-index of the side panel to a high value so
       // there are no problems with slide scrolling stuff
-      $('#' + sidebarId).css('z-index', 200);
+      $('#' + sidebarId).css('z-index', 100);
 
       // remove the transition
       mainPanel.unbind("webkitTransitionEnd oTransitionEnd transitionend msTransitionEnd");
