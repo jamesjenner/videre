@@ -1520,6 +1520,7 @@ function addVehicleContentUI(id, vehicle, server) {
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.THERMOMETER, thermometerGauge, {x: 0, y: 150, width: 150, visible: false}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.HEADING, headingGauge, {x: 150, y: 150, width: 150, visible: true}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.VSI, vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.STATUS, statusGauge, {x: 300, y: 150, width: 150, visible: false}));
 
   // setup the remote control settings
   var remoteControlSettings = new ContentSettings();
@@ -2586,6 +2587,71 @@ var thermometerGauge = new Gauge({name: 'thermometer', title: 'Thermometer', des
 				 foregroundImg: 'assets/gauges/gauge_needle_cap_s.png'
 				 });
 
+var statusGauge = new Gauge({name: 'status', title: 'Status', description: 'Vehicle State',
+				 icon: 'assets/icons/drawable-xhdpi-v11/ic_stat_gauge.png',
+			         backgroundImg: 'assets/gauges/base_blank.png',
+                                 stateBackgroundImg: 'assets/gauges/state_area.png',
+                                 stateIndicatorActiveImg: 'assets/gauges/state_indicator_active.png',
+                                 stateIndicatorInactiveImg: 'assets/gauges/state_indicator_inactive.png',
+                                 stateIndicatorDisabledImg: 'assets/gauges/state_indicator_disabled.png',
+                                 states: {
+                                   armed: {
+                                     id: 'armed',
+                                     label: 'Armed'
+                                   },
+                                   stabilized: {
+                                     id: 'stabilized',
+                                     label: 'Stabilized'
+                                   },
+                                   autonomous: {
+                                     id: 'autonomous',
+                                     label: 'Autonomous'
+                                   },
+                                   gpsLock: {
+                                     id: 'GPS',
+                                     label: 'GPS'
+                                   },
+                                   remoteControl: {
+                                     id: 'remoteControl',
+                                     label: 'Remote Control'
+                                   },
+                                   guided: {
+                                     id: 'guided',
+                                     label: 'Guided'
+                                   },
+                                   hardwareInLoop: {
+                                     id: 'hardwareInLoop',
+                                     label: 'HIL'
+                                   }
+                                 }
+				 });
+
+/*
+    drawStatusFlag(1,  1, tr("RAT"), rateControlEnabled, rateControlKnown, painter);
+    drawStatusFlag(17, 1, tr("ATT"), attControlEnabled, attControlKnown, painter);
+    drawStatusFlag(33, 1, tr("PXY"), xyControlEnabled,  xyControlKnown,  painter);
+    drawStatusFlag(49, 1, tr("PZ"),  zControlEnabled,   zControlKnown,   painter);
+    drawStatusFlag(65, 1, tr("YAW"), yawControlEnabled, yawControlKnown, painter);
+
+    // Draw position lock indicators
+    drawPositionLock(1,  6, tr("POS"), positionFix, positionFixKnown, painter);
+    drawPositionLock(17, 6, tr("GPS"), gpsFix,      gpsFixKnown,      painter);
+    drawStatusFlag(33,   6, tr("FLO"), flowON, flowKnown, flowOK, painter);
+    drawPositionLock(49, 6, tr("VIS"), visionFix,   visionFixKnown,   painter);
+    drawPositionLock(65, 6, tr("IRU"), iruFix,      iruFixKnown,      painter);
+
+    drawStatusFlag(1,   11, tr("GYR"), gyroON, gyroKnown, gyroOK, painter);
+    drawStatusFlag(17,  11, tr("ACC"), accelON, accelKnown, accelOK, painter);
+    drawStatusFlag(33,  11, tr("MAG"), magON, magKnown, magOK, painter);
+    drawStatusFlag(49,  11, tr("BAR"), pressureON, pressureKnown, pressureOK, painter);
+    drawStatusFlag(65,  11, tr("PIT"), diffPressureON, diffPressureKnown, diffPressureOK, painter);
+
+    drawStatusFlag(1, 16, tr("ACT"), actuatorsON, actuatorsKnown, actuatorsOK, painter);
+    drawStatusFlag(17, 16, tr("LAS"), laserON, laserKnown, laserOK, painter);
+    drawStatusFlag(33, 16, tr("VCN"), viconON, viconKnown, viconOK, painter);
+*/
+
+
 /*
  * setGaugeAngle()
  *
@@ -2727,10 +2793,39 @@ function showGauge(gaugeSetting, parentId) {
 	gaugeHTML += 
 	  '<img id="instrument' + gaugeSetting.gaugeId + '_foreground" class="gaugeOverlay gaugeForeground" src="' + gaugeSetting.gauge.foregroundImg + '" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.foregroundHeight + '" />';
       }
+      
+      var marginTop = 12;
+      
+      // add states if it has any
+      for(var i = 0, l = gaugeSetting.gauge.states.length; i < l; i++) {
+        // add the background
+	gaugeHTML += '<div class="gaugeState" style=" top: ' + marginTop + 'px">';
+        
+	gaugeHTML += 
+	  '<img id="instrument' + gaugeSetting.gaugeId + '_background_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateBackground" src="' + gaugeSetting.gauge.stateBackgroundImg +
+            '" width="' + gaugeSetting.gauge.stateBackgroundImg.width +
+            '" height="' + gaugeSetting.gauge.stateBackgroundImg.height + '" />';
+
+        // add the text
+	gaugeHTML += 
+	  '<div id="instrument' + gaugeSetting.gaugeId + '_text_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateText" >' +
+          gaugeSetting.gauge.states[i].label + '</div>';
+
+        // add the indicator (initialy inactive)
+	gaugeHTML += 
+	  '<img id="instrument' + gaugeSetting.gaugeId + '_indicator_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateIndicator" src="' + gaugeSetting.gauge.stateIndicatorDisabledImg +
+            '" width="' + gaugeSetting.gauge.stateIndicatorDisabledImg.width +
+            '" height="' + gaugeSetting.gauge.stateIndicatorDisabledImg.height + '" />';
+        
+	gaugeHTML += '</div>';
+        
+        marginTop += 38;
+      }
+      
     }
       
     gaugeHTML += 
-      '<div id="gauge_' + gaugeSetting.gaugeId + 'Drag" class="gaugeDrag" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />' +
+        '<div id="gauge_' + gaugeSetting.gaugeId + 'Drag" class="gaugeDrag" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />' +
       '</div>';
 
     if(typeof parentId === "undefined") {

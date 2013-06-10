@@ -1022,6 +1022,56 @@ div.gaugeIconTitle {
         z-index: 250;
 }
 
+.gaugeState {
+	z-index: 250;
+	position:absolute;
+	left: 12px;
+	right:12px;
+	height: 34px;
+}
+
+
+.gaugeStateBackground {
+	z-index: 250;
+	position:absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.gaugeStateText {
+	z-index: 251;
+	position:absolute;
+	left: 10px;
+	right: 34px;
+	height: 100%;
+        text-align: left;
+	font-size: large;
+	color: white;
+        text-decoration: bold;
+
+	display:-ms-flexbox;
+	-ms-flex-align:center;
+
+	display:-moz-box;
+	-moz-box-align:center;
+	
+	display:-webkit-box;
+	-webkit-box-align:center;
+	
+	display:box;
+	box-align: center;
+}
+
+.gaugeStateIndicator {
+	z-index: 251;
+	position:absolute;
+	top: 2px;
+	right: 2px;
+	height: 30px;
+}
+
 .gaugeOverlay {
         position: absolute;
 	top: 0;

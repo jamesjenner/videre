@@ -18,6 +18,7 @@
 
 
 var Gauge = function (argmap) {
+    
     if('name' in argmap) {
         this.name = argmap.name;
     }
@@ -133,6 +134,62 @@ var Gauge = function (argmap) {
     if('mask' in argmap) {
         this.mask = argmap.mask;
     }
+    
+    /*
+     *
+     * TODO the following is the preference however code in index.html is testing typeof <...> != "undefined", so needs some work.
+    this.name = ((options.name != null) ? options.name : '');    
+    this.id = ((options.id != null) ? options.id : this.name + 'Panel');
+    
+    this.canvasId = this.id + '_canvas';
+
+    this.title = ((options.title != null) ? options.title : '');
+    this.description = ((options.description != null) ? options.description : '');
+    
+    this.width = ((options.width != null) ? options.width : '100%');
+    this.height = ((options.height != null) ? options.height : '100%');
+    this.x = ((options.x != null) ? options.x : '10px');
+    this.y = ((options.y != null) ? options.y : '10px');
+    this.backgroundImg = ((options.backgroundImg != null) ? options.backgroundImg : undefined);
+    this.foregroundImg = ((options.foregroundImg != null) ? options.foregroundImg : undefined);
+    this.foregroundHeight = ((options.foregroundHeight != null) ? options.foregroundHeight : this.height);
+    this.foregroundClips = ((options.foregroundClips != null) ? options.foregroundClips : false);
+    
+    this.dialImg = ((options.dialImg != null) ? options.dialImg : undefined);
+    this.needleImg1                   = ((options.needleImg1                   != null) ? options.needleImg1                   : undefined);
+    this.needleImg1XOffset            = ((options.needleImg1XOffset            != null) ? options.needleImg1XOffset            : '0px');
+    this.needleImg1Rotates            = ((options.needleImg1Rotates            != null) ? options.needleImg1Rotates            : true);
+    this.needleImg1VerticalScroll     = ((options.needleImg1VerticalScroll     != null) ? options.needleImg1VerticalScroll     : false);
+    this.needleImg1VerticalScrollType = ((options.needleImg1VerticalScrollType != null) ? options.needleImg1VerticalScrollType : 'fixed');
+    this.needleImg1Height             = ((options.needleImg1Height             != null) ? options.needleImg1Height             : this.height);
+    
+    this.needleImg2                   = ((options.needleImg2                   != null) ? options.needleImg2                   : undefined);
+    this.needleImg2Rotates            = ((options.needleImg2Rotates            != null) ? options.needleImg2Rotates            : true);
+    
+    this.needleImg3                   = ((options.needleImg3                   != null) ? options.needleImg3                   : undefined);
+    this.needleImg3Rotates            = ((options.needleImg3Rotates            != null) ? options.needleImg3Rotates            : true);
+    
+    this.overlayImg = ((options.overlayImg != null) ? options.overlayImg : '');
+    this.icon = ((options.icon != null) ? options.icon : '');
+    
+    this.enabled = false;
+    
+    this.contentIsCanvas = ((options.contentIsCanvas != null) ? options.contentIsCanvas : false);
+    
+    this.mask = ((options.mask != null) ? options.mask : '');
+*/
+    
+    this.stateBackgroundImg = ((argmap.stateBackgroundImg != null) ? argmap.stateBackgroundImg : '');
+    this.stateIndicatorActiveImg = ((argmap.stateIndicatorActiveImg != null) ? argmap.stateIndicatorActiveImg : '');
+    this.stateIndicatorInactiveImg = ((argmap.stateIndicatorInactiveImg != null) ? argmap.stateIndicatorInactiveImg : '');
+    this.stateIndicatorDisabledImg = ((argmap.stateIndicatorDisabledImg != null) ? argmap.stateIndicatorDisabledImg : '');
+    
+    this.states = new Array();
+    if(argmap.states != null) {
+        for(var i in argmap.states) {
+            this.states.push(new GaugeState(argmap.states[i]));
+        }
+    }
 }
 
 Gauge.SPEED = 'SpeadGauge';
@@ -141,6 +198,7 @@ Gauge.ALTIMETER = 'AltimeterGauge';
 Gauge.THERMOMETER = 'ThermometerGauge';
 Gauge.HEADING = 'HeadingGauge';
 Gauge.VSI  = 'VSIGauge';
+Gauge.STATUS = 'StatusGauge';
 
 Gauge.NEEDLE_1 = 'needle1';
 Gauge.NEEDLE_2 = 'needle2';
@@ -169,3 +227,11 @@ Gauge.prototype = {
         
     },
 };
+
+
+var GaugeState = function (options) {
+    this.id = ((options.id != null) ? options.id : '');
+    this.label = ((options.label != null) ? options.label: '');
+}
+
+
