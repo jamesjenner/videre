@@ -2559,6 +2559,7 @@ var altimeterGauge = new Gauge({name: 'altimeter', title: 'Altimeter', descripti
 			         dialImg: 'assets/gauges/altimeter_background_s.png',
 			         needleImg1: 'assets/gauges/altimeter_large_needle_s.png',
 			         needleImg2: 'assets/gauges/altimeter_small_needle_s.png',
+			         needleImg3: 'assets/gauges/altimeter_mini_needle_s.png',
 			         foregroundImg: 'assets/gauges/gauge_needle_cap_s.png'
 			         });
 
@@ -2972,17 +2973,16 @@ function serverError(e) {
 }
 
 function updateVehicleTelemetry(server, vehicle, telemetry) {
-
-  // update the vehicle
-  vehicle.telemetry = telemetry;
-
   // if the vehicle is the currently selected vehicle, then update the widgets
   if(contentManager.currentVehicle.id === vehicle.id) {
-    setTelemetry(telemetry);
+    setTelemetry(vehicle, telemetry);
   }
+  
+  // update the vehicle
+  vehicle.telemetry = telemetry;
 }
 
-function setTelemetry(telemetry) {
+function setTelemetry(vehicle, telemetry) {
   if(!telemetry) {
     return;
   }
@@ -2991,43 +2991,60 @@ function setTelemetry(telemetry) {
   
   var time = 0;
   
-  // heading is atttiude.yaw?
-  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.HEADING, Gauge.NEEDLE_1, telemetry.attitude.yaw, time + 'ms');
+  if(vehicle.telemetry.heading !== telemetry.heading) {
+    setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.HEADING, Gauge.NEEDLE_1, telemetry.heading, time + 'ms');
+  }
   
-  // vertical speed indicator m/s
-  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.VSI, Gauge.NEEDLE_1, 98, time + 'ms');
+  if(vehicle.telemetry.vsi !== telemetry.vsi) {
+    // vertical speed indicator m/s
+    // this goes from - to + while 0 is equal to 0, but steps are in increments of 16 for the gui
+    setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.VSI, Gauge.NEEDLE_1, (-16 * telemetry.vsi), time + 'ms');
+  }
   
-  // altimeter in meters, needle 1 is from 0m to 10m - each bar is 20cm, needle 2 is from 0m to 0 to 1000m, each bar is 20m
-  // 0 degrees is 0, 90 degress is 5 and 360 degreess is 10
-  //
-  // needle 1, 10m = 360, 1m = 360 / 10
-  // needle 2, 1000m = 360, 100m = 360 / 10, 10m = 360 / 100, 1m = 360 / 1000
-  //
-  // thus needle 1 is altitude mod 10 * 36 and needle 2 is altitude / 1000
   
-  var altitudeNeedle1 = (telemetry.altitude % 10) * 36;
-  var altitudeNeedle2 = (telemetry.altitude / 1000) * 36;
-  
-  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ALTIMETER, Gauge.NEEDLE_1, altitudeNeedle1, time + 'ms');
-  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ALTIMETER, Gauge.NEEDLE_2, altitudeNeedle2, time + 'ms');
-  
-  // speed is in meters, needle 1 is from 0m/s to 200m/s
-  // 0 degrees is 0, 64.16 degress is 100
-  //
-  // thus needle 1 is speed * 1.5586 (100/64.16)
-  var speed = telemetry.speed * 1.5586;
-  
-  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.SPEED, Gauge.NEEDLE_1, speed, time + 'ms');
+  // if(vehicle.telemetry.altitude !== telemetry.altitude) {
+  if(true) {
 
-  var roll = 45;
-  var pitch = 25;
+    // altimeter in meters, needle 1 is from 0m to 10m - each bar is 20cm, needle 2 is from 0m to 0 to 1000m, each bar is 20m
+    // 0 degrees is 0, 90 degress is 5 and 360 degreess is 10
+    //
+    // needle 1, 10m = 360, 1m = 360 / 10
+    // needle 2, 1000m = 360, 100m = 360 / 10, 10m = 360 / 100, 1m = 360 / 1000
+    //
+    // thus needle 1 is altitude mod 10 * 36 and needle 2 is altitude / 1000
+    
+    var alt = telemetry.altitude;
+    
+    var altitudeNeedle1 = (alt % 10) * 36;
+    var altitudeNeedle2 = (alt / 10) * 36;
+    var altitudeNeedle3 = (alt / 100) * 36;
+    
+    time = 0;
+    
+    setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ALTIMETER, Gauge.NEEDLE_1, altitudeNeedle1, time + 'ms');
+    setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ALTIMETER, Gauge.NEEDLE_2, altitudeNeedle2, time + 'ms');
+    setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ALTIMETER, Gauge.NEEDLE_3, altitudeNeedle3, time + 'ms');
+    time = 0;
+  }
   
-  // pitch is based on pixels, 18px per 10 degrees, so pitch is multiplied by 1.8 to determine the px, should we round?
-  var pitch = telemetry.attitude.pitch * 1.8;
+  if(vehicle.telemetry.speed !== telemetry.speed) {
+    // speed is in meters, needle 1 is from 0m/s to 200m/s
+    // 0 degrees is 0, 64.16 degress is 100
+    //
+    // thus needle 1 is speed * 1.5586 (100/64.16)
+    var speed = telemetry.speed * 1.5586;
+    setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.SPEED, Gauge.NEEDLE_1, speed, time + 'ms');
+  }
+
+  if(vehicle.telemetry.attitude.pitch !== telemetry.attitude.pitch) {
+    // pitch is based on pixels, 18px per 10 degrees, so pitch is multiplied by 1.8 to determine the px, should we round?
+    var pitch = telemetry.attitude.pitch * 1.8;
+    setGauge(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_1, telemetry.attitude.roll, pitch + 'px', time + 'ms');
+  }
   
-  setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_2, telemetry.attitude.roll, time + 'ms');
-  setGauge(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_1, telemetry.attitude.roll, pitch + 'px', time + 'ms');
-  // gaugeId, gauge, indicatorName, degree, value, time
+  if(vehicle.telemetry.attitude.roll !== telemetry.attitude.roll) {
+    setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_2, telemetry.attitude.roll, time + 'ms');
+  }
 
 }
 
