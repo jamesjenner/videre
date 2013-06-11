@@ -592,6 +592,7 @@ function createServer() {
     rcvdDeleteVehicle: removeVehicleFromSidebar,
     rcvdUpdateVehicle: updateVehicleOnSidebar,
     rcvdTelemetry: receivedTelemetry,
+    rcvdState: receivedState,
     rcvdVehicleDeviceTypes: receivedVehicleDeviceTypes,
     rcvdUpdateNavPath: receivedUpdateNavPath,
     // rcvdNavPathUpdated:
@@ -1520,7 +1521,7 @@ function addVehicleContentUI(id, vehicle, server) {
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.THERMOMETER, thermometerGauge, {x: 0, y: 150, width: 150, visible: false}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.HEADING, headingGauge, {x: 150, y: 150, width: 150, visible: true}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.VSI, vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
-  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.STATUS, statusGauge, {x: 300, y: 150, width: 150, visible: false}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.STATUS, statusGauge, {x: 450, y: 0, width: 300, visible: true}));
 
   // setup the remote control settings
   var remoteControlSettings = new ContentSettings();
@@ -2594,37 +2595,48 @@ var statusGauge = new Gauge({name: 'status', title: 'Status', description: 'Vehi
                                  stateIndicatorActiveImg: 'assets/gauges/state_indicator_active.png',
                                  stateIndicatorInactiveImg: 'assets/gauges/state_indicator_inactive.png',
                                  stateIndicatorDisabledImg: 'assets/gauges/state_indicator_disabled.png',
+                                 stateToggleImg: 'assets/gauges/button.png',
+                                 size: Gauge.SIZE_LARGE,
                                  states: {
                                    armed: {
-                                     id: 'armed',
-                                     label: 'Armed'
+                                     id: Gauge.STATE_ARMED,
+                                     label: 'Armed',
+                                     toggle: true
                                    },
                                    stabilized: {
-                                     id: 'stabilized',
-                                     label: 'Stabilized'
+                                     id: Gauge.STATE_STABILISED,
+                                     label: 'Stabilized',
+                                     toggle: true
                                    },
                                    autonomous: {
-                                     id: 'autonomous',
-                                     label: 'Autonomous'
-                                   },
-                                   gpsLock: {
-                                     id: 'GPS',
-                                     label: 'GPS'
+                                     id: Gauge.STATE_AUTONOMOUS,
+                                     label: 'Autonomous',
+                                     toggle: true
                                    },
                                    remoteControl: {
-                                     id: 'remoteControl',
-                                     label: 'Remote Control'
+                                     id: Gauge.STATE_REMOTECONTROL,
+                                     label: 'Remote Controled',
+                                     toggle: true
                                    },
                                    guided: {
-                                     id: 'guided',
-                                     label: 'Guided'
+                                     Gauge.STATE_GUIDED,
+                                     label: 'Guided',
+                                     toggle: true
                                    },
-                                   hardwareInLoop: {
-                                     id: 'hardwareInLoop',
-                                     label: 'HIL'
+/*                                   gps: {
+                                     id: Gauge.STATE_GPS,
+                                     label: 'GPS',
+                                     toggle: false
+                                   },
+*/                                   
+                                   messages: {
+                                     id: Gauge.STATE_MESSAGES,
+                                     label: 'Messages',
+                                     toggle: false,
+                                     textBox: true
                                    }
                                  }
-				 });
+			       });
 
 /*
     drawStatusFlag(1,  1, tr("RAT"), rateControlEnabled, rateControlKnown, painter);
@@ -2740,8 +2752,13 @@ function showGauge(gaugeSetting, parentId) {
     
     var gaugeHTML = '';
 
-    gaugeHTML +=
-      '<div ' + 'id="' + gaugeSetting.gaugeId + '" class="viewPanel">';
+    if(gaugeSetting.gauge.size === Gauge.SIZE_SMALL) {
+      gaugeHTML +=
+        '<div ' + 'id="' + gaugeSetting.gaugeId + '" class="viewPanel">';
+    } else if(gaugeSetting.gauge.size === Gauge.SIZE_LARGE) {
+      gaugeHTML +=
+        '<div ' + 'id="' + gaugeSetting.gaugeId + '" class="viewPanelLarge">';
+    }
     
     if(gaugeSetting.gauge.contentIsCanvas) {
       gaugeHTML +=
@@ -2798,24 +2815,42 @@ function showGauge(gaugeSetting, parentId) {
       
       // add states if it has any
       for(var i = 0, l = gaugeSetting.gauge.states.length; i < l; i++) {
-        // add the background
-	gaugeHTML += '<div class="gaugeState" style=" top: ' + marginTop + 'px">';
-        
-	gaugeHTML += 
-	  '<img id="instrument' + gaugeSetting.gaugeId + '_background_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateBackground" src="' + gaugeSetting.gauge.stateBackgroundImg +
-            '" width="' + gaugeSetting.gauge.stateBackgroundImg.width +
-            '" height="' + gaugeSetting.gauge.stateBackgroundImg.height + '" />';
 
-        // add the text
-	gaugeHTML += 
-	  '<div id="instrument' + gaugeSetting.gaugeId + '_text_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateText" >' +
-          gaugeSetting.gauge.states[i].label + '</div>';
-
-        // add the indicator (initialy inactive)
-	gaugeHTML += 
-	  '<img id="instrument' + gaugeSetting.gaugeId + '_indicator_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateIndicator" src="' + gaugeSetting.gauge.stateIndicatorDisabledImg +
-            '" width="' + gaugeSetting.gauge.stateIndicatorDisabledImg.width +
-            '" height="' + gaugeSetting.gauge.stateIndicatorDisabledImg.height + '" />';
+        if(gaugeSetting.gauge.states[i].textBox) {
+          gaugeHTML += '<div class="gaugeStateLarge" style=" top: ' + marginTop + 'px">';
+          gaugeHTML += 
+            '<img id="instrument' + gaugeSetting.gaugeId + '_textBox_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateTextBox" src="' + gaugeSetting.gauge.stateBackgroundImg +
+              '" width="' + gaugeSetting.gauge.stateBackgroundImg.width +
+              '" height="' + gaugeSetting.gauge.stateBackgroundImg.height + '" />' +
+              '<div class="guageStateTextMessage">Test 123</div>';
+        } else {
+          gaugeHTML += '<div class="gaugeState" style=" top: ' + marginTop + 'px">';
+          /*
+          // add the background
+          gaugeHTML += 
+            '<img id="instrument' + gaugeSetting.gaugeId + '_background_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateBackground" src="' + gaugeSetting.gauge.stateBackgroundImg +
+              '" width="' + gaugeSetting.gauge.stateBackgroundImg.width +
+              '" height="' + gaugeSetting.gauge.stateBackgroundImg.height + '" />';
+          */
+  
+          // add the text
+          gaugeHTML += 
+            '<div id="instrument' + gaugeSetting.gaugeId + '_text_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateText" >' +
+            gaugeSetting.gauge.states[i].label + '</div>';
+  
+          // add the indicator (initialy inactive)
+          gaugeHTML += 
+            '<img id="instrument' + gaugeSetting.gaugeId + '_indicator_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateIndicator" src="' + gaugeSetting.gauge.stateIndicatorDisabledImg +
+              '" width="' + gaugeSetting.gauge.stateIndicatorDisabledImg.width +
+              '" height="' + gaugeSetting.gauge.stateIndicatorDisabledImg.height + '" />';
+          
+          if(gaugeSetting.gauge.states[i].toggle) {
+            gaugeHTML += 
+              '<img id="instrument' + gaugeSetting.gaugeId + '_toggle_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateToggle" src="' + gaugeSetting.gauge.stateToggleImg +
+                '" width="' + gaugeSetting.gauge.stateToggleImg.width +
+                '" height="' + gaugeSetting.gauge.stateToggleImg.height + '" />';
+          }
+        }
         
 	gaugeHTML += '</div>';
         
@@ -2985,14 +3020,26 @@ function receivedVehicleDeviceTypes(server, vehicleDeviceTypes) {
 function receivedTelemetry(server, e) {
   // console.log("received telemetry from server " + server.name + " for vehicle " + e);
 
+  // TODO: improve this so we don't have to loop through the array, should be a named list
   var vehicles = contentManager.getVehiclesForServer(server.name);
-  
-  // remoteVehicles["Asterix"][0].id === e.id
   
   for(var i = 0, l = vehicles.length; i < l; i++) {
     if(vehicles[i].id === e.id) {
       // update this one
       updateVehicleTelemetry(server, vehicles[i], e.telemetry);
+      break;
+    }
+  }
+}
+
+function receivedState(server, e) {
+  var vehicles = contentManager.getVehiclesForServer(server.name);
+  
+  // TODO: improve this so we don't have to loop through the array, should be a named list
+  for(var i = 0, l = vehicles.length; i < l; i++) {
+    if(vehicles[i].id === e.id) {
+      // update this one
+      updateVehicleState(server, vehicles[i], e.state);
       break;
     }
   }
@@ -3141,6 +3188,54 @@ function setTelemetry(vehicle, telemetry) {
     setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_2, telemetry.attitude.roll, time + 'ms');
   }
 
+}
+
+function updateVehicleState(server, vehicle, state) {
+  // if the vehicle is the currently selected vehicle, then update the widgets
+  if(contentManager.currentVehicle.id === vehicle.id) {
+    setState(vehicle, state);
+  }
+  
+  // update the vehicle
+  vehicle.state = state;
+}
+
+function setState(vehicle, state) {
+  if(!state) {
+    return;
+  }
+  
+  if(vehicle.state.armed !== state.armed) {
+    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_ARMED, state.armed);
+  }
+  
+  if(vehicle.state.autonomous !== state.autonomous) {
+    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_AUTONOMOUS, state.autonomous);
+  }
+  
+  if(vehicle.state.stabilised !== state.stabilised) {
+    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_STABILISED, state.stabilised);
+  }
+  /*
+  if(vehicle.state.hardwareInLoop !== state.hardwareInLoop) {
+    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_HARDWAREINLOOP, state.hardwareInLoop);
+  }
+  */
+  if(vehicle.state.remoteControl !== state.remoteControl) {
+    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_REMOTECONTROL, state.remoteControl);
+  }
+  
+  if(vehicle.state.guided !== state.guided) {
+    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_GUIDED, state.guided);
+  }
+}
+
+function setStateIndicator(gaugeId, state) {
+  // lets play with the speed
+  var currentAngle = 0; 
+  var direction = 1;  // default positive
+
+  var obj = $('#instrument' + gaugeId + '_'  + indicatorName);
 }
 
 
