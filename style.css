@@ -993,16 +993,36 @@ a.toolbarButton {
 	height: 150px;
 	margin: 5px;
         z-index: 299;
-	background-color:#FCFCFC;
+/*	background-color:#FCFCFC; */
 	font-weight: normal;
 	font-size: 10px;
-	color: #000000;
+/*	color: #000000; */
 /*	border:1px solid #CACACA; */
 /*        box-shadow: 0px 5px 10px #CACACA; */
         box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.36);
+	
 	-moz-border-radius: 10px;
 	-webkit-border-radius: 10px;
 	border-radius:10px;
+	
+	text-align: center;
+	display: none;
+	overflow: hidden;
+}
+
+.viewPanelLarge {
+	width: 300px;
+	height: 300px;
+	margin: 5px;
+        z-index: 299;
+	font-weight: normal;
+	font-size: 10px;
+        box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.36);
+	
+	-moz-border-radius: 13px;
+	-webkit-border-radius: 13px;
+	border-radius:13px;
+	
 	text-align: center;
 	display: none;
 	overflow: hidden;
@@ -1022,6 +1042,14 @@ div.gaugeIconTitle {
         z-index: 250;
 }
 
+.gaugeStateLarge {
+	z-index: 250;
+	position:absolute;
+	left: 12px;
+	right:12px;
+	height: 34px;
+}
+
 .gaugeState {
 	z-index: 250;
 	position:absolute;
@@ -1030,6 +1058,17 @@ div.gaugeIconTitle {
 	height: 34px;
 }
 
+.guageStateTextMessage {
+	z-index: 253;
+        text-align: left;
+	font-size: small;
+	color: lightgrey;
+	width: 100%;
+	height: 100%;
+	position:absolute;
+	top: 8px;
+	left: 8px;
+}
 
 .gaugeStateBackground {
 	z-index: 250;
@@ -1040,8 +1079,16 @@ div.gaugeIconTitle {
 	height: 100%;
 }
 
+.gaugeStateTextBox {
+	z-index: 250;
+	position:absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 200%;
+}
+
 .gaugeStateText {
-	z-index: 251;
 	position:absolute;
 	left: 10px;
 	right: 34px;
@@ -1068,8 +1115,15 @@ div.gaugeIconTitle {
 	z-index: 251;
 	position:absolute;
 	top: 2px;
-	right: 2px;
+	right: 40px;
 	height: 30px;
+}
+
+.gaugeStateToggle {
+	z-index: 251;
+	position:absolute;
+	right: 3px;
+	height: 34px;
 }
 
 .gaugeOverlay {
