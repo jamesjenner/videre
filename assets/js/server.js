@@ -56,6 +56,7 @@ var Server = function (options) {
     this.rcvdUpdateVehicle = options.rcvdUpdateVehicle || this.rcvdUnsupportedMessage;
     this.rcvdVehicleDeviceTypes = options.rcvdVehicleDeviceTypes || this.rcvdUnsupportedMessage;
     this.rcvdTelemetry = options.rcvdTelemetry || this.rcvdUnsupportedMessage;
+    this.rcvdState = options.rcvdState || this.rcvdUnsupportedMessage;
     this.rcvdPayload = options.rcvdPayload || this.rcvdUnsupportedMessage;
     this.rcvdNavPathUpdated = options.rcvdNavPathUpdated || this.rcvdUnsupportedMessage;
     this.rcvdUpdateNavPath = options.rcvdUpdateNavPath || this.rcvdUnsupportedMessage;
@@ -313,6 +314,10 @@ Server.prototype = {
                 
                 case Message.VEHICLE_TELEMETRY:
                     this.rcvdTelemetry(this, msg.body);
+                    break;
+                
+                case Message.VEHICLE_STATE:
+                    this.rcvdState(this, msg.body);
                     break;
                 
                 case Message.VEHICLE_PAYLOAD:
