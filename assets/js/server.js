@@ -57,6 +57,7 @@ var Server = function (options) {
     this.rcvdVehicleDeviceTypes = options.rcvdVehicleDeviceTypes || this.rcvdUnsupportedMessage;
     this.rcvdTelemetry = options.rcvdTelemetry || this.rcvdUnsupportedMessage;
     this.rcvdState = options.rcvdState || this.rcvdUnsupportedMessage;
+    this.rcvdStatusMsg = options.rcvdStatusMsg || this.rcvdUnsupportedMessage;
     this.rcvdPayload = options.rcvdPayload || this.rcvdUnsupportedMessage;
     this.rcvdNavPathUpdated = options.rcvdNavPathUpdated || this.rcvdUnsupportedMessage;
     this.rcvdUpdateNavPath = options.rcvdUpdateNavPath || this.rcvdUnsupportedMessage;
@@ -316,6 +317,10 @@ Server.prototype = {
                     this.rcvdTelemetry(this, msg.body);
                     break;
                 
+                case Message.VEHICLE_STATUS_MSG:
+                    this.rcvdStatusMsg(this, msg.body);
+                    break;
+                
                 case Message.VEHICLE_STATE:
                     this.rcvdState(this, msg.body);
                     break;
@@ -399,7 +404,7 @@ Server.prototype = {
                 this.secureConnection.send(Message.constructMessage(id, body));
             } else if(this.unsecureConnected) {
                 if(this.log) {
-                    console.log(this.name + " sending unsecure message, id: " + id + " body: " + body);
+                    console.log(this.name + " sending unsecure message, id: " + id + " body: " + JSON.stringify(body));
                 }
                 // fallback is to send unsecure only when no secure connection and not secure only
                 this.unsecureConnection.send(Message.constructMessage(id, body));
