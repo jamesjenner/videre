@@ -179,7 +179,7 @@ var Gauge = function (argmap) {
     this.mask = ((options.mask != null) ? options.mask : '');
 */
     this.size = ((argmap.size != null) ? argmap.size : 'small');
-    
+
     this.stateBackgroundImg = ((argmap.stateBackgroundImg != null) ? argmap.stateBackgroundImg : '');
     this.stateIndicatorActiveImg = ((argmap.stateIndicatorActiveImg != null) ? argmap.stateIndicatorActiveImg : '');
     this.stateIndicatorInactiveImg = ((argmap.stateIndicatorInactiveImg != null) ? argmap.stateIndicatorInactiveImg : '');
@@ -196,7 +196,7 @@ var Gauge = function (argmap) {
 
 Gauge.SIZE_LARGE = 'large';
 Gauge.SIZE_SMALL = 'small';
-Guage.STATUS = 'StatusGauge_indicator'
+Gauge.STATUS = 'StatusGauge_indicator';
 Gauge.SPEED = 'SpeadGauge';
 Gauge.ATTITUDE = 'AttitudeGauge';
 Gauge.ALTIMETER = 'AltimeterGauge';
@@ -204,13 +204,14 @@ Gauge.THERMOMETER = 'ThermometerGauge';
 Gauge.HEADING = 'HeadingGauge';
 Gauge.VSI  = 'VSIGauge';
 Gauge.STATUS = 'StatusGauge';
+Gauge.STATUS_MSG = '';
 
 Gauge.NEEDLE_1 = 'needle1';
 Gauge.NEEDLE_2 = 'needle2';
 Gauge.NEEDLE_3 = 'needle3';
 
 Gauge.STATE_ARMED = 'armed';
-Gauge.STATE_STABILISED = 'stabilized';
+Gauge.STATE_STABILIZED = 'stabilized';
 Gauge.STATE_AUTONOMOUS = 'autonomous';
 Gauge.STATE_REMOTECONTROL = 'remoteControl';
 Gauge.STATE_HARDWAREINLOOP = 'hardwareInLoop';
@@ -249,6 +250,7 @@ var GaugeState = function (options) {
     this.label = ((options.label != null) ? options.label : '');
     this.toggle = ((options.toggle != null) ? options.toggle : false);
     this.textBox = ((options.textBox != null) ? options.textBox : false);
+    this.action = ((options.action != null) ? options.action : function() {});
 }
 
 
