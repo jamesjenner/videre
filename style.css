@@ -1058,7 +1058,7 @@ div.gaugeIconTitle {
 	height: 34px;
 }
 
-.guageStateTextMessage {
+.gaugeStateTextMessage {
 	z-index: 253;
         text-align: left;
 	font-size: small;
@@ -1120,7 +1120,7 @@ div.gaugeIconTitle {
 }
 
 .gaugeStateToggle {
-	z-index: 251;
+	z-index: 501;
 	position:absolute;
 	right: 3px;
 	height: 34px;
