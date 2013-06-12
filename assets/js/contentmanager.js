@@ -196,6 +196,17 @@ ContentManager.prototype = {
             return new Array();
         }
     },
+    getServerForVehicle: function(vehicleId) {
+        for(var i in this.remoteVehicles) {
+            for(var j = 0, l = this.remoteVehicles[i].length; j < l; j++) {
+                if(this.remoteVehicles[i][j].id === vehicleId) {
+                    return i;
+                }
+            }
+        }
+        
+        return null;
+    },
     getRemoteVehicles: function() {
         var vehicles = new Array();
         for(var key in this.remoteVehicles) {
