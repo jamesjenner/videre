@@ -368,6 +368,9 @@ function configureApplication() {
     contentManager.servers[server].rcvdDeleteVehicle = removeVehicleFromSidebar;
     contentManager.servers[server].rcvdUpdateVehicle = updateVehicleOnSidebar;
     contentManager.servers[server].rcvdTelemetry = receivedTelemetry;
+    contentManager.servers[server].rcvdState = receivedState;
+    contentManager.servers[server].rcvdStatusMsg = receivedStatusMsg;
+    
     // contentManager.servers[server].rcvdNavPathUpdated = 
     contentManager.servers[server].rcvdUpdateNavPath = receivedUpdateNavPath;
     contentManager.servers[server].rcvdVehicleDeviceTypes = receivedVehicleDeviceTypes;
@@ -593,6 +596,7 @@ function createServer() {
     rcvdUpdateVehicle: updateVehicleOnSidebar,
     rcvdTelemetry: receivedTelemetry,
     rcvdState: receivedState,
+    rcvdStatusMsg: receivedStatusMsg,
     rcvdVehicleDeviceTypes: receivedVehicleDeviceTypes,
     rcvdUpdateNavPath: receivedUpdateNavPath,
     // rcvdNavPathUpdated:
@@ -2601,27 +2605,32 @@ var statusGauge = new Gauge({name: 'status', title: 'Status', description: 'Vehi
                                    armed: {
                                      id: Gauge.STATE_ARMED,
                                      label: 'Armed',
-                                     toggle: true
+                                     toggle: true,
+                                     action: toggleArmed
                                    },
                                    stabilized: {
-                                     id: Gauge.STATE_STABILISED,
+                                     id: Gauge.STATE_STABILIZED,
                                      label: 'Stabilized',
-                                     toggle: true
+                                     toggle: true,
+                                     action: toggleStabilized
                                    },
                                    autonomous: {
                                      id: Gauge.STATE_AUTONOMOUS,
                                      label: 'Autonomous',
-                                     toggle: true
+                                     toggle: true,
+                                     action: toggleAutonomous
                                    },
                                    remoteControl: {
                                      id: Gauge.STATE_REMOTECONTROL,
                                      label: 'Remote Controled',
-                                     toggle: true
+                                     toggle: true,
+                                     action: toggleRemoteControlled
                                    },
                                    guided: {
-                                     Gauge.STATE_GUIDED,
+                                     id: Gauge.STATE_GUIDED,
                                      label: 'Guided',
-                                     toggle: true
+                                     toggle: true,
+                                     action: toggleGuided
                                    },
 /*                                   gps: {
                                      id: Gauge.STATE_GPS,
@@ -2812,6 +2821,7 @@ function showGauge(gaugeSetting, parentId) {
       }
       
       var marginTop = 12;
+      var gaugeSettingGenerated = false;
       
       // add states if it has any
       for(var i = 0, l = gaugeSetting.gauge.states.length; i < l; i++) {
@@ -2819,10 +2829,10 @@ function showGauge(gaugeSetting, parentId) {
         if(gaugeSetting.gauge.states[i].textBox) {
           gaugeHTML += '<div class="gaugeStateLarge" style=" top: ' + marginTop + 'px">';
           gaugeHTML += 
-            '<img id="instrument' + gaugeSetting.gaugeId + '_textBox_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateTextBox" src="' + gaugeSetting.gauge.stateBackgroundImg +
+            '<img class="gaugeStateTextBox" src="' + gaugeSetting.gauge.stateBackgroundImg +
               '" width="' + gaugeSetting.gauge.stateBackgroundImg.width +
               '" height="' + gaugeSetting.gauge.stateBackgroundImg.height + '" />' +
-              '<div class="guageStateTextMessage">Test 123</div>';
+              '<div id="instrument' + gaugeSetting.gaugeId + '_textBox_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateTextMessage">Test 123</div>';
         } else {
           gaugeHTML += '<div class="gaugeState" style=" top: ' + marginTop + 'px">';
           /*
@@ -2853,14 +2863,17 @@ function showGauge(gaugeSetting, parentId) {
         }
         
 	gaugeHTML += '</div>';
-        
+        gaugeSettingGenerated = true;
         marginTop += 38;
       }
       
     }
-      
+    
+    if(!gaugeSettingGenerated) {
+      gaugeHTML += 
+        '<div id="gauge_' + gaugeSetting.gaugeId + 'Drag" class="gaugeDrag" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />';
+    }
     gaugeHTML += 
-        '<div id="gauge_' + gaugeSetting.gaugeId + 'Drag" class="gaugeDrag" width="' + gaugeSetting.gauge.width + '" height="' + gaugeSetting.gauge.height + '" />' +
       '</div>';
 
     if(typeof parentId === "undefined") {
@@ -2870,6 +2883,13 @@ function showGauge(gaugeSetting, parentId) {
       $('#' + parentId).append(gaugeHTML);
     }
      
+    if(gaugeSettingGenerated) {
+      for(var i = 0, l = gaugeSetting.gauge.states.length; i < l; i++) {
+
+        $('#instrument' + gaugeSetting.gaugeId + '_toggle_' + gaugeSetting.gauge.states[i].id).on("click", gaugeSetting.gauge.states[i].action);
+      }
+    }
+    
     if(typeof gaugeSetting.gauge.mask != "undefined") {
       $('#' + gaugeSetting.gaugeId).css('-webkit-mask-image', 'url(' + gaugeSetting.gauge.mask + ')');
     }
@@ -3045,6 +3065,19 @@ function receivedState(server, e) {
   }
 }
 
+function receivedStatusMsg(server, e) {
+  var vehicles = contentManager.getVehiclesForServer(server.name);
+  
+  // TODO: improve this so we don't have to loop through the array, should be a named list
+  for(var i = 0, l = vehicles.length; i < l; i++) {
+    if(vehicles[i].id === e.id) {
+      // update this one
+      updateVehicleStatusMesssage(server, vehicles[i], e.severity, e.text);
+      break;
+    }
+  }
+}
+
 function receivedConnecting(server, e) {
   updateVehicleConnectionState(server, e.id, Vehicle.COMMS_CONNECTING, false);
 }
@@ -3190,6 +3223,15 @@ function setTelemetry(vehicle, telemetry) {
 
 }
 
+function updateVehicleStatusMesssage(server, vehicle, severity, text) {
+  console.log("status message: " + severity + " : " + text);
+  if(contentManager.currentVehicle.id === vehicle.id) {
+    var obj = $('#instrument' + VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_textBox_'  + Gauge.STATE_MESSAGES);
+
+    obj.text(severity + ": " + text);
+  }
+}
+
 function updateVehicleState(server, vehicle, state) {
   // if the vehicle is the currently selected vehicle, then update the widgets
   if(contentManager.currentVehicle.id === vehicle.id) {
@@ -3213,8 +3255,8 @@ function setState(vehicle, state) {
     setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_AUTONOMOUS, state.autonomous);
   }
   
-  if(vehicle.state.stabilised !== state.stabilised) {
-    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_STABILISED, state.stabilised);
+  if(vehicle.state.stabilized !== state.stabilized) {
+    setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_STABILIZED, state.stabilized);
   }
   /*
   if(vehicle.state.hardwareInLoop !== state.hardwareInLoop) {
@@ -3230,13 +3272,107 @@ function setState(vehicle, state) {
   }
 }
 
-function setStateIndicator(gaugeId, state) {
+function setStateIndicator(gaugeId, indicatorName, state) {
   // lets play with the speed
   var currentAngle = 0; 
   var direction = 1;  // default positive
 
   var obj = $('#instrument' + gaugeId + '_'  + indicatorName);
+  
+  /*
+   * TODO try and rationalise this:
+  stateIndicatorActiveImg: ,
+  stateIndicatorInactiveImg: 'assets/gauges/state_indicator_inactive.png',
+  stateIndicatorDisabledImg: 'assets/gauges/state_indicator_disabled.png',
+  */
+  
+  if(state) {
+    obj.attr('src', 'assets/gauges/state_indicator_active.png');
+    // $('#takeoffLandToggleActionTxt' + this.id).text('Takeoff');
+  } else {
+    obj.attr('src', 'assets/gauges/state_indicator_inactive.png');
+    // $('#takeoffLandToggleActionTxt' + this.id).text('Takeoff');
+  }
 }
+
+// TODO: possibly consolidate all the toggle methods
+
+function toggleArmed() {
+  console.log("toggleArmed");
+
+  var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
+  
+  var serverPos = contentManager.getServerIndex(serverName);
+  
+  var server = contentManager.servers[serverPos];
+  
+  if(contentManager.currentVehicle) {
+    if(server) {
+      if(contentManager.currentVehicle.state.armed) {
+        server.sendMessage(Message.CMD_DISARM, {id: contentManager.currentVehicle.id});
+      } else {
+        server.sendMessage(Message.CMD_ARM, {id: contentManager.currentVehicle.id});
+      }
+    }
+  }
+}
+
+function toggleStabilized() {
+  console.log("toggleStabilized");
+  
+  var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
+  var serverPos = contentManager.getServerIndex(serverName);
+  var server = contentManager.servers[serverPos];
+  
+  if(contentManager.currentVehicle) {
+    if(server) {
+      server.sendMessage(Message.CMD_SET_STABILIZED_MODE, {id: contentManager.currentVehicle.id, mode: !contentManager.currentVehicle.state.stabilized});
+    }
+  }
+}
+
+function toggleAutonomous() {
+  console.log("toggleAutonomous");
+  
+  var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
+  var serverPos = contentManager.getServerIndex(serverName);
+  var server = contentManager.servers[serverPos];
+  
+  if(contentManager.currentVehicle) {
+    if(server) {
+      server.sendMessage(Message.CMD_SET_AUTONOMOUS_MODE, {id: contentManager.currentVehicle.id, mode: !contentManager.currentVehicle.state.autonomous});
+    }
+  }
+}
+
+function toggleRemoteControlled() {
+  console.log("toggleControlled");
+  
+  var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
+  var serverPos = contentManager.getServerIndex(serverName);
+  var server = contentManager.servers[serverPos];
+  
+  if(contentManager.currentVehicle) {
+    if(server) {
+      server.sendMessage(Message.CMD_SET_REMOTE_CONTROLLED_MODE, {id: contentManager.currentVehicle.id, mode: !contentManager.currentVehicle.state.remoteControlled});
+    }
+  }
+}
+
+function toggleGuided() {
+  console.log("toggleGuided");
+  
+  var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
+  var serverPos = contentManager.getServerIndex(serverName);
+  var server = contentManager.servers[serverPos];
+  
+  if(contentManager.currentVehicle) {
+    if(server) {
+      server.sendMessage(Message.CMD_SET_GUIDED_MODE, {id: contentManager.currentVehicle.id, mode: !contentManager.currentVehicle.state.guided});
+    }
+  }
+}
+
 
 
 </script>
