@@ -1126,6 +1126,99 @@ div.gaugeIconTitle {
 	height: 34px;
 }
 
+.gaugeHorizontalBarBackground {
+	z-index: 250;
+	position:absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.gaugeHorizontalLabel {
+	z-index: 251;
+	position:absolute;
+	left: 10px;
+	right: 10px;
+	height: 100%;
+        text-align: left;
+	font-size: small;
+	color: white;
+        text-decoration: bold;
+}
+
+.textCentered {
+	text-align: center;
+}
+
+.gaugeHorizontalValueLarge {
+	font-size: small;
+	top: 1px;
+	z-index: 251;
+	position:absolute;
+	right: 3px;
+	width: auto;
+	height: 100%;
+        text-align: right;
+	color: white;
+}
+
+.gaugeHorizontalValueSmall {
+	font-size: smaller;
+	top: 17px;
+	z-index: 253;
+	position:absolute;
+	right: 3px;
+	width: auto;
+        text-align: right;
+	color: black;
+}
+
+
+.gaugeHorizontalValueLeft {
+	z-index: 251;
+	position:absolute;
+	top: 2px;
+	left: 3px;
+	width: auto;
+	height: 100%;
+        text-align: left;
+	font-size: smaller;
+	color: white;
+}
+
+.gaugeHorizontalValueRight {
+	z-index: 251;
+	position:absolute;
+	top: 2px;
+	right: 3px;
+	width: auto;
+	height: 100%;
+        text-align: right;
+	font-size: smaller;
+	color: white;
+}
+
+
+.gaugeHorizontalBar {
+	z-index: 251;
+	width: 118px;
+	height: 10px;
+	position: absolute;
+	top: 17px;
+	left: 4px;
+}
+
+.gaugeHorizontalIndicator {
+	z-index: 252;
+	width: 3px;
+	height: 17px;
+	position: absolute;
+	top: 14px;
+	left: 4px;
+}
+
+
 .gaugeOverlay {
         position: absolute;
 	top: 0;
