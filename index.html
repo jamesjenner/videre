@@ -1995,6 +1995,7 @@ function addNavigationContentUI(id) {
     servers: contentManager.servers,
     localVehicles: contentManager.vehicles,
     preferences: contentManager.getPreferences(),
+    clearFunction: removeActualPathsForVehicles,
     });
   
   var navContentSettings = null;
@@ -3674,16 +3675,24 @@ function toggleGuided() {
     <!-- radial menu for map -->
     <ul class="radial" id="mapMenu">
       <li>
+        <a href="#" id="menuMapRefresh">Refresh Navigation</a>
+        <span>X</span>
+      </li>
+      <li>
+        <a href="#" id="menuMapClearTrails">Clear Trails</a>
+        <span>X</span>
+      </li>
+      <li>
+        <a href="#" id="menuMapSelectVehicle">Select Vehicle</a>
+        <span>X</span>
+      </li>
+      <li>
         <a href="#" id="menuMapDeselectVehicle">Deselect Vehicle</a>
         <span>X</span>
       </li>
       <li>
-        <a href="#" id="menuMapZoomToVehicles">Zoom all Vehicles</a>
+        <a href="#" id="menuMapZoomToVehicles">Zoom</a>
         <span>[ ]</span>
-      </li>
-      <li>
-        <a href="#" id="menuMapZoomSelectedVehicle">Zoom Selected Vehicle</a>
-        <span>( )</span>
       </li>
     </ul>
     

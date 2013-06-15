@@ -46,8 +46,11 @@ Navigation.VEHICLE_REVERSE_DIRECTION = "menuVehicleReverseDirection";
 Navigation.HOME_DELETE_PATH = "menuHomeDeletePath";
 Navigation.HOME_REVERSE_DIRECTION = "menuHomeReverseDirection";
 
+Navigation.MAP_SELECT_VEHICLE = "menuMapSelectVehicle";
+Navigation.MAP_REFRESH = "menuMapRefresh";
+Navigation.MAP_CLEAR_TRAILS = "menuMapClearTrails";
 Navigation.MAP_ZOOM_TO_ALL_VEHICLES = "menuMapZoomToVehicles";
-Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE = "menuMapZoomSelectedVehicle";
+// Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE = "menuMapZoomSelectedVehicle";
 Navigation.MAP_DESELECT_VEHICLE = "menuMapDeselectVehicle";
 
 Navigation.MODE_NO_ACTION = 0;
@@ -103,6 +106,9 @@ function Navigation(options) {
     this.selectedNavPathStyle = {color: this.navPathSelectedColor, opacity: this.navPathSelectedOpacity, clickable: false};
     this.actualPathStyle = {color: this.actualPathSelectedColor, opacity: this.navPathSelectedOpacity, clickable: false};
 
+    this.clearFunction = options.clearFunction || function() {};    
+    
+    
     this.navigationMapPaths = new Object();
     this.actualMapPaths = new Object();
     this.flightMapPaths = new Object();
@@ -575,12 +581,13 @@ Navigation.prototype._displayMapMenu = function(e, that) {
     that.mapMenu.enableMenuItem(Navigation.MAP_ZOOM_TO_ALL_VEHICLES);
 
     if(that.selectedVehicle) {    
-        that.mapMenu.enableMenuItem(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE);
+        // that.mapMenu.enableMenuItem(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE);
         that.mapMenu.enableMenuItem(Navigation.MAP_DESELECT_VEHICLE);
+        that.mapMenu.disableMenuItem(Navigation.MAP_SELECT_VEHICLE);
     } else {
-        that.mapMenu.disableMenuItem(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE);
+        // that.mapMenu.disableMenuItem(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE);
         that.mapMenu.disableMenuItem(Navigation.MAP_DESELECT_VEHICLE);
-        
+        that.mapMenu.enableMenuItem(Navigation.MAP_SELECT_VEHICLE);
     }
     
     that.currentLatLng = e.latlng;
@@ -794,12 +801,24 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
             that.map.fitBounds(that._getVehicleBounds());
             break;
         
+        /*
         case(Navigation.MAP_ZOOM_TO_SELECTED_VEHICLE):
             that.map.fitBounds(that._getVehicleBounds());
+            break;
+            */
+        
+        case(Navigation.MAP_SELECT_VEHICLE):
             break;
         
         case(Navigation.MAP_DESELECT_VEHICLE):
             that.deselectVehicle.bind(that)();
+            break;
+        
+        case(Navigation.MAP_REFRESH):
+            break;
+        
+        case(Navigation.MAP_CLEAR_TRAILS):
+            this.clearFunction();
             break;
     }
 }
