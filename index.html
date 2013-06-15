@@ -1526,6 +1526,8 @@ function addVehicleContentUI(id, vehicle, server) {
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.HEADING, headingGauge, {x: 150, y: 150, width: 150, visible: true}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.VSI, vsiGauge, {x: 300, y: 150, width: 150, visible: false}));
   addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.STATUS, statusGauge, {x: 450, y: 0, width: 300, visible: true}));
+  addGaugeToContentAreaSettings(id  + TELEMETRY_SUB_ID, telemetrySettings, new GaugeSetting(id  + TELEMETRY_SUB_ID + Gauge.BATTERIES, batteryGauge, {x: 0, y: 150, width: 150, visible: true}));
+  
 
   // setup the remote control settings
   var remoteControlSettings = new ContentSettings();
@@ -1826,6 +1828,10 @@ function addVehicleContentUI(id, vehicle, server) {
       rightReleaseListener: directControlReleaseListener});
   
   touchControls.initialise();
+  
+  // update the gauges
+  setTelemetry(vehicle, vehicle.telemetry, true);
+  setState(vehicle, vehicle.state, true);
   
   $(window).bind("orientationchange", function() {touchControls.resetCanvas();});
   $(window).bind("resize", function() {touchControls.resetCanvas();});
@@ -2622,7 +2628,7 @@ var statusGauge = new Gauge({name: 'status', title: 'Status', description: 'Vehi
                                    },
                                    remoteControl: {
                                      id: Gauge.STATE_REMOTECONTROL,
-                                     label: 'Remote Controled',
+                                     label: 'Remote Controlled',
                                      toggle: true,
                                      action: toggleRemoteControlled
                                    },
@@ -2646,6 +2652,50 @@ var statusGauge = new Gauge({name: 'status', title: 'Status', description: 'Vehi
                                    }
                                  }
 			       });
+
+var batteryGauge = new Gauge({name: 'battery', title: 'Battery', description: 'Battery State',
+				 icon: 'assets/icons/drawable-xhdpi-v11/ic_action_battery.png',
+			         backgroundImg: 'assets/gauges/base_blank.png',
+                                 horizontalBarBackgroundImg: 'assets/gauges/gauge_horiztonalbar_background.png',
+                                 horizontalBarWhiteImg: 'assets/gauges/gauge_horiztonalbar_bar_white.png',
+                                 horizontalBarRedImg: 'assets/gauges/gauge_horiztonalbar_bar_red.png',
+                                 horizontalBarOrangeImg: 'assets/gauges/gauge_horiztonalbar_bar_orange.png',
+                                 horizontalBarGreenImg: 'assets/gauges/gauge_horiztonalbar_bar_green.png',
+                                 horizontalBarIndicatorRedImg: 'assets/gauges/gauge_horiztonalbar_indicator_red.png',
+                                 horizontalBarIndicatorWhiteImg: 'assets/gauges/gauge_horiztonalbar_indicator_white.png',
+                                 horizontalBars: {
+                                   voltage: {
+                                     id: Gauge.BATTERY_VOLTAGE,
+                                     label: 'Voltage',
+                                     labelCentered: true,
+                                     whiteBarEnabled: true,
+                                     redIndicatorEnabled: true,
+                                     showValue: true,
+                                     startValue: '0V',
+                                     endValue: '18V'
+                                   },
+                                   current: {
+                                     id: Gauge.BATTERY_CURRENT,
+                                     label: 'Current',
+                                     labelCentered: true,
+                                     whiteBarEnabled: true,
+                                     redIndicatorEnabled: true,
+                                     showValue: true,
+                                     startValue: '0mA',
+                                     endValue: '10mA'
+                                   },
+                                   remaining: {
+                                     id: Gauge.BATTERY_PERCENTAGE,
+                                     label: 'Remaining',
+                                     whiteBarEnabled: true,
+                                     redIndicatorEnabled: true,
+                                     endValueIsActual: true,
+                                     showValue: true,
+                                     endValue: '100%'
+                                   },
+                                 }
+			       });
+
 
 /*
     drawStatusFlag(1,  1, tr("RAT"), rateControlEnabled, rateControlKnown, painter);
@@ -2832,7 +2882,7 @@ function showGauge(gaugeSetting, parentId) {
             '<img class="gaugeStateTextBox" src="' + gaugeSetting.gauge.stateBackgroundImg +
               '" width="' + gaugeSetting.gauge.stateBackgroundImg.width +
               '" height="' + gaugeSetting.gauge.stateBackgroundImg.height + '" />' +
-              '<div id="instrument' + gaugeSetting.gaugeId + '_textBox_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateTextMessage">Test 123</div>';
+              '<div id="instrument' + gaugeSetting.gaugeId + '_textBox_' + gaugeSetting.gauge.states[i].id + '" class="gaugeStateTextMessage"></div>';
         } else {
           gaugeHTML += '<div class="gaugeState" style=" top: ' + marginTop + 'px">';
           /*
@@ -2868,6 +2918,71 @@ function showGauge(gaugeSetting, parentId) {
       }
       
     }
+    
+    // add horizontal bars if it has any
+    for(var i = 0, l = gaugeSetting.gauge.horizontalBars.length; i < l; i++) {
+      gaugeHTML += '<div class="gaugeState" style=" top: ' + marginTop + 'px">';
+
+      // add the background
+      gaugeHTML += 
+        '<img id="instrument' + gaugeSetting.gaugeId + '_background_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalBarBackground" src="' + gaugeSetting.gauge.horizontalBarBackgroundImg + '" />';
+
+      // add the start value
+      gaugeHTML += 
+        '<div id="instrument' + gaugeSetting.gaugeId + '_startValue_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalValueLeft" >' +
+        gaugeSetting.gauge.horizontalBars[i].startValue + '</div>';
+      
+      // add the text
+      if(gaugeSetting.gauge.horizontalBars[i].labelCentered) {
+        gaugeHTML += 
+          '<div id="instrument' + gaugeSetting.gaugeId + '_text_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalLabel textCentered" >' +
+          gaugeSetting.gauge.horizontalBars[i].label + '</div>';
+      } else {
+        gaugeHTML += 
+          '<div id="instrument' + gaugeSetting.gaugeId + '_text_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalLabel" >' +
+          gaugeSetting.gauge.horizontalBars[i].label + '</div>';
+      }
+
+      // add the end value
+      if(gaugeSetting.gauge.horizontalBars[i].endValueIsActual && gaugeSetting.gauge.horizontalBars[i].showValue) {
+        gaugeHTML += 
+          '<div id="instrument' + gaugeSetting.gaugeId + '_endValue_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalValueLarge" >' +
+          gaugeSetting.gauge.horizontalBars[i].endValue + '</div>';
+      } else {
+        gaugeHTML += 
+          '<div id="instrument' + gaugeSetting.gaugeId + '_endValue_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalValueRight" >' +
+          gaugeSetting.gauge.horizontalBars[i].endValue + '</div>';
+      }
+      
+      // add the bars, as appropriate
+      if(gaugeSetting.gauge.horizontalBars[i].whiteBarEnabled) {
+        gaugeHTML += 
+          '<img id="instrument' + gaugeSetting.gaugeId + '_bar_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalBar" src="' + gaugeSetting.gauge.horizontalBarWhiteImg + '" />';
+      }
+      if(gaugeSetting.gauge.horizontalBars[i].redBarEnabled) {
+      }
+      if(gaugeSetting.gauge.horizontalBars[i].orangeBarEnabled) {
+      }
+      if(gaugeSetting.gauge.horizontalBars[i].greenBarEnabled) {
+      }
+      
+      if(gaugeSetting.gauge.horizontalBars[i].redIndicatorEnabled) {
+        gaugeHTML += 
+          '<img id="instrument' + gaugeSetting.gaugeId + '_indicator_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalIndicator" src="' + gaugeSetting.gauge.horizontalBarIndicatorRedImg + '" />';
+      }
+      if(gaugeSetting.gauge.horizontalBars[i].whiteIndicatorEnabled) {
+        
+      }
+
+      if(!gaugeSetting.gauge.horizontalBars[i].endValueIsActual && gaugeSetting.gauge.horizontalBars[i].showValue) {
+        gaugeHTML += 
+          '<div id="instrument' + gaugeSetting.gaugeId + '_value_' + gaugeSetting.gauge.horizontalBars[i].id + '" class="gaugeHorizontalValueSmall" ></div>';
+      }
+      
+      gaugeHTML += '</div>';
+      marginTop += 38;
+    }
+        
     
     if(!gaugeSettingGenerated) {
       gaugeHTML += 
@@ -3038,8 +3153,6 @@ function receivedVehicleDeviceTypes(server, vehicleDeviceTypes) {
 }
 
 function receivedTelemetry(server, e) {
-  // console.log("received telemetry from server " + server.name + " for vehicle " + e);
-
   // TODO: improve this so we don't have to loop through the array, should be a named list
   var vehicles = contentManager.getVehiclesForServer(server.name);
   
@@ -3157,29 +3270,30 @@ function updateVehicleTelemetry(server, vehicle, telemetry) {
   vehicle.telemetry = telemetry;
 }
 
-function setTelemetry(vehicle, telemetry) {
+function setTelemetry(vehicle, telemetry, forceUpdate) {
   if(!telemetry) {
     return;
   }
+
+  forceUpdate = ((forceUpdate != null )? forceUpdate : false);
+  
   // temperature is not reported in V1
   // setGaugeAngle('gaugeId', Gauge.NEEDLE_1, 90, '750ms');
   
   var time = 0;
   
-  if(vehicle.telemetry.heading !== telemetry.heading) {
+  if(vehicle.telemetry.heading !== telemetry.heading || forceUpdate) {
     setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.HEADING, Gauge.NEEDLE_1, telemetry.heading, time + 'ms');
   }
   
-  if(vehicle.telemetry.vsi !== telemetry.vsi) {
+  if(vehicle.telemetry.vsi !== telemetry.vsi || forceUpdate) {
     // vertical speed indicator m/s
     // this goes from - to + while 0 is equal to 0, but steps are in increments of 16 for the gui
     setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.VSI, Gauge.NEEDLE_1, (-16 * telemetry.vsi), time + 'ms');
   }
   
   
-  // if(vehicle.telemetry.altitude !== telemetry.altitude) {
-  if(true) {
-
+  if(vehicle.telemetry.altitude !== telemetry.altitude || forceUpdate) {
     // altimeter in meters, needle 1 is from 0m to 10m - each bar is 20cm, needle 2 is from 0m to 0 to 1000m, each bar is 20m
     // 0 degrees is 0, 90 degress is 5 and 360 degreess is 10
     //
@@ -3202,7 +3316,7 @@ function setTelemetry(vehicle, telemetry) {
     time = 0;
   }
   
-  if(vehicle.telemetry.speed !== telemetry.speed) {
+  if(vehicle.telemetry.speed !== telemetry.speed || forceUpdate) {
     // speed is in meters, needle 1 is from 0m/s to 200m/s
     // 0 degrees is 0, 64.16 degress is 100
     //
@@ -3211,16 +3325,56 @@ function setTelemetry(vehicle, telemetry) {
     setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.SPEED, Gauge.NEEDLE_1, speed, time + 'ms');
   }
 
-  if(vehicle.telemetry.attitude.pitch !== telemetry.attitude.pitch) {
+  if(vehicle.telemetry.attitude.pitch !== telemetry.attitude.pitch || forceUpdate) {
     // pitch is based on pixels, 18px per 10 degrees, so pitch is multiplied by 1.8 to determine the px, should we round?
     var pitch = telemetry.attitude.pitch * 1.8;
     setGauge(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_1, telemetry.attitude.roll, pitch + 'px', time + 'ms');
   }
   
-  if(vehicle.telemetry.attitude.roll !== telemetry.attitude.roll) {
+  if(vehicle.telemetry.attitude.roll !== telemetry.attitude.roll || forceUpdate) {
     setGaugeAngle(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.ATTITUDE, Gauge.NEEDLE_2, telemetry.attitude.roll, time + 'ms');
   }
+  
+  if(vehicle.telemetry.batteryVoltage !== telemetry.batteryVoltage || forceUpdate) {
+    // max 24, min 0.
+    // min is left:4px, max is left119px, so range is 115. 115 = 24, 115 / 24 = 4.79. if 10V then 10 * 4.79 = 47.9, 4 + 50 px
+    var x = 4;
 
+    if(telemetry.batteryVoltage > 24) {
+      x = 119;
+    } else {
+      x += Math.round(telemetry.batteryVoltage * 4.79);
+    }
+    // adjust indicator to left: x
+    $('#instrument' + VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.BATTERIES + '_indicator_'  + Gauge.BATTERY_VOLTAGE).css('left', x + 'px');
+    
+    // update text
+    var obj = $('#instrument' + VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.BATTERIES + '_value_'  + Gauge.BATTERY_VOLTAGE);
+    obj.text(telemetry.batteryVoltage + 'V');
+  }
+  
+  if(vehicle.telemetry.batteryCurrent !== telemetry.batteryCurrent || forceUpdate) {
+    // max 1000Ma, min 0.
+    // min is left:4px, max is left119px, so range is 115. 115 = 1000, 115 / 1000 = 0.115 if 580mA then 580 * 0.115 = 66.7, 4 + 67 px
+    var x = 4;
+
+    if(telemetry.batteryCurrent > 1000) {
+      x = 119;
+    } else {
+      x += Math.round(telemetry.batteryCurrent * 0.115);
+    }
+    // adjust indicator to left: x
+    $('#instrument' + VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.BATTERIES + '_indicator_'  + Gauge.BATTERY_CURRENT).css('left', x + 'px');
+    
+    // update value
+    var obj = $('#instrument' + VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.BATTERIES + '_value_'  + Gauge.BATTERY_CURRENT);
+    obj.text(telemetry.batteryCurrent + 'mA');
+  }
+  
+  if(vehicle.telemetry.batteryCharge !== telemetry.batteryCharge || forceUpdate) {
+    var obj = $('#instrument' + VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.BATTERIES + '_endValue_'  + Gauge.BATTERY_PERCENTAGE);
+    obj.text(telemetry.batteryCharge + '%');
+  }
 }
 
 function updateVehicleStatusMesssage(server, vehicle, severity, text) {
@@ -3235,39 +3389,41 @@ function updateVehicleStatusMesssage(server, vehicle, severity, text) {
 function updateVehicleState(server, vehicle, state) {
   // if the vehicle is the currently selected vehicle, then update the widgets
   if(contentManager.currentVehicle.id === vehicle.id) {
-    setState(vehicle, state);
+    setState(vehicle, state, false);
   }
   
   // update the vehicle
   vehicle.state = state;
 }
 
-function setState(vehicle, state) {
+function setState(vehicle, state, forceUpdate) {
   if(!state) {
     return;
   }
   
-  if(vehicle.state.armed !== state.armed) {
+  forceUpdate = ((forceUpdate != null )? forceUpdate : false);
+  
+  if(vehicle.state.armed !== state.armed || forceUpdate) {
     setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_ARMED, state.armed);
   }
   
-  if(vehicle.state.autonomous !== state.autonomous) {
+  if(vehicle.state.autonomous !== state.autonomous || forceUpdate) {
     setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_AUTONOMOUS, state.autonomous);
   }
   
-  if(vehicle.state.stabilized !== state.stabilized) {
+  if(vehicle.state.stabilized !== state.stabilized || forceUpdate) {
     setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_STABILIZED, state.stabilized);
   }
   /*
-  if(vehicle.state.hardwareInLoop !== state.hardwareInLoop) {
+  if(vehicle.state.hardwareInLoop !== state.hardwareInLoop || forceUpdate) {
     setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_HARDWAREINLOOP, state.hardwareInLoop);
   }
   */
-  if(vehicle.state.remoteControl !== state.remoteControl) {
+  if(vehicle.state.remoteControl !== state.remoteControl || forceUpdate) {
     setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_REMOTECONTROL, state.remoteControl);
   }
   
-  if(vehicle.state.guided !== state.guided) {
+  if(vehicle.state.guided !== state.guided || forceUpdate) {
     setStateIndicator(VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_indicator', Gauge.STATE_GUIDED, state.guided);
   }
 }
