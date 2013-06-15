@@ -192,6 +192,21 @@ var Gauge = function (argmap) {
             this.states.push(new GaugeState(argmap.states[i]));
         }
     }
+
+    this.horizontalBarBackgroundImg = ((argmap.horizontalBarBackgroundImg != null) ? argmap.horizontalBarBackgroundImg : '');
+    this.horizontalBarWhiteImg = ((argmap.horizontalBarWhiteImg != null) ? argmap.horizontalBarWhiteImg : '');
+    this.horizontalBarRedImg = ((argmap.horizontalBarRedImg != null) ? argmap.horizontalBarRedImg : '');
+    this.horizontalBarOrangeImg = ((argmap.horizontalBarOrangeImg != null) ? argmap.horizontalBarOrangeImg : '');
+    this.horizontalBarGreenImg = ((argmap.horizontalBarGreenImg != null) ? argmap.horizontalBarGreenImg : '');
+    this.horizontalBarIndicatorRedImg = ((argmap.horizontalBarIndicatorRedImg != null) ? argmap.horizontalBarIndicatorRedImg : '');
+    this.horizontalBarIndicatorWhiteImg = ((argmap.horizontalBarIndicatorWhiteImg != null) ? argmap.horizontalBarIndicatorWhiteImg : '');
+    
+    this.horizontalBars = new Array();
+    if(argmap.horizontalBars != null) {
+        for(var i in argmap.horizontalBars) {
+            this.horizontalBars.push(new GaugeBar(argmap.horizontalBars[i]));
+        }
+    }
 }
 
 Gauge.SIZE_LARGE = 'large';
@@ -204,7 +219,7 @@ Gauge.THERMOMETER = 'ThermometerGauge';
 Gauge.HEADING = 'HeadingGauge';
 Gauge.VSI  = 'VSIGauge';
 Gauge.STATUS = 'StatusGauge';
-Gauge.STATUS_MSG = '';
+Gauge.BATTERIES = 'Batteries';
 
 Gauge.NEEDLE_1 = 'needle1';
 Gauge.NEEDLE_2 = 'needle2';
@@ -219,6 +234,9 @@ Gauge.STATE_GUIDED = 'guided';
 Gauge.STATE_GPS = 'gps';
 Gauge.STATE_MESSAGES = 'messages';
 
+Gauge.BATTERY_VOLTAGE = 'voltage';
+Gauge.BATTERY_CURRENT = 'current';
+Gauge.BATTERY_PERCENTAGE = 'percentage';
 
     
 Gauge.prototype = {
@@ -252,5 +270,26 @@ var GaugeState = function (options) {
     this.textBox = ((options.textBox != null) ? options.textBox : false);
     this.action = ((options.action != null) ? options.action : function() {});
 }
+
+var GaugeBar = function (options) {
+    this.id = ((options.id != null) ? options.id : '');
+    this.label = ((options.label != null) ? options.label : '');
+    this.labelCentered = ((options.labelCentered != null) ? options.labelCentered : false);
+    this.redIndicatorEnabled = ((options.redIndicatorEnabled != null) ? options.redIndicatorEnabled : false);
+    this.whiteIndicatorEnabled = ((options.whiteIndicatorEnabled != null) ? options.whiteIndicatorEnabled : false);
+    
+    this.whiteBarEnabled = ((options.whiteBarEnabled != null) ? options.whiteBarEnabled : false);
+    this.redBarEnabled = ((options.redBarEnabled != null) ? options.redBarEnabled : false);
+    this.orangeBarEnabled = ((options.orangeBarEnabled != null) ? options.orangeBarEnabled : false);
+    this.greenBarEnabled = ((options.greenBarEnabled != null) ? options.greenBarEnabled : false);
+    
+    this.showValue = ((options.showValue != null) ? options.showValue : false);
+
+    this.startValue = ((options.startValue != null) ? options.startValue : '');
+    this.endValue = ((options.endValue != null) ? options.endValue : '');
+    
+    this.endValueIsActual = ((options.endValueIsActual != null) ? options.endValueIsActual : '');
+}
+
 
 
