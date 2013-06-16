@@ -23,6 +23,7 @@ function MapPath(options) {
     this.markers = new Array();
     this.homeMarker = options.homeMarker || null;
     this.polyLine = options.polyLine || null;
+    this.vehicleId = options.vehicleId || null;
 
     this.returnHomePolyLine = options.returnHomePolyLine || null;
     
@@ -268,6 +269,14 @@ MapPath.prototype.getReturnHomePolyLine = function() {
  */
 MapPath.prototype.select = function() {
     this.selected = true;
+
+    if(this.vehicleId) {
+        for(var i = 0, l = this.markers.length; i < l; i++) {
+            var obj = $('#div_' + this.vehicleId + '_marker_' + (i + 1));
+            obj.css('-webkit-filter', 'grayscale(0)');
+            this.markers[i].dragging.enable();
+        }
+    }
 }
 
 /*
@@ -275,6 +284,14 @@ MapPath.prototype.select = function() {
  */
 MapPath.prototype.deselect = function() {
     this.selected = false;
+    
+    if(this.vehicleId) {
+        for(var i = 0, l = this.markers.length; i < l; i++) {
+            var obj = $('#div_' + this.vehicleId + '_marker_' + (i + 1));
+            obj.css('-webkit-filter', 'grayscale(1)');
+            this.markers[i].dragging.disable();
+        }
+    }
 }
 
 /*
