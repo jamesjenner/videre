@@ -212,6 +212,12 @@ div.noflex {
 	*/
 }
 
+.MapIcon32x32 {
+	height: 32px;
+	width: 32px;
+}
+
+
 .airplaneMapIcon {
 	background-Image: url(assets/icons/drawable-xhdpi-v11/ic_action_airplane_inverse.png);
 	height: 64px;
