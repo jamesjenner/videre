@@ -54,8 +54,12 @@ L.NumberedDivIcon = L.Icon.extend({
         if(this.options['number']) {
             if(this.options['idPrefix']) {
                 numdiv.setAttribute("id", this.options['idPrefix'] + this.options['number']);
+                img.setAttribute("id", "img_" + this.options['idPrefix'] + this.options['number']);
+                div.setAttribute("id", "div_" + this.options['idPrefix'] + this.options['number']);
             } else {
                 numdiv.setAttribute("id", "nbr" + this.options['number']);
+                img.setAttribute("id", "img_nbr" + this.options['number']);
+                div.setAttribute("id", "div_nbr" + this.options['number']);
             }
         }
         
