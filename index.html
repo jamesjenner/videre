@@ -36,6 +36,7 @@
     <script src="assets/js/Vector2.js" type="text/javascript"></script>
     <script src="assets/js/touchControls.js" type="text/javascript"></script>
     <script src="assets/js/numberedMarker.js" type="text/javascript"></script>
+    <script src="assets/js/advDivMarker.js" type="text/javascript"></script>
     <script src="assets/js/navigation.js" type="text/javascript"></script>
     <script src="assets/js/mapPath.js" type="text/javascript"></script>
     <script src="assets/js/mapLayer.js" type="text/javascript"></script>
@@ -1990,7 +1991,8 @@ function addNavigationContentUI(id) {
   navigationManager = new Navigation({
     mapMenuId: 'mapMenu',
     vehicleMenuId: 'vehicleMenu',
-    pointMenuId: 'navPointMenu',
+    pointEditingMenuId: 'navPointMenu',
+    pointNonEditingMenuId: 'navPointNotEditingMenu',
     remoteVehicles: contentManager.remoteVehicles,
     servers: contentManager.servers,
     localVehicles: contentManager.vehicles,
@@ -3267,6 +3269,10 @@ function updateVehicleTelemetry(server, vehicle, telemetry) {
     setTelemetry(vehicle, telemetry);
   }
   
+  if(navigationManager != null && telemetry && vehicle.telemetry.heading !== telemetry.heading) {
+    navigationManager.setVehicleDirection(vehicle, telemetry.heading);
+  }
+  
   // update the vehicle
   vehicle.telemetry = telemetry;
 }
@@ -3641,7 +3647,7 @@ function toggleGuided() {
         <span>+</span>
       </li>
     </ul>
-    <!-- radial menu for navigation points -->
+    <!-- radial menu for navigation points when editing -->
     <ul class="radial" id="navPointMenu">
       <li>
         <a href="#" id="menuPointNavPointProperties">Properties</a>
@@ -3670,6 +3676,17 @@ function toggleGuided() {
       <li>
         <a href="#" id="menuPointTerminusToggle">Terminus Toggle</a>
         <span>&Theta;</span>
+      </li>
+    </ul>
+    <!-- radial menu for navigation points when not editing -->
+    <ul class="radial" id="navPointNotEditingMenu">
+      <li>
+        <a href="#" id="menuPointGotoWaypoint">Target Waypoint</a>
+        <span>-</span>
+      </li>
+      <li>
+        <a href="#" id="menuPointEditWaypoints">Edit Waypoints</a>
+        <span>-</span>
       </li>
     </ul>
     <!-- radial menu for map -->
