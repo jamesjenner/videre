@@ -24,7 +24,8 @@ L.AdvDivIcon = L.Icon.extend({
         idPostfix: '',
         internalClass: '',
         shadowUrl: null,
-        iconSize: new L.Point(25, 41),
+        iconClass: '',
+        iconSize: [32, 32],
         iconAnchor: new L.Point(13, 41),
         popupAnchor: new L.Point(0, -33),
         /*
@@ -38,6 +39,10 @@ L.AdvDivIcon = L.Icon.extend({
         var div = document.createElement('div');
         var img = this._createImg(this.options['iconUrl']);
         var advDiv = document.createElement('div');
+        
+        if(this.options['iconClass']) {
+            img.setAttribute("class", this.options['iconClass']);
+        }
         
         if(this.options['internalClass']) {
             advDiv.setAttribute("class", this.options['internalClass']);
