@@ -52,7 +52,7 @@ function MapPath(options) {
 }
 
 /*
- * remove the group from the map
+ * get the lat/lngs as an array 
  */
 MapPath.prototype.getLatLngs = function() {
     var latlngs = new Array();
