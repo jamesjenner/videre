@@ -24,6 +24,9 @@ Navigation.AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 Navigation.HOME_ICON_CLASS = 'homeMapIcon';
 Navigation.DIRECTION_ICON_CLASS = 'directionMapIcon';
 Navigation.DIRECTION_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_direction_inverse.png';
+Navigation.DONE_ICON = 'assets/img/done.png';
+Navigation.TARGET_ICON = 'assets/img/target.png';
+Navigation.MAP_ICON_32_32 = 'MapIcon32x32';
 
 Navigation.AIRPLANE_ICON_CLASS = 'airplaneMapIcon';
 Navigation.SURFACE_ICON_CLASS = 'surfaceMapIcon';
@@ -38,8 +41,8 @@ Navigation.POINT_RETURN_TO_BASE = "menuPointReturnToBase";
 Navigation.POINT_TERMINUS_TOGGLE = "menuPointTerminusToggle";
 
 Navigation.VEHICLE_PROPERTIES = "menuVehicleProperties";
-Navigation.VEHICLE_EDIT_PATH = "menuVehicleEditPath";
-Navigation.VEHICLE_SAVE_PATH = "menuVehicleSavePath";
+Navigation.VEHICLE_SELECT = "menuVehicleSelect";
+Navigation.VEHICLE_DESELECT = "menuVehicleDeselect";
 Navigation.VEHICLE_DELETE_PATH = "menuVehicleDeletePath";
 Navigation.VEHICLE_REVERSE_DIRECTION = "menuVehicleReverseDirection";
 
@@ -115,6 +118,7 @@ function Navigation(options) {
     this.actualMapPaths = new Object();
     this.flightMapPaths = new Object();
     this.vehicleMarkers = new Object();
+    this.vehicleTargetMarkers = new Object();
     
     this.mapTouchMode = Navigation.MODE_NO_ACTION;
     this.selectedVehicle = null;
@@ -248,6 +252,9 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replace
     // draw the points for the path
     this._addMarkers(this.navigationMapPaths[vehicle.id], vehicle, this);
     
+    // set the target (defaults to 0)
+    this.setTarget(vehicle, 0);
+    
     // deselect the path
     this.navigationMapPaths[vehicle.id].deselect();
 }
@@ -292,6 +299,9 @@ Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
     // draw the points for the path
     this._addMarkers(this.navigationMapPaths[vehicle.id], vehicle, this);
     
+    // set the target (defaults to 0)
+    this.setTarget(vehicle, 1);
+    
     // deselect the path
     this.navigationMapPaths[vehicle.id].deselect();
 }
@@ -305,10 +315,10 @@ Navigation.prototype.setVehicleLocation = function(vehicle, position) {
     var self = this;
     // test if the marker exists for the vehicle
     if(this.vehicleMarkers[vehicle.id]) {
-        // it does so update the position of the marker
+        // it does, so update the position of the marker
         this.vehicleMarkers[vehicle.id].setLatLng(latLng);
     } else {
-        // it doesn't so create it at the position
+        // it doesn't, so create it at the position
         this.vehicleMarkers[vehicle.id] = new L.Marker(latLng, {
             icon: new L.AdvDivIcon({
                 iconUrl: Navigation.DIRECTION_ICON,
@@ -316,6 +326,7 @@ Navigation.prototype.setVehicleLocation = function(vehicle, position) {
                 iconSize: [64, 64],
                 idPostfix: vehicle.id
             }),
+            zIndexOffset: -100,
             draggable: false,
             opacity: self.markerOpacity})
             .on('click', function(e) {self._onVehicleMarkerClick(e, self, vehicle); });
@@ -332,6 +343,50 @@ Navigation.prototype.setVehicleDirection = function(vehicle, direction) {
     var rotation = direction - 90;
     
     $('#innerDiv_' + vehicle.id).css('-webkit-transform', 'rotate(' + rotation + 'deg)');
+}
+
+Navigation.prototype.setTarget = function(vehicle, nbr) {
+    var latLng = null;
+    var point = null;
+    // move the current target for the vehicle to the specified waypoint
+
+    // get the lat lng of the path for the target, if no path then return
+    if(vehicle.navigationPath.isEmpty()) {
+        return;
+    } else {
+        var point = vehicle.navigationPath.getPoint(nbr);
+        latLng = new L.LatLng(point.position.latitude, point.position.longitude)
+    }
+    
+    // test if the target marker exists for the vehicle
+    if(this.vehicleTargetMarkers[vehicle.id]) {
+        // it does, so update the position of the marker
+        this.vehicleTargetMarkers[vehicle.id].setLatLng(latLng);
+    } else {
+        // it doesn't, so create it at the specified position
+        this.vehicleTargetMarkers[vehicle.id] = new L.Marker(latLng, {
+            icon: new L.AdvDivIcon({
+                iconUrl: Navigation.TARGET_ICON,
+                iconClass: Navigation.MAP_ICON_32_32,
+                iconAnchor: [16, 16],
+                iconSize: [32, 32],
+                idPostfix: "_target_" + vehicle.id
+            }),
+            zIndexOffset: -100,
+            draggable: false,
+            opacity: self.markerOpacity})
+            .on('click', function(e) {self._onVehicleMarkerClick(e, self, vehicle); });
+
+        this.vehicleTargetMarkers[vehicle.id].addTo(this.map);
+    }
+}
+
+Navigation.prototype.setDone = function(vehicle, nbr) {
+    // add a done icon for the specified waypoint
+    
+    // Navigation.DONE_ICON
+
+    
 }
 
 Navigation.prototype.selectVehicle = function(vehicle) {
@@ -448,6 +503,7 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
     var homeMarker = new L.Marker([latitude, longitude], {
         icon: L.divIcon({className: Navigation.HOME_ICON_CLASS, iconAnchor: [32, 32], iconSize: [64, 64]}),
         draggable: true,
+        zIndexOffset: 200,
         })
         .on('drag', function(e) {self._baseDragged(e, self);})
         .on('click', function(e) { self._onHomeMarkerClick(e, self, vehicle); });
@@ -475,6 +531,7 @@ Navigation.prototype._addMarkers = function(mapPath, vehicle, self) {
         
         var marker = new L.Marker(new L.LatLng(point.position.latitude, point.position.longitude), {
             icon: self._getIconForPoint(vehicle.id, point, this),
+            zIndexOffset: 200,
             draggable: true,
             opacity: self.markerOpacity})
             .on('drag', function(e) {self._markerDragged(e, self);})
@@ -707,6 +764,7 @@ Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, positi
         var marker = new L.Marker(toPoint, {
             icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
             draggable: true,
+            zIndexOffset: 200,
             opacity: this.markerOpacity})
             .on('drag', function(e) {that._markerDragged(e, that);})
             .on('click', function(e) {that._onNavigationPointClick(e, that); });
@@ -728,6 +786,7 @@ Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, 
         var marker = new L.Marker(point, {
             icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
             draggable: true,
+            zIndexOffset: 200,
             opacity: this.markerOpacity})
             .on('drag', function(e) {that._markerDragged(e, that);})
             .on('click', function(e) {that._onNavigationPointClick(e, that); });
@@ -758,6 +817,13 @@ Navigation.prototype._onVehicleMarkerClick = function(e, that, vehicle) {
         }
     }
     
+    if(that.clickedVehicle === that.selectedVehicle) {
+        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_SELECT);
+        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_DESELECT);
+    } else {
+        that.vehicleMenu.enableMenuItem(Navigation.VEHICLE_SELECT);
+        that.vehicleMenu.disableMenuItem(Navigation.VEHICLE_DESELECT);
+    }
     
     // show the menu
     that.vehicleMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
@@ -916,11 +982,11 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
             break;
 //    that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
         
-        case(Navigation.VEHICLE_EDIT_PATH):
+        case(Navigation.VEHICLE_SELECT):
             that.selectVehicle.bind(that)(that.clickedVehicle);
             break;
         
-        case(Navigation.VEHICLE_SAVE_PATH):
+        case(Navigation.VEHICLE_DESELECT):
             that.deselectVehicle.bind(that)();
             break;
         
