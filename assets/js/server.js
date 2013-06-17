@@ -64,6 +64,7 @@ var Server = function (options) {
     
     this.rcvdNavPathWaypointAchieved = options.rcvdNavPathWaypointAchieved || this.rcvdUnsupportedMessage;
     this.rcvdCurrentPosition = options.rcvdCurrentPosition || this.rcvdUnsupportedMessage;
+    this.rcvdNavPathSetTargeted = options.rcvdNavPathSetTargeted || this.rcvdUnsupportedMessage;
     
     this.rcvdConnecting = options.rcvdConnecting || this.rcvdUnsupportedMessage;
     this.rcvdConnected = options.rcvdConnected || this.rcvdUnsupportedMessage;
@@ -343,6 +344,10 @@ Server.prototype = {
                 
                 case Message.CURRENT_POSITION:
                     this.rcvdCurrentPosition(this, msg.body);
+                    break;
+                
+                case Message.NAV_PATH_SET_TARGETED:
+                    this.rcvdNavPathSetTargeted(this, msg.body);
                     break;
 
                 case Message.VEHICLE_CONNECTING:
