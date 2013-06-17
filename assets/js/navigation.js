@@ -26,6 +26,7 @@ Navigation.DIRECTION_ICON_CLASS = 'directionMapIcon';
 Navigation.DIRECTION_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_direction_inverse.png';
 Navigation.DONE_ICON = 'assets/img/done.png';
 Navigation.TARGET_ICON = 'assets/img/target.png';
+Navigation.DONE_ICON = 'assets/img/done.png';
 Navigation.MAP_ICON_32_32 = 'MapIcon32x32';
 
 Navigation.AIRPLANE_ICON_CLASS = 'airplaneMapIcon';
@@ -39,6 +40,9 @@ Navigation.POINT_INSERT_AFTER = "menuPointInsertAfter";
 Navigation.POINT_LOITER_TOGGLE = "menuPointLoiterToggle";
 Navigation.POINT_RETURN_TO_BASE = "menuPointReturnToBase";
 Navigation.POINT_TERMINUS_TOGGLE = "menuPointTerminusToggle";
+
+Navigation.POINT_TARGET_WAYPOINT = "menuPointTargetWaypoint";
+Navigation.POINT_SELECT_VEHICLE = "menuPointSelectVehicle";
 
 Navigation.VEHICLE_PROPERTIES = "menuVehicleProperties";
 Navigation.VEHICLE_SELECT = "menuVehicleSelect";
@@ -84,6 +88,7 @@ function Navigation(options) {
     this.homeMenuId = options.homeMenuId || 'navigationHomeMenu';
     this.pointEditingMenuId = options.pointEditingMenuId || 'navigationPointMenu';
     this.pointNonEditingMenuId = options.pointNonEditingMenuId || 'navigationNonEditingPointMenu';
+    // TODO: remove the following listeners? They appear not to be used
     this.vehicleMenuItemListener = options.vehicleMenuItemListener || function() {};
     this.pointEditingMenuItemListener = options.pointEditingMenuItemListener || function() {};
     
@@ -111,7 +116,8 @@ function Navigation(options) {
     this.selectedNavPathStyle = {color: this.navPathSelectedColor, opacity: this.navPathSelectedOpacity, clickable: false};
     this.actualPathStyle = {color: this.actualPathSelectedColor, opacity: this.navPathSelectedOpacity, clickable: false};
 
-    this.clearFunction = options.clearFunction || function() {};    
+    this.clearFunction = options.clearFunction || function() {};
+    this.setTargetWaypointFunction = options.setTargetWaypointFunction || function() {};
     
     
     this.navigationMapPaths = new Object();
@@ -119,6 +125,7 @@ function Navigation(options) {
     this.flightMapPaths = new Object();
     this.vehicleMarkers = new Object();
     this.vehicleTargetMarkers = new Object();
+    this.vehicleDoneMarkers = new Object();
     
     this.mapTouchMode = Navigation.MODE_NO_ACTION;
     this.selectedVehicle = null;
@@ -300,7 +307,9 @@ Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
     this._addMarkers(this.navigationMapPaths[vehicle.id], vehicle, this);
     
     // set the target (defaults to 0)
-    this.setTarget(vehicle, 1);
+    this.setTarget(vehicle, 2);
+    this.setDone(vehicle, 0);
+    this.setDone(vehicle, 1);
     
     // deselect the path
     this.navigationMapPaths[vehicle.id].deselect();
@@ -386,7 +395,43 @@ Navigation.prototype.setDone = function(vehicle, nbr) {
     
     // Navigation.DONE_ICON
 
+    var latLng = null;
+    var point = null;
+    // move the current target for the vehicle to the specified waypoint
+
+    // get the lat lng of the path for the target, if no path then return
+    if(vehicle.navigationPath.isEmpty()) {
+        return;
+    } else {
+        var point = vehicle.navigationPath.getPoint(nbr);
+        latLng = new L.LatLng(point.position.latitude, point.position.longitude)
+    }
     
+    if(!this.vehicleDoneMarkers[vehicle.id]) {
+        this.vehicleDoneMarkers[vehicle.id] = new Array();
+    }
+    
+    // test if the done marker exists for the vehicle at the specified point
+    if(this.vehicleDoneMarkers[vehicle.id][nbr]) {
+        // it does, so update the position of the marker
+        this.vehicleDoneMarkers[vehicle.id][nbr].setLatLng(latLng);
+    } else {
+        // it doesn't, so create it at the specified position
+        this.vehicleDoneMarkers[vehicle.id][nbr] = new L.Marker(latLng, {
+            icon: new L.AdvDivIcon({
+                iconUrl: Navigation.DONE_ICON,
+                iconClass: Navigation.MAP_ICON_32_32,
+                iconAnchor: [16, 16],
+                iconSize: [32, 32],
+                idPostfix: "_done_" + vehicle.id + '_' + nbr
+            }),
+            zIndexOffset: -100,
+            draggable: false,
+            opacity: self.markerOpacity})
+            .on('click', function(e) {self._onVehicleMarkerClick(e, self, vehicle); });
+
+        this.vehicleDoneMarkers[vehicle.id][nbr].addTo(this.map);
+    }
 }
 
 Navigation.prototype.selectVehicle = function(vehicle) {
@@ -522,6 +567,12 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
     return mapPath;
 }
 
+Navigation.prototype._createOnNavigationPointClickFunction = function(self, vehicleId, position) {
+    return function(e) {
+        self._onNavigationPointClick(e, self, vehicleId, position)
+    }
+}
+
 Navigation.prototype._addMarkers = function(mapPath, vehicle, self) {
     var point = null;
     
@@ -535,7 +586,7 @@ Navigation.prototype._addMarkers = function(mapPath, vehicle, self) {
             draggable: true,
             opacity: self.markerOpacity})
             .on('drag', function(e) {self._markerDragged(e, self);})
-            .on('click', function(e) {self._onNavigationPointClick(e, self); });
+            .on('click', self._createOnNavigationPointClickFunction(self, vehicle.id, i));
     
         mapPath.addMarker(marker);
     }
@@ -750,11 +801,11 @@ Navigation.RENUMBER_FROM_END = +1;
 // TODO: this should be updated to include adding points for actual path as well as nav path
 Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, position, vehicleSelected) {
     vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
-    var that = this;
+    var self = this;
 
     if (position == 1) {
         // we're starting out, so set the poly line based on the from and to points
-        mapPath.setPolyLine(L.polyline([fromPoint, toPoint], that.selectedNavPathStyle));
+        mapPath.setPolyLine(L.polyline([fromPoint, toPoint], self.selectedNavPathStyle));
     } else {
         mapPath.polyLine.spliceLatLngs(position, 0, toPoint);
     }
@@ -762,12 +813,12 @@ Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, positi
     // add a marker for the point when the vehicle is selected
     if(vehicleSelected) {
         var marker = new L.Marker(toPoint, {
-            icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
+            icon: new L.NumberedDivIcon({idPrefix: self.selectedVehicle.id + '_marker_', number: position+''}),
             draggable: true,
             zIndexOffset: 200,
             opacity: this.markerOpacity})
-            .on('drag', function(e) {that._markerDragged(e, that);})
-            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+            .on('drag', function(e) {self._markerDragged(e, self);})
+            .on('click', self._createOnNavigationPointClickFunction(self, self.selectedVehicle.id, position));
     
         // this appends a marker, it doesn't insert
         mapPath.addMarker(marker);
@@ -776,7 +827,7 @@ Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, positi
     return mapPath;
 }
 
-Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, vehicleSelected) {
+Navigation.prototype._insertNavPoint = function(self, mapPath, point, position, vehicleSelected) {
     vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
 
     mapPath.polyLine.spliceLatLngs(position, 0, point);
@@ -784,12 +835,12 @@ Navigation.prototype._insertNavPoint = function(that, mapPath, point, position, 
     // add a marker for the point when the vehicle is selected
     if(vehicleSelected) {
         var marker = new L.Marker(point, {
-            icon: new L.NumberedDivIcon({idPrefix: that.selectedVehicle.id + '_marker_', number: position+''}),
+            icon: new L.NumberedDivIcon({idPrefix: self.selectedVehicle.id + '_marker_', number: position+''}),
             draggable: true,
             zIndexOffset: 200,
             opacity: this.markerOpacity})
-            .on('drag', function(e) {that._markerDragged(e, that);})
-            .on('click', function(e) {that._onNavigationPointClick(e, that); });
+            .on('drag', function(e) {self._markerDragged(e, self);})
+            .on('click', self._createOnNavigationPointClickFunction(self, self.selectedVehicle.id, position));
     
         // map path starts from 1 less than the polyline, as there is no marker at the start
         mapPath.insertMarker(position - 1, marker);
@@ -849,7 +900,7 @@ Navigation.prototype._onHomeMarkerClick = function(e, that, vehicle) {
     that.homeMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
 }
   
-Navigation.prototype._onNavigationPointClick = function(e, that) {
+Navigation.prototype._onNavigationPointClick = function(e, that, vehicleId, position) {
 
     // if a menu is open, treat the click on a point as a request to close the menu
     if(that.hideMenus.bind(that)()) {
@@ -858,7 +909,8 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
     }
     
     if(that.selectedVehicle) {
-        // determine which marker position was dragged
+        /*
+        // determine which marker position was clicked based on the current map path (as vehicle is selected)
         for(var pos = 0, l = that.currentMapPath.markers.length; pos < l; pos++) {
             if(that.currentMapPath.markers[pos] === e.target) {
                 break;
@@ -867,17 +919,21 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
         
         // need to add 1 as the first point is the vehicle, while the mapPath doesn't include the vehicle
         pos++;
+        */
 
         // reset the listener so that the correct position is used
         that.pointEditingMenu.setListener(function(e) {
-            that._pointEditingMenuItemSelected(e, that, pos);
+            // that._pointEditingMenuItemSelected(e, that, pos);
+            that._pointEditingMenuItemSelected(e, that, position);
         });
         
         // setup the elements as enabled/disabled as appropriate
-        var p = that.selectedVehicle.navigationPath.getPoint(pos);
+        // var p = that.selectedVehicle.navigationPath.getPoint(pos);
+        var p = that.selectedVehicle.navigationPath.getPoint(position);
         
         // disable and enable as appropriate
-        if(that.selectedVehicle.navigationPath.length() -1 != pos) {
+        // if(that.selectedVehicle.navigationPath.length() -1 != pos) {
+        if(that.selectedVehicle.navigationPath.length() -1 != position) {
             that.pointEditingMenu.disableMenuItem(Navigation.POINT_RETURN_TO_BASE);
             that.pointEditingMenu.disableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
         } else {
@@ -889,7 +945,7 @@ Navigation.prototype._onNavigationPointClick = function(e, that) {
     } else {
         // reset the listener so that the correct position is used
         that.pointNonEditingMenu.setListener(function(e) {
-            that._pointNonEditingMenuItemSelected(e, that);
+            that._pointNonEditingMenuItemSelected(e, that, vehicleId, position);
         });
         
         that.pointNonEditingMenu.displayMenu(e.originalEvent.clientY, e.originalEvent.clientX);
@@ -1158,8 +1214,17 @@ Navigation.prototype._pointEditingMenuItemSelected = function(e, that, position)
     return false;
 }
 
-Navigation.prototype._pointNonEditingMenuItemSelected = function(e, that) {
+Navigation.prototype._pointNonEditingMenuItemSelected = function(e, that, vehicleId, position) {
+    that.pointNonEditingMenu.hideMenu();
     
+    switch(e.originalEvent.currentTarget.id) {
+        case Navigation.POINT_TARGET_WAYPOINT:
+            this.setTargetWaypointFunction(vehicleId, position);
+            break;
+        
+        case Navigation.POINT_SELECT_VEHICLE:
+            break;
+    }
 }
 
 Navigation.prototype._deletePoint = function(that, position) {
