@@ -378,6 +378,7 @@ function configureApplication() {
     // contentManager.servers[server].rcvdPayload =
     contentManager.servers[server].rcvdNavPathWaypointAchieved = receivedWaypointAchieved;
     contentManager.servers[server].rcvdCurrentPosition = receivedCurrentPosition;
+    contentManager.servers[server].rcvdNavPathSetTargeted = receivedWaypointTargeted;
     
     
     contentManager.servers[server].rcvdConnecting = receivedConnecting;
@@ -603,6 +604,7 @@ function createServer() {
     // rcvdNavPathUpdated:
     rcvdNavPathWaypointAchieved: receivedWaypointAchieved,
     rcvdCurrentPosition: receivedCurrentPosition,
+    rcvdNavPathSetTargeted: receivedWaypointTargeted, 
     // rcvdPayload: ,
     rcvdConnecting: receivedConnecting,
     rcvdConnected: receivedConnected,
@@ -815,8 +817,32 @@ function receivedWaypointAchieved(server, message) {
     return;
   }
   
-  // update the waypoint info
-  // vehicle.navigationPath = message.navPath;
+  if(navigationManager != null) {
+    // vehicle.position = message.position;
+    navigationManager.setDone(vehicle, message.sequence);
+  }
+}
+
+function receivedWaypointTargeted(server, message) {
+  // update the details of the specified vehicle for the remote server
+  var vehicle = null;
+
+  // if we're on the nav map then update the nav map as well
+  for(i = 0, l = contentManager.remoteVehicles[server.name].length; i < l; i++) {
+    if(contentManager.remoteVehicles[server.name][i].id === message.id) {
+      vehicle = contentManager.remoteVehicles[server.name][i];
+      break;
+    }
+  }
+  
+  if(!vehicle) {
+    return;
+  }
+  
+  if(navigationManager != null) {
+    // vehicle.position = message.position;
+    navigationManager.setTarget(vehicle, message.sequence);
+  }
 }
 
 function receivedCurrentPosition(server, message) {
@@ -1998,6 +2024,7 @@ function addNavigationContentUI(id) {
     localVehicles: contentManager.vehicles,
     preferences: contentManager.getPreferences(),
     clearFunction: removeActualPathsForVehicles,
+    setTargetWaypointFunction: targetWaypointForVehicle,
     });
   
   var navContentSettings = null;
@@ -2128,6 +2155,15 @@ function updateNavPathsForVehicles() {
 
 function removeActualPathsForVehicles() {
   navigationManager.clearActualPaths();
+}
+
+function targetWaypointForVehicle(vehicleId, waypointNumber) {
+  // get the server for the vehicle
+  remoteServer = getServerForVehicleId(vehicleId);
+  
+  if(remoteServer != null) {
+    remoteServer.sendMessage(Message.NAV_PATH_SET_TARGETED, {vehicleId: vehicleId, nbr: waypointNumber});
+  }
 }
 
 function getServerForVehicleId(vehicleId) {
@@ -3681,11 +3717,11 @@ function toggleGuided() {
     <!-- radial menu for navigation points when not editing -->
     <ul class="radial" id="navPointNotEditingMenu">
       <li>
-        <a href="#" id="menuPointGotoWaypoint">Target Waypoint</a>
+        <a href="#" id="menuPointTargetWaypoint">Target Waypoint</a>
         <span>-</span>
       </li>
       <li>
-        <a href="#" id="menuPointEditWaypoints">Select Vehicle</a>
+        <a href="#" id="menuPointSelectVehicle">Select Vehicle</a>
         <span>-</span>
       </li>
     </ul>
