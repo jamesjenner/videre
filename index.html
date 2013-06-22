@@ -954,16 +954,24 @@ function addVehicleToSidebar(vehicle, server) {
 /**
  * toggleSwitch() Toggles a checkbox hidden by css.
  *
+ * returns true if toggled on, false if toggled off
+ *
  * This is dependant on the classes switch, on and off.
  */
 function toggleSwitch() {
+    var selected = false;
+    
     if (this.className === "switch on") {
       this.className = 'switch off';
+      selected = false;
     } else {
       this.className = ("switch on");
+      selected = true;
     }
     checkbox = this.lastElementChild;
     checkbox.checked = !checkbox.checked;
+    
+    return selected;
 }
 
 function addPreferencesFormUI(id, title) {
@@ -2181,7 +2189,25 @@ function getServerForVehicleId(vehicleId) {
 }
 
 function addNavPointForm(parentId, id) {
+/*
+    this.position = new Position(lat, lng);
+    
+    this.stop = land
+    this.start = take off
+    
+    this.autoContinue = options.autoContinue === undefined ? true : options.autoContinue;
+    this.accuracy = options.accuracy === undefined ? 0 : options.accuracy;
+    this.loiterLaps = options.loiterLaps === undefined ? 0 : options.loiterLaps;
 
+    this.yaw = options.yaw === undefined ? 0 : options.yaw;
+    this.pitch = options.pitch === undefined ? 0 : options.pitch;
+
+    this.isHome = options.isHome === undefined ? false : options.isHome;
+    
+    this.loiter = options.loiter === undefined ? false : options.loiter;
+    this.returnHome = options.returnHome === undefined ? false : options.returnHome;
+    this.terminus  = options.terminus  === undefined ? false : options.terminus ;
+ */
   $('#' + parentId).append(
     '<div id="' + id + '" class="applicationContents modalContents">' +
     '  <div id="' + id + 'Form" class="formContainer">' +
@@ -2190,38 +2216,51 @@ function addNavPointForm(parentId, id) {
     '       <form id="updateNavPointForm">' +
     '         <ul>' + 
     '           <li>' +
-    '             <label for="navPointSequence">Sequence</label>' +
-    '             <input type="text" name="sequence" id="navPointSequence" readonly="readonly" disabled="disabled"><br>' +
+    '             <label for="navPointUpdateSequence">Sequence</label>' +
+    '             <input type="text" name="sequence" id="navPointUpdateSequence" readonly="readonly" disabled="disabled"><br>' +
     '           </li>' + 
-    '           <li class="breakTop">' + 
-    '             <label for="navPointUpdateLabel">Label</label>' +
-    '             <input type="text" name="label" id="navPointUpdateLabel"><br>' +
-    '           </li>' + 
+    '           <li>' + 
+    '             <label for="navPointUpdateAccuracy">Accuracy (m)</label>' +
+    '             <input type="number" min="0" max="99999" name="navPointAccuracy" id="navPointUpdateAccuracy" placeholder=""><br>' +
+    '           </li>' +
     '           <li>' + 
     '             <label for="navPointUpdateAltitude">Altitude</label>' +
     '             <input type="text" name="altitude" id="navPointUpdateAltitude"><br>' +
-    '           </li>' + 
+    '           </li>' +
+    /* removing for now, as there is no speed on a navpoint for mavlink. however throttle can be adjusted via seperate commands, so this will be used in future
     '           <li>' + 
     '             <label for="navPointUpdateSpeed">Speed</label>' +
     '             <input type="text" name="address" id="navPointUpdateSpeed"><br>' +
-    '           </li>' + 
+    '           </li>' +
+    */
+    '           <li>' +
+    '             <span class="checkboxLabel">Auto Continue</span> ' +
+    '             <div id="navPointUpdateAutoContinueSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="NavPointUpdateAutoContinue" id="navPointUpdateAutoContinue"></div>' +
+    '           </li>' +
+    
     '           <li class="breakTop">' + 
+    '           <li>' +
+    '             <span class="checkboxLabel">Loiter</span> ' +
+    '             <div id="navPointUpdateLoiterSwitch" class="switch"><span class="thumb"></span><input type="checkbox" name="NavPointUpdateLoiter" id="navPointUpdateLoiter"></div>' +
+    '           </li>' +
     '           <li>' +
     '             <label for="navPointUpdateLoiterSpeed">Loiter Radius</label>' +
     '             <input type="number" min="1" max="99999" name="loiterRadius" id="navPointUpdateLoiterRadius" placeholder=""><br>' +
     '           </li>' + 
-    '           <li>' +
-    '             <label for="navPointUpdateLoiterSpeed">Loiter Speed</label>' +
-    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="navPointUpdateLoiterSpeed" placeholder=""><br>' +
-    '           </li>' + 
+    '           <li>' + 
+    '             <label for="navPointUpdateLoiterLaps">Loiter Laps</label>' +
+    '             <input type="number" min="0" max="99999" name="navPointUpdateLoiterLaps" id="navPointUpdateLoiterLaps" placeholder=""><br>' +
+    '           </li>' +
     '           <li>' + 
     '             <label for="navPointUpdateLoiterDuration">Loiter Duration</label>' +
     '             <input type="number" min="1" max="99999" name="loiterDuration" id="navPointUpdateLoiterDuration" placeholder=""><br>' +
     '           </li>' + 
-    '           <li>' + 
-    '             <label for="navPointUpdateLoiterDurationUOM">Loiter Duration UOM</label>' +
-    '             <input type="text" name="loiterDurationUOM" id="navPointUpdateLoiterDurationUOM" placeholder=""><br>' +
+    /* removing for now, as there is no speed on a navpoint for mavlink. however throttle can be adjusted via seperate commands, so this will be used in future
+    '           <li>' +
+    '             <label for="navPointUpdateLoiterSpeed">Loiter Speed</label>' +
+    '             <input type="number" min="1" max="99999" name="loiterSpeed" id="navPointUpdateLoiterSpeed" placeholder=""><br>' +
     '           </li>' +
+    */
     '       </form>' +
     '      </div>' +
     '    </div>' +
@@ -2231,50 +2270,77 @@ function addNavPointForm(parentId, id) {
   // setup and initialise the action bar
   navPointModalBar = new ModalBar({ targetId: id, id: id + MODAL_BAR,})
     .initialise();
+
+  // add the toggle switch to switch classed checkboxes  
+  $('#navPointUpdateLoiterSwitch').on("click", toggleNavPointLoiter);
+  $('#navPointUpdateAutoContinueSwitch').on("click", toggleSwitch);
 }
 
 var navPointModalBar = null;
 
 function showNavPointForm(navPoint) {
-  // disable/enable the loiter fields, as appropriate
-  $('#navPointUpdateLoiterRadius').prop('disabled', !navPoint.loiter);
-  $('#navPointUpdateLoiterSpeed').prop('disabled', !navPoint.loiter);
-  $('#navPointUpdateLoiterDuration').prop('disabled', !navPoint.loiter);
-  $('#navPointUpdateLoiterDurationUOM').prop('disabled', !navPoint.loiter);
   
-  // we need to do this so css for the style is applied
-  if(navPoint.loiter) {
-    $('#navPointUpdateLoiterRadius').removeAttr('readonly', '');
-    $('#navPointUpdateLoiterSpeed').removeAttr('readonly', '');
-    $('#navPointUpdateLoiterDuration').removeAttr('readonly', '');
-    $('#navPointUpdateLoiterDurationUOM').removeAttr('readonly', '');;
-  } else {
-    $('#navPointUpdateLoiterRadius').attr('readonly', 'readonly');
-    $('#navPointUpdateLoiterSpeed').attr('readonly', 'readonly');
-    $('#navPointUpdateLoiterDuration').attr('readonly', 'readonly');
-    $('#navPointUpdateLoiterDurationUOM').attr('readonly', 'readonly');;
-  }
-  // set values
-  $('#navPointSequence').val(navPoint.sequence);
+  // disable/enable the loiter fields as appropriate
+  setupNavPointLoiterFieldStates(navPoint.loiter);
+  
+  // set the values  
+  $('#navPointUpdateSequence').val(navPoint.sequence);
+  $('#navPointUpdateAccuracy').val(navPoint.accuracy);
   $('#navPointUpdateAltitude').val(navPoint.altitude);
   $('#navPointUpdateSpeed').val(navPoint.speed);
+  $('#navPointUpdateAutoContinue').prop('checked', navPoint.autoContinue);
+  if(navPoint.autoContinue) {
+    $('#navPointUpdateAutoContinueSwitch').toggleClass('on');
+  }
+  $('#navPointUpdateLoiter').prop('checked', navPoint.loiter);
+  if(navPoint.loiter) {
+    $('#navPointUpdateLoiterSwitch').toggleClass('on');
+  }
   $('#navPointUpdateLoiterRadius').val(navPoint.loiterRadius);
-  $('#navPointUpdateLoiterSpeed').val(navPoint.loiterSpeed);
+  $('#navPointUpdateLoiterLaps').val(navPoint.loiterLaps);
   $('#navPointUpdateLoiterDuration').val(navPoint.loiterTime);
-  $('#navPointUpdateLoiterDurationUOM').val(navPoint.loiterDurationUOM);
+  $('#navPointUpdateLoiterSpeed').val(navPoint.loiterSpeed);
   
   navPointModalBar.setAcceptFunction(function() {acceptNavPointUpdate(navPoint)});
   navPointModalBar.show();
 }
 
+function setupNavPointLoiterFieldStates(loiterEnabled) {
+  // disable/enable the loiter fields, as appropriate
+  $('#navPointUpdateLoiterRadius').prop('disabled', !loiterEnabled);
+  $('#navPointUpdateLoiterLaps').prop('disabled', !loiterEnabled);
+  $('#navPointUpdateLoiterDuration').prop('disabled', !loiterEnabled);
+  $('#navPointUpdateLoiterSpeed').prop('disabled', !loiterEnabled);
+  
+  // we need to do this so css for the style is applied
+  if(loiterEnabled) {
+    $('#navPointUpdateLoiterRadius').removeAttr('readonly', '');
+    $('#navPointUpdateLoiterLaps').removeAttr('readonly', '');
+    $('#navPointUpdateLoiterDuration').removeAttr('readonly', '');
+    $('#navPointUpdateLoiterSpeed').removeAttr('readonly', '');
+  } else {
+    $('#navPointUpdateLoiterRadius').attr('readonly', 'readonly');
+    $('#navPointUpdateLoiterLaps').attr('readonly', 'readonly');
+    $('#navPointUpdateLoiterDuration').attr('readonly', 'readonly');
+    $('#navPointUpdateLoiterSpeed').attr('readonly', 'readonly');
+  }
+}
+
 function acceptNavPointUpdate(navPoint) {
   // update the navPoint
+  navPoint.accuracy = $('#navPointUpdateAccuracy').val();
   navPoint.altitude = $('#navPointUpdateAltitude').val();
   navPoint.speed = $('#navPointUpdateSpeed').val();
+  navPoint.autoContinue = $('#navPointUpdateAutoContinue').is(':checked');
+  navPoint.loiter = $('#navPointUpdateLoiter').is(':checked');
   navPoint.loiterRadius = $('#navPointUpdateLoiterRadius').val();
-  navPoint.loiterSpeed = $('#navPointUpdateLoiterSpeed').val();
+  navPoint.loiterLaps = $('#navPointUpdateLoiterLaps').val();
   navPoint.loiterTime = $('#navPointUpdateLoiterDuration').val();
-  navPoint.loiterDurationUOM = $('#navPointUpdateLoiterDurationUOM').val();
+  navPoint.loiterSpeed = $('#navPointUpdateLoiterSpeed').val();
+}
+
+function toggleNavPointLoiter() {
+  setupNavPointLoiterFieldStates(toggleSwitch.call(this));
 }
 
 var navigationManager = null;
