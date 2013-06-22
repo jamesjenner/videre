@@ -1218,6 +1218,14 @@ Navigation.prototype._pointNonEditingMenuItemSelected = function(e, that, vehicl
             break;
         
         case Navigation.POINT_SELECT_VEHICLE:
+            // determine the vehicle
+            for(var i = 0, l = this.remoteVehicles.length; i < l; i++) {
+                if(this.remoteVehicles[i].id === vehicleId) {
+                    // select the vehicle
+                    this.selectVehicle.bind(this)(this.remoteVehicles[i]);
+                    break;
+                }
+            }
             break;
     }
 }
