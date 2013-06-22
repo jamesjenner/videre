@@ -1032,15 +1032,6 @@ function addPreferencesFormUI(id, title) {
     '  </div>' +
     '</div>');
 
-  // set values
-  /*
-  
-  $('#serverUpdateRememberPassword').prop('checked', server.rememberPassword);
-  if(server.rememberPassword) {
-    $('#serverUpdateRememberPasswordSwitch').toggleClass('on');
-  }
-  */
-
   // setup and initialise the action bar
   new ActionBar({
     targetId: id,
@@ -1067,16 +1058,12 @@ function setPreferencesFormValues() {
   $('#preferencesDefaultLoiterLaps').val(preferences.defaultLoiterLaps);
   
   $('#preferencesDefaultAutoContinue').prop('checked', preferences.defaultAutoContinue);
-  if(preferences.defaultAutoContinue) {
-    $('#preferencesDefaultAutoContinueSwitch').toggleClass('on');
-  }
+  setToggle('#preferencesDefaultAutoContinueSwitch', preferences.defaultAutoContinue);
   
   $('#debugLevel').val(preferences.debugLevel);
   
   $('#debugEnabled').prop('checked', preferences.debugEnabled);
-  if(preferences.debugEnabled) {
-    $('#debugEnabledSwitch').toggleClass('on');
-  }
+  setToggle('#debugEnabled', preferences.debugEnabled);
 }
 
 function savePreferences() {
@@ -1227,15 +1214,11 @@ function addServerContentUI(id, server) {
   $('#serverUpdatePassword').val(server.password),
   
   $('#serverUpdateRememberPassword').prop('checked', server.rememberPassword);
-  if(server.rememberPassword) {
-    $('#serverUpdateRememberPasswordSwitch').toggleClass('on');
-  }
+  setToggle('#serverUpdateRememberPasswordSwitch', server.rememberPassword);
   $('#serverUpdateCommsSecurity').val(server.commsSecurity);
   
   $('#serverUpdateLoggingEnabled').prop('checked', server.log);
-  if(server.log) {
-    $('#serverUpdateLoggingEnabledSwitch').toggleClass('on');
-  }
+  setToggle('#serverUpdateLoggingEnabledSwitch', server.log);
 
   // add the pane to the tab manager
   contentManager.addPane(id);
@@ -1527,9 +1510,7 @@ function addVehicleContentUI(id, vehicle, server) {
   'payloadEnabled':$('#vehiclePropertiesPayload').is(':checked'),
   'navigationEnabled':$('#vehiclePropertiesNavigationEnabled').is(':checked'),
   'remoteControlEnabled':$('#vehiclePropertiesRemoteControlEnabled').is(':checked'),
-  if(server.log) {
-    $('#serverUpdateLoggingEnabledSwitch').toggleClass('on');
-  }
+  setToggle('#serverUpdateLoggingEnabledSwitch', server.log);
   */
   
   // add the drop down logic for vehicle types
@@ -2278,6 +2259,16 @@ function addNavPointForm(parentId, id) {
 
 var navPointModalBar = null;
 
+function setToggle(element, on) {
+  obj = $(element);
+  
+  if(on) {
+    obj.removeClass('off').addClass('on');
+  } else {
+    obj.removeClass('on').addClass('off');
+  }
+}
+
 function showNavPointForm(navPoint) {
   
   // disable/enable the loiter fields as appropriate
@@ -2289,13 +2280,9 @@ function showNavPointForm(navPoint) {
   $('#navPointUpdateAltitude').val(navPoint.altitude);
   $('#navPointUpdateSpeed').val(navPoint.speed);
   $('#navPointUpdateAutoContinue').prop('checked', navPoint.autoContinue);
-  if(navPoint.autoContinue) {
-    $('#navPointUpdateAutoContinueSwitch').toggleClass('on');
-  }
+  setToggle('#navPointUpdateAutoContinueSwitch', navPoint.autoContinue);
   $('#navPointUpdateLoiter').prop('checked', navPoint.loiter);
-  if(navPoint.loiter) {
-    $('#navPointUpdateLoiterSwitch').toggleClass('on');
-  }
+  setToggle('#navPointUpdateLoiterSwitch', navPoint.loiter)
   $('#navPointUpdateLoiterRadius').val(navPoint.loiterRadius);
   $('#navPointUpdateLoiterLaps').val(navPoint.loiterLaps);
   $('#navPointUpdateLoiterDuration').val(navPoint.loiterTime);
