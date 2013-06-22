@@ -230,6 +230,7 @@ Navigation.prototype.hideMenus = function() {
 }
 
 // TODO: addVehicle does not appear to be used
+/*
 Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replaceFirstPos) {
     // add the start point
     if(vehicle.navigationPath.isEmpty()) {
@@ -265,6 +266,7 @@ Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replace
     // deselect the path
     this.navigationMapPaths[vehicle.id].deselect();
 }
+*/
 
 
 
@@ -540,15 +542,8 @@ Navigation.prototype._setupMapPath = function(path, vehicle, latitude, longitude
     
     var self = this;
     
-    var homeMarker = new L.Marker([latitude, longitude], {
-        icon: L.divIcon({className: Navigation.HOME_ICON_CLASS, iconAnchor: [32, 32], iconSize: [64, 64]}),
-        draggable: true,
-        zIndexOffset: 200,
-        })
-        .on('drag', function(e) {self._baseDragged(e, self);})
-        .on('click', function(e) { self._onHomeMarkerClick(e, self, vehicle); });
-        
-    var mapPath = new MapPath({vehicleId: vehicle.id, map: this.map, homeMarker: homeMarker, polyLine: polyLine});
+    // var mapPath = new MapPath({vehicleId: vehicle.id, map: this.map, homeMarker: homeMarker, polyLine: polyLine});
+    var mapPath = new MapPath({vehicleId: vehicle.id, map: this.map, polyLine: polyLine});
     
     if(path.returnsHome()) {
         var lastPoint = path.getPoint(path.length() - 1);
@@ -571,8 +566,7 @@ Navigation.prototype._createOnNavigationPointClickFunction = function(self, vehi
 Navigation.prototype._addMarkers = function(mapPath, vehicle, self) {
     var point = null;
     
-    // start at 1 as the first point (0) is for the base/vehicle start point
-    for(var i = 1, l = vehicle.navigationPath.length(); i < l; i++) {
+    for(var i = 0, l = vehicle.navigationPath.length(); i < l; i++) {
         point = vehicle.navigationPath.getPoint(i);
         
         var marker = new L.Marker(new L.LatLng(point.position.latitude, point.position.longitude), {
@@ -619,52 +613,32 @@ Navigation.prototype._markerDragged = function (e, that) {
         }
     }
     
-    // need to add 1 as the first point is the vehicle base, while the mapPath doesn't include the vehicle base
-    pos++;
-    
-    // retreive the point on the path for the current position and the home point
+    // retreive the point on the path for the current position
     var point = that.selectedVehicle.navigationPath.getPoint(pos);
     
     point.position.latitude = newPoint.lat;
     point.position.longitude = newPoint.lng;
     that.selectedVehicle.navigationPath.dirty = true;
     
-    // presume that only the last point can return home
+    // update the return home poly line if either the last point or first point is dragged
     if(point.returnHome) {
+        // if the current point is return home then presume that only the last point can do this
         var homePoint = that.selectedVehicle.navigationPath.getPoint(0);
         
         // need to update the return home path as well
         that.currentMapPath.returnHomePolyLine.setLatLngs(
             [[point.position.latitude, point.position.longitude],
              [homePoint.position.latitude, homePoint.position.longitude]]);
-    }
-    
-    // update the whole poly line, we could use splice to replace the point in question. TODO: test which is more efficient, suspect they are the same
-    that.currentMapPath.polyLine.setLatLngs(that.selectedVehicle.navigationPath.toArray());
-}
-
-
-Navigation.prototype._baseDragged = function (e, that) {
-    var newPoint = e.target.getLatLng();
-    
-    // retreive the point on the path for the home point
-    var point = that.selectedVehicle.navigationPath.getPoint(0);
-    
-    point.position.latitude = newPoint.lat;
-    point.position.longitude = newPoint.lng;
-    
-    that.selectedVehicle.navigationPath.dirty = true;
-    
-    // get the last point and check if it is a return to home point
-    
-    lastPoint = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
-    
-    // presume that only the last point can return home
-    if(lastPoint.returnHome) {
-        // need to update the return home path as well
-        that.currentMapPath.returnHomePolyLine.setLatLngs(
-            [[lastPoint.position.latitude, lastPoint.position.longitude],
-             [point.position.latitude, point.position.longitude]]);
+    } else if(point.sequence === 0) {
+        // we are the first point so check if last point is return home
+        var lastPoint = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+        
+        if(lastPoint.returnHome) {
+            // need to update the return home path as well
+            that.currentMapPath.returnHomePolyLine.setLatLngs(
+                [[lastPoint.position.latitude, lastPoint.position.longitude],
+                 [point.position.latitude, point.position.longitude]]);
+        }
     }
     
     // update the whole poly line, we could use splice to replace the point in question. TODO: test which is more efficient, suspect they are the same
@@ -837,8 +811,7 @@ Navigation.prototype._insertNavPoint = function(self, mapPath, point, position, 
             .on('drag', function(e) {self._markerDragged(e, self);})
             .on('click', self._createOnNavigationPointClickFunction(self, self.selectedVehicle.id, position));
     
-        // map path starts from 1 less than the polyline, as there is no marker at the start
-        mapPath.insertMarker(position - 1, marker);
+        mapPath.insertMarker(position, marker);
     }
 }
 
@@ -904,30 +877,15 @@ Navigation.prototype._onNavigationPointClick = function(e, that, vehicleId, posi
     }
     
     if(that.selectedVehicle) {
-        /*
-        // determine which marker position was clicked based on the current map path (as vehicle is selected)
-        for(var pos = 0, l = that.currentMapPath.markers.length; pos < l; pos++) {
-            if(that.currentMapPath.markers[pos] === e.target) {
-                break;
-            }
-        }
-        
-        // need to add 1 as the first point is the vehicle, while the mapPath doesn't include the vehicle
-        pos++;
-        */
-
         // reset the listener so that the correct position is used
         that.pointEditingMenu.setListener(function(e) {
-            // that._pointEditingMenuItemSelected(e, that, pos);
             that._pointEditingMenuItemSelected(e, that, position);
         });
         
         // setup the elements as enabled/disabled as appropriate
-        // var p = that.selectedVehicle.navigationPath.getPoint(pos);
         var p = that.selectedVehicle.navigationPath.getPoint(position);
         
         // disable and enable as appropriate
-        // if(that.selectedVehicle.navigationPath.length() -1 != pos) {
         if(that.selectedVehicle.navigationPath.length() -1 != position) {
             that.pointEditingMenu.disableMenuItem(Navigation.POINT_RETURN_TO_BASE);
             that.pointEditingMenu.disableMenuItem(Navigation.POINT_TERMINUS_TOGGLE);
@@ -1031,7 +989,6 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
         
         case(Navigation.VEHICLE_PROPERTIES):
             break;
-//    that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
         
         case(Navigation.VEHICLE_SELECT):
             that.selectVehicle.bind(that)(that.clickedVehicle);
@@ -1049,18 +1006,15 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
                 // remove the current markers
                 that.currentMapPath.removeMarkers();
                 
-                // remove the return home polyline
-                that.currentMapPath.removeReturnHomePolyLine();
-
                 // set the new polyline
                 that.currentMapPath.setPolyLine(L.polyline(that.clickedVehicle.navigationPath.toArray(), that.selectedNavPathStyle));
 
                 // add the return home polyline (if required)
                 if(that.selectedVehicle.navigationPath.returnsHome()) {
                     var lastPoint = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
-                    var homePoint = that.selectedVehicle.navigationPath.getPoint(0);
+                    var firstPoint = that.selectedVehicle.navigationPath.getPoint(0);
                     var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
-                                               [homePoint.position.latitude, homePoint.position.longitude]],
+                                               [firstPoint.position.latitude, firstPoint.position.longitude]],
                                               that.selectedNavPathStyle);
                     that.currentMapPath.addReturnHomePolyLine(polyline);
                 }
@@ -1124,9 +1078,9 @@ Navigation.prototype._homeMenuItemSelected = function(e, that) {
                 // add the return home polyline (if required)
                 if(that.selectedVehicle.navigationPath.returnsHome()) {
                     var lastPoint = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
-                    var homePoint = that.selectedVehicle.navigationPath.getPoint(0);
+                    var firstPoint = that.selectedVehicle.navigationPath.getPoint(0);
                     var polyline = L.polyline([[lastPoint.position.latitude, lastPoint.position.longitude],
-                                               [homePoint.position.latitude, homePoint.position.longitude]],
+                                               [firstPoint.position.latitude, firstPoint.position.longitude]],
                                               that.selectedNavPathStyle);
                     that.currentMapPath.addReturnHomePolyLine(polyline);
                 }
@@ -1146,12 +1100,24 @@ Navigation.prototype._homeMenuItemSelected = function(e, that) {
 Navigation.prototype._renumberMarkers = function(position, that, direction, adjustment) {
     if(direction == Navigation.RENUMBER_TO_END) {
         // iterate through the positions from position to the end and reset the number 
-        for(var i = position, l = that.currentMapPath.markers.length + 1; i <= l; i++) {
+        for(var i = position, l = that.currentMapPath.markers.length; i <= l; i++) {
+            // remove existing listeners
+            that.currentMapPath.markers[i + adjustment].off('click');
+            
+            // update the listener so that it has the correct position for clicks
+            that.currentMapPath.markers[i + adjustment].on('click', that._createOnNavigationPointClickFunction(that, that.selectedVehicle.id, i + adjustment));
+            // update the marker position (internal div that displays the number)
             that._updateMarkerPosition(i, i + adjustment, that);
         }
     } else {
         // iterate through the positions from the end to position and reset the number 
         for(var i = that.currentMapPath.markers.length + 1, l = position; i > l; i--) {
+            // remove existing listeners
+            that.currentMapPath.markers[i + adjustment].off('click');
+            
+            // update the listener so that it has the correct position for clicks
+            that.currentMapPath.markers[i + adjustment].on('click', that._createOnNavigationPointClickFunction(that, that.selectedVehicle.id, i + adjustment));
+            // update the marker position (internal div that displays the number)
             that._updateMarkerPosition(i, i + adjustment, that);
         }
     }
