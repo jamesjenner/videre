@@ -306,11 +306,6 @@ Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
     // draw the points for the path
     this._addMarkers(this.navigationMapPaths[vehicle.id], vehicle, this);
     
-    // set the target (defaults to 0)
-    this.setTarget(vehicle, 2);
-    this.setDone(vehicle, 0);
-    this.setDone(vehicle, 1);
-    
     // deselect the path
     this.navigationMapPaths[vehicle.id].deselect();
 }
