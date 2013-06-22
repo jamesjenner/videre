@@ -312,6 +312,9 @@ $(document).ready(function() {
 
 // setup the options in the left sidebar
 function configureApplication() {
+  // load previously persisted data
+  contentManager.loadData();
+  
   // add home content
   // TODO: create content for the home page
   addContentUI(HOME_CONTENT_ID, 'Home', 'It is a cliche that most cliches are true, but then like most cliches, that cliche is untrue - Stephen Fry');
@@ -347,9 +350,6 @@ function configureApplication() {
   // set the initial focus to the home control
   setFocus(HOME_CONTROL_ID, HOME_CONTENT_ID);
 
-  // load previously persisted data
-  contentManager.loadData();
-  
   // iterate through the vehicles and add them to the sidebar
   for(var vehicle in contentManager.vehicles) {
     addVehicleToSidebar(contentManager.vehicles[vehicle]);
