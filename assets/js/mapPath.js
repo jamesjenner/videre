@@ -153,8 +153,8 @@ MapPath.prototype.insertMarker = function(idx, marker) {
  * remove a marker
  */
 MapPath.prototype.removeMarker = function(idx) {
-    this.layerGroup.removeLayer(this.markers[idx - 1]);
-    this.markers.splice(idx - 1, 1);
+    this.layerGroup.removeLayer(this.markers[idx]);
+    this.markers.splice(idx, 1);
 }
 
 /*
@@ -195,7 +195,7 @@ MapPath.prototype.setPathStyle = function(style) {
  * change the url of a marker
  */
 MapPath.prototype.setIcon = function(idx, icon) {
-    this.markers[idx - 1].setIcon(icon);
+    this.markers[idx].setIcon(icon);
 }
 
 /*
@@ -272,7 +272,7 @@ MapPath.prototype.select = function() {
 
     if(this.vehicleId) {
         for(var i = 0, l = this.markers.length; i < l; i++) {
-            var obj = $('#div_' + this.vehicleId + '_marker_' + (i + 1));
+            var obj = $('#div_' + this.vehicleId + '_marker_' + i);
             obj.css('-webkit-filter', 'grayscale(0)');
             this.markers[i].dragging.enable();
         }
@@ -287,7 +287,7 @@ MapPath.prototype.deselect = function() {
     
     if(this.vehicleId) {
         for(var i = 0, l = this.markers.length; i < l; i++) {
-            var obj = $('#div_' + this.vehicleId + '_marker_' + (i + 1));
+            var obj = $('#div_' + this.vehicleId + '_marker_' + i);
             obj.css('-webkit-filter', 'grayscale(1)');
             this.markers[i].dragging.disable();
         }
