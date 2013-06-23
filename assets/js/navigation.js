@@ -959,26 +959,26 @@ Navigation.prototype._vehicleMenuItemSelected = function(e, that) {
         
         case(Navigation.VEHICLE_DELETE_PATH):
             if(!that.clickedVehicle.navigationPath.isEmpty()) {
-                // remove the current markers if selected and change to append mode
+                // remove the current markers 
                 if(that.selectedVehicle) {
-                    that.currentMapPath.removeMarkers();
+                    // change to append mode as selected
                     that.mapTouchMode = Navigation.MODE_APPEND;            
                 }
+
+                // remove the markers from the map
+                that.navigationMapPaths[that.clickedVehicle.id].removeMarkers();
             
-                // save first point (which is the vehicle)
-                var p = that.clickedVehicle.navigationPath.getPoint(0);
+                // remove the current nav path from the map
+                that.navigationMapPaths[that.clickedVehicle.id].removePaths();
                 
                 // remove the path from the vehicle
                 that.clickedVehicle.navigationPath.clear();
                 
-                // add back the first point
-                that.clickedVehicle.navigationPath.append(p.position.latitude, p.position.longitude, p);
-
+                // set to dirty
+                that.clickedVehicle.navigationPath.dirty = true;
+                
                 // clear out the prevLatLng
                 that.prevLatLng = null;
-                
-                // remove the current nav path from the map
-                that.navigationMapPaths[that.clickedVehicle.id].removePaths();
             }
             break;
         
