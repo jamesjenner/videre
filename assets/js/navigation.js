@@ -23,7 +23,9 @@ Navigation.AIRPLANE_MAP_ICON = 'assets/icons/airplane.png';
 
 Navigation.HOME_ICON_CLASS = 'homeMapIcon';
 Navigation.DIRECTION_ICON_CLASS = 'directionMapIcon';
-Navigation.DIRECTION_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_direction_inverse.png';
+Navigation.DIRECTION_ICON = 'assets/icons/drawable-xhdpi-v11/ic_action_direction.png';
+Navigation.DIRECTION_ICON_INVERSE = 'assets/icons/drawable-xhdpi-v11/ic_action_direction_inverse.png';
+Navigation.DIRECTION_ICON_SELECTED = 'assets/icons/drawable-xhdpi-v11/ic_action_direction_selected.png';
 Navigation.DONE_ICON = 'assets/img/done.png';
 Navigation.TARGET_ICON = 'assets/img/target.png';
 Navigation.DONE_ICON = 'assets/img/done.png';
@@ -79,6 +81,9 @@ Navigation.MAP_STYLE_NIGHT_VIEW = 4;
 Navigation.MAP_STYLE_STREETS = 5;
 Navigation.MAP_STYLE_SATELITE = 6;
 Navigation.MAP_STYLE_TOPOGRAPHICAL = 7;
+
+Navigation.RENUMBER_TO_END = -1;
+Navigation.RENUMBER_FROM_END = +1;
 
 function Navigation(options) {
     options = options || {};
@@ -229,51 +234,7 @@ Navigation.prototype.hideMenus = function() {
     return menuHidden;
 }
 
-// TODO: addVehicle does not appear to be used
-/*
-Navigation.prototype.addVehicle = function(vehicle, latitude, longitude, replaceFirstPos) {
-    // add the start point
-    if(vehicle.navigationPath.isEmpty()) {
-        vehicle.navigationPath.append(latitude, longitude, {
-            altitude: this.preferences.defaultAltitude,
-            speed: this.preferences.defaultSpeed,
-            accuracy: this.preferences.defaultAccuracy,
-            loiterRadius: this.preferences.defaultLoiterRadius,
-            loiterTime: this.preferences.defaultLoiterTime,
-            loiterLaps: this.preferences.defaultLoiterLaps,
-            autoContinue: this.preferences.defaultAutoContinue,
-        });
-    } else if(replaceFirstPos) {
-        // replace the first position on the navigation path with the specified lat/lng
-        var point = vehicle.navigationPath.getPoint(0);
-        
-        point.position.latitude = latitude;
-        point.position.longitude = longitude;
-    }
-    
-    // setup the nav path
-    this.navigationMapPaths[vehicle.id] = this._setupMapPath(vehicle.navigationPath, vehicle, latitude, longitude, false, this.selectedNavPathStyle);
-
-    // setup the actual path    
-    this.actualMapPaths[vehicle.id] = this._setupActualPath(vehicle);
-    
-    // draw the points for the path
-    this._addMarkers(this.navigationMapPaths[vehicle.id], vehicle, this);
-    
-    // set the target (defaults to 0)
-    this.setTarget(vehicle, 0);
-    
-    // deselect the path
-    this.navigationMapPaths[vehicle.id].deselect();
-}
-*/
-
-
-
-Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
-    var point = navigationPath.getPoint(0);
-    vehicle.navigationPath = navigationPath;
-    
+Navigation.prototype._checkVehicleExists = function(vehicle) {
     // TODO: should be supporting different servers... this will not
     var existingVehicle = null;
     
@@ -291,8 +252,18 @@ Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
         
         // setup the actual path
         this.actualMapPaths[vehicle.id] = this._setupActualPath(vehicle);
-    } else {
-        if(this.selectedVehicle && this.selectedVehicle.id == existingVehicle.id) {
+        return false;
+    }
+    
+    return true;
+}
+
+Navigation.prototype.setNavigationPath = function(vehicle, navigationPath) {
+    var point = navigationPath.getPoint(0);
+    vehicle.navigationPath = navigationPath;
+    
+    if(this._checkVehicleExists(vehicle)) {
+        if(this.selectedVehicle && this.selectedVehicle.id == vehicle.id) {
             this.deselectVehicle();
         }
     
@@ -327,7 +298,7 @@ Navigation.prototype.setVehicleLocation = function(vehicle, position) {
         // it doesn't, so create it at the position
         this.vehicleMarkers[vehicle.id] = new L.Marker(latLng, {
             icon: new L.AdvDivIcon({
-                iconUrl: Navigation.DIRECTION_ICON,
+                iconUrl: Navigation.DIRECTION_ICON_INVERSE,
                 iconAnchor: [32, 32],
                 iconSize: [64, 64],
                 idPostfix: vehicle.id
@@ -339,9 +310,11 @@ Navigation.prototype.setVehicleLocation = function(vehicle, position) {
 
         this.vehicleMarkers[vehicle.id].addTo(this.map);
     }
-    
-    // add the new location to the actual map path
-    this.actualMapPaths[vehicle.id].polyLine.addLatLng(latLng);
+
+    if(this._checkVehicleExists(vehicle)) {
+        // add the new location to the actual map path
+        this.actualMapPaths[vehicle.id].polyLine.addLatLng(latLng);
+    }
 }
 
 Navigation.prototype.setVehicleDirection = function(vehicle, direction) {
@@ -441,7 +414,7 @@ Navigation.prototype.selectVehicle = function(vehicle) {
     
     this.selectedVehicle = vehicle;
     
-    // allocate the current map path
+    // allocate the current map path to the selected map path
     this.currentMapPath = this.navigationMapPaths[this.selectedVehicle.id];
     
     if(this.currentMapPath) {
@@ -451,6 +424,10 @@ Navigation.prototype.selectVehicle = function(vehicle) {
         // select the path
         this.currentMapPath.select();
     }
+    
+    // set vehicle marker to selected
+    var obj = $('#img_' + vehicle.id);
+    obj.attr('src', Navigation.DIRECTION_ICON_SELECTED);
     
     if(this.selectedVehicle.navigationPath.isEmpty() || !this.selectedVehicle.navigationPath.complete()) {
         // path is either empty or not complete, so go to append mode
@@ -465,16 +442,17 @@ Navigation.prototype.selectVehicle = function(vehicle) {
 }
 
 Navigation.prototype.deselectVehicle = function() {
-    // TODO: change the colour of the vehicle to deselected (possibly not required)
+    // set vehicle marker to unselected
+    var obj = $('#img_' + this.selectedVehicle.id);
+    obj.attr('src', Navigation.DIRECTION_ICON_INVERSE);
     
-    // change the colour of the path to deselected
-    this.currentMapPath.setPathStyle(this.deselectedNavPathStyle);
-
-    // deselect the path
-    this.currentMapPath.deselect();
+    if(this.currentMapPath) {
+        // change the colour of the path to deselected
+        this.currentMapPath.setPathStyle(this.deselectedNavPathStyle);
     
-    // TODO: remove the following step
-    // this.currentMapPath.removeMarkers();
+        // deselect the path
+        this.currentMapPath.deselect();
+    }
     
     // change to no action
     this.mapTouchMode = Navigation.MODE_NO_ACTION;
@@ -712,15 +690,15 @@ Navigation.prototype._displayMapMenu = function(e, that) {
 Navigation.prototype._appendPoint = function(e, that, selected) {
     // if the navigation path is empty then we need to add the vehicle base position
     if(that.selectedVehicle.navigationPath.isEmpty()) {
-        // this should never happen
-        return;
-    }
-    
-    // setup the previous point if required
-    if(!that.prevLatLng) {
-        // set to the last point on the path
-        var point = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
-        that.prevLatLng = new L.LatLng(point.position.latitude, point.position.longitude);
+        // first time we have added a point 
+        that.selectedVehicle.navigationPath = new Path();
+    } else {
+        // setup the previous point if required
+        if(!that.prevLatLng) {
+            // set to the last point on the path
+            var point = that.selectedVehicle.navigationPath.getPoint(that.selectedVehicle.navigationPath.length() - 1);
+            that.prevLatLng = new L.LatLng(point.position.latitude, point.position.longitude);
+        }
     }
     
     // TODO: add options for default settings on append
@@ -734,7 +712,7 @@ Navigation.prototype._appendPoint = function(e, that, selected) {
         autoContinue: this.preferences.defaultAutoContinue,
     });
     that.selectedVehicle.navigationPath.dirty = true;
-    
+
     // add the point to the map
     that.currentMapPath = that._addNavPoint(that.currentMapPath, that.prevLatLng, e.latlng, that.selectedVehicle.navigationPath.length() - 1, selected);
     that.prevLatLng = e.latlng;
@@ -764,19 +742,22 @@ Navigation.prototype._insertPoint = function(e, that, position, selected) {
     that._renumberMarkers(position, that, Navigation.RENUMBER_FROM_END, +1);
 }
 
-Navigation.RENUMBER_TO_END = -1;
-Navigation.RENUMBER_FROM_END = +1;
-
-// TODO: this should be updated to include adding points for actual path as well as nav path
 Navigation.prototype._addNavPoint = function(mapPath, fromPoint, toPoint, position, vehicleSelected) {
     vehicleSelected = ((vehicleSelected != null) ? vehicleSelected : false);
     var self = this;
 
-    if (position == 1) {
-        // we're starting out, so set the poly line based on the from and to points
-        mapPath.setPolyLine(L.polyline([fromPoint, toPoint], self.selectedNavPathStyle));
+    // if we're starting out then there is no polyline to set as it's the first point
+    if(position === 0) {
+        mapPath = new MapPath({vehicleId: this.selectedVehicle.id, map: this.map});
+        this.navigationMapPaths[this.selectedVehicle.id] = mapPath;
     } else {
-        mapPath.polyLine.spliceLatLngs(position, 0, toPoint);
+        if(position === 1) {
+            // we're the second point so we need to setup the polyline
+            mapPath.setPolyLine(L.polyline([fromPoint, toPoint], self.selectedNavPathStyle));
+        } else {
+            // we have at least two points so we just need to splice the polyline
+            mapPath.polyLine.spliceLatLngs(position, 0, toPoint);
+        }
     }
     
     // add a marker for the point when the vehicle is selected
@@ -915,6 +896,7 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
 
     switch(e.originalEvent.currentTarget.id) {
         case(Navigation.MAP_ZOOM_TO_ALL_VEHICLES):
+            that.zoomToVehicles.call(that);
             that.map.fitBounds(that._getVehicleBounds());
             break;
         
@@ -940,6 +922,13 @@ Navigation.prototype._mapMenuItemSelected = function(e, that) {
     }
 }
 
+Navigation.prototype.zoomToVehicles = function() {
+    bounds = this._getVehicleBounds();
+    if(bounds) {
+        this.map.fitBounds(bounds);
+    }
+}
+
 Navigation.prototype._getVehicleBounds = function(vehicle) {
     var latlngs = new Array();
     
@@ -950,6 +939,12 @@ Navigation.prototype._getVehicleBounds = function(vehicle) {
     } else {
         for(var id in this.navigationMapPaths) {
             latlngs.push(this.navigationMapPaths[id].getLatLngs());
+        }
+    }
+    
+    if(this.vehicleMarkers) {
+        for(var id in this.vehicleMarkers) {
+            latlngs.push(this.vehicleMarkers[id].getLatLng());
         }
     }
     
