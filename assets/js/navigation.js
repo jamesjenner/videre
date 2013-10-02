@@ -720,7 +720,6 @@ Navigation.prototype._appendPoint = function(e, that, selected) {
 
 Navigation.prototype._insertPoint = function(e, that, position, selected) {
     // the previous point is based on the position. the insert is between the position and the position + 1
-    console.log("inserting point at " + e.latlng.toString());
 
     // TODO: add options for default settings on insert
     that.selectedVehicle.navigationPath.insert(position + 1, e.latlng.lat, e.latlng.lng, {
@@ -888,7 +887,7 @@ Navigation.prototype._onNavigationPointClick = function(e, that, vehicleId, posi
   
   // TODO: not working, but beleive that the dev branch of leaflet supports it
 Navigation.prototype._onFlightPathClick = function(e) {
-    console.log("navigation path clicked");
+    // console.log("navigation path clicked");
 }
 
 Navigation.prototype._mapMenuItemSelected = function(e, that) {

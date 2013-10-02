@@ -539,16 +539,15 @@ function loadSidebar(targetId, containerId) {
     for(var i=0; i < len; i++) {
       if(i in settings) {
         if(settings[i] instanceof HeadingSetting) {
-          console.log("Settings: Adding heading");
           addHeadingToSidebar(containerId, settings[i].title);
         } else if(settings[i] instanceof ToggleSetting) {
-          console.log("Settings: Adding toggle");
+          // console.log((new Date()) + " Settings: Adding toggle");
         } else if(settings[i] instanceof TextSetting) {
-          console.log("Settings: Adding text");
+          // console.log((new Date()) + " Settings: Adding text");
         } else if(settings[i] instanceof RangeSetting) {
-          console.log("Settings: Adding range");
+          // console.log((new Date()) + " Settings: Adding range");
         } else if(settings[i] instanceof GaugeSetting) {
-          console.log("Settings: Adding gauge");
+          // console.log((new Date()) + " Settings: Adding gauge");
           addGaugeControlToSidebar(containerId, contentManager, settings[i]);
         }
       }
@@ -1804,7 +1803,6 @@ function addVehicleContentUI(id, vehicle, server) {
   
   var directControlReleaseListener = function(e) {
     if(e.controlId == TouchControls.LEFT) {
-      console.log("touch release (left) x: " + e.strengthX + ', y: ' + e.strengthY);
       if(server) {
         server.sendMessage(Message.CMD_UP, {id: vehicle.id, name: vehicle.name, power: 0});
         server.sendMessage(Message.CMD_TURN_RIGHT, {id: vehicle.id, name: vehicle.name, power: 0});
@@ -1812,7 +1810,6 @@ function addVehicleContentUI(id, vehicle, server) {
         server.sendMessage(Message.CMD_TURN_LEFT, {id: vehicle.id, name: vehicle.name, power: 0});
       }
     } else if(e.controlId == TouchControls.RIGHT) {
-      console.log("touch release (right) x: " + e.strengthX + ', y: ' + e.strengthY);
       if(server) {
         server.sendMessage(Message.CMD_FORWARD, {id: vehicle.id, name: vehicle.name, power: 0});
         server.sendMessage(Message.CMD_RIGHT, {id: vehicle.id, name: vehicle.name, power: 0});
@@ -2130,8 +2127,6 @@ function updateNavPathsForVehicles() {
       msg.vehicleId = vehicles[i].id;
       msg.navigationPath = vehicles[i].navigationPath;
 
-      console.log(" sending message " + JSON.stringify(msg, null, ' '));
-      
       // get the server for the vehicle
       remoteServer = getServerForVehicleId(vehicles[i].id);
       
@@ -3474,7 +3469,6 @@ function setTelemetry(vehicle, telemetry, forceUpdate) {
 }
 
 function updateVehicleStatusMesssage(server, vehicle, severity, text) {
-  console.log("status message: " + severity + " : " + text);
   if(contentManager.currentVehicle.id === vehicle.id) {
     var obj = $('#instrument' + VEHICLE_CONTENT + TELEMETRY_SUB_ID + Gauge.STATUS + '_textBox_'  + Gauge.STATE_MESSAGES);
 
@@ -3550,7 +3544,6 @@ function setStateIndicator(gaugeId, indicatorName, state) {
 // TODO: possibly consolidate all the toggle methods
 
 function toggleArmed() {
-  console.log("toggleArmed");
 
   var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
   
@@ -3570,7 +3563,6 @@ function toggleArmed() {
 }
 
 function toggleStabilized() {
-  console.log("toggleStabilized");
   
   var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
   var serverPos = contentManager.getServerIndex(serverName);
@@ -3584,7 +3576,6 @@ function toggleStabilized() {
 }
 
 function toggleAutonomous() {
-  console.log("toggleAutonomous");
   
   var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
   var serverPos = contentManager.getServerIndex(serverName);
@@ -3598,7 +3589,6 @@ function toggleAutonomous() {
 }
 
 function toggleRemoteControlled() {
-  console.log("toggleControlled");
   
   var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
   var serverPos = contentManager.getServerIndex(serverName);
@@ -3612,7 +3602,6 @@ function toggleRemoteControlled() {
 }
 
 function toggleGuided() {
-  console.log("toggleGuided");
   
   var serverName = contentManager.getServerForVehicle(contentManager.currentVehicle.id);
   var serverPos = contentManager.getServerIndex(serverName);

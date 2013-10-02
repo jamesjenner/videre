@@ -61,7 +61,6 @@ ContentManager.prototype = {
         var temp;
         
         for(var prop in localStorage) {
-            console.log("prop:" + prop);
             i = prop.indexOf('_');
             if(i > -1) {
                 key = prop.substring(0, i);

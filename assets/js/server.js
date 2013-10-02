@@ -241,6 +241,7 @@ Server.prototype = {
         if(event.data) {
             var msg = Message.deconstructMessage(event.data);
 
+            console.log((new Date()) + " rcvdMsg     " + msg.id + " body: " + JSON.stringify(msg.body));
             if(this.log && msg.id != Message.VEHICLE_TELEMETRY) {
                 console.log(this.name + " webSocket msg rcvd: " + msg.id + " : " + msg.body);
             }
@@ -367,7 +368,7 @@ Server.prototype = {
                     break;
 
                 case Message.VEHICLE_LAUNCHING:
-                    console.log(this.name + " webSocket msg rcvd: firing vehicle launching ");
+                    // console.log(this.name + " webSocket msg rcvd: firing vehicle launching ");
                     this.rcvdLaunching(this, msg.body);
                     break;
                 
@@ -392,6 +393,7 @@ Server.prototype = {
         this.errorListener(event);
     },
     sendMessage: function (id, body) {
+        console.log((new Date()) + " sendMsg     " + id + " body: " + JSON.stringify(body));
         if(this.secureOnly) {
             if(this.secureConnected) {
                 if(this.log) {
