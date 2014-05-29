@@ -11,6 +11,23 @@ An implementation using phone gap can be built that allows the software to run a
 
 Due to the focus on HTML5, the focus for compatibility is only the latest versions of firefox, chrome and safari. The goal is to eventually be compliant with HTML5 and remove all browser specific tags.
 
+Citation
+--------
+If you find this software useful and wish to cite then please reference it as:
+James G. Jenner and Luis Mejias "Towards the Development of 1-to-n Human Machine Interfaces for Unmanned Aerial Vehicles", in proceedings of the 2014 International Conference on Unmanned Aerial Systems (ICUAS'14). (in press)
+
+Bibtex entry:
+
+@inproceedings{Jenner:2014aa,
+    Author = {James G. Jenner and Luis Mejias},
+    Booktitle = {International Conferences on Unmanned Aerial Vehicles},
+    Date-Added = {2014-05-28 20:10:37 +0000},
+    Date-Modified = {2014-05-28 20:12:12 +0000},
+    Pages = {},
+    Title = "Towards the Development of 1-to-n Human Machine Interfaces for Unmanned Aerial Vehicles},
+    Year = {2014}
+    }
+
 
 Submodules
 ----------
